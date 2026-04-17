@@ -1,0 +1,184 @@
+﻿@import "tailwindcss";
+
+:root {
+  --background: #f7f4f1;
+  --foreground: #220707;
+  --font-body: "Avenir Light", "Avenir", "Montserrat", sans-serif;
+  --font-title: "Oswald", sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #f7f4f1;
+  color: var(--foreground);
+  font-family: var(--font-body), sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top, rgba(141, 18, 14, 0.08), transparent 25%);
+  z-index: -1;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-title), sans-serif;
+}
+
+img {
+  max-width: 100%;
+}
+
+.ridemax-logo {
+  display: block;
+  /*
+   * Keep the raster JPG crisp on 1x / 2x displays. -webkit-optimize-contrast
+   * is the Blink/WebKit variant; crisp-edges is the spec equivalent used by
+   * Gecko. Combining both avoids a per-browser CSS file.
+   * Also guarantee no filter pipeline ever darkens or inverts the logo.
+   */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  filter: none;
+  -webkit-filter: none;
+}
+
+.ridemax-white-depth {
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+::selection {
+  background: rgba(141, 18, 14, 0.18);
+}
+
+/*
+ * Standardized card hover lift used by Featured Brands, News, Upcoming Events,
+ * and Job Postings. Defined once here so every card surface inherits the same
+ * feel and so a single tweak (timing, easing, shadow) rolls out everywhere.
+ *
+ * Usage:
+ *   <article class="card-lift"> ... </article>                 // outer lifter
+ *   <span class="card-lift-reveal"> Read More </span>          // optional inner reveal
+ *
+ * The reveal slides up and fades in when the ancestor card is hovered.
+ */
+.card-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow;
+}
+
+.card-lift:hover,
+.card-lift:focus-within {
+  transform: translateY(-8px);
+  box-shadow:
+    0 22px 44px rgba(28, 20, 19, 0.16),
+    0 6px 14px rgba(28, 20, 19, 0.08);
+}
+
+.card-lift-reveal {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-lift:hover .card-lift-reveal,
+.card-lift:focus-within .card-lift-reveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Careers "Fuel Your Passion" bento grid (matches reference layout). */
+.grid-container {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr; /* Two main columns */
+  grid-template-rows: auto auto;
+}
+
+.box-1 {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.box-2 {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.box-3 {
+  grid-column: 2;
+  grid-row: 1 / span 2; /* This makes it a tall rectangle */
+}
+
+.box-4 {
+  grid-column: 1 / span 2;
+  grid-row: 3; /* This makes it full-width at the bottom */
+}
+
+@media (max-width: 767px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .box-1,
+  .box-2,
+  .box-3,
+  .box-4 {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+@keyframes ridemax-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ridemax-marquee {
+  animation: ridemax-marquee 34s linear infinite;
+}
+
+.animate-ridemax-marquee-reverse {
+  animation: ridemax-marquee 34s linear infinite reverse;
+}
+
+@media (min-width: 1024px) {
+  .tire-type-row:nth-child(even) > div {
+    flex-direction: row-reverse;
+  }
+}
