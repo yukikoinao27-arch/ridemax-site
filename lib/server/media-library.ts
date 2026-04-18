@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import sharp from "sharp";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
@@ -7,8 +8,26 @@ import { z } from "zod";
 import type { MediaAsset, MediaAssetStorageMode } from "@/lib/ridemax-types";
 import { getServerSupabaseClient, getServerSupabaseStatus } from "@/lib/server/supabase-server";
 
-const mediaLibraryPath = path.join(process.cwd(), "data", "media-library.json");
-const localMediaRoot = path.join(process.cwd(), "data", "media");
+/**
+ * Serverless platforms (Vercel, AWS Lambda) expose a read-only root filesystem.
+ * The only writable area is the OS temp dir (/tmp on Linux, 512 MB on Vercel,
+ * cleared between cold starts). Detect that case at import time and redirect
+ * the local-mode fallback there so `fs.mkdir` never crashes with ENOENT on
+ * `/var/task/data/media`.
+ *
+ * Production deployments should still configure Supabase Storage or S3; the
+ * /tmp path is only a safety net so a missing env var surfaces as a clean
+ * "image lost after redeploy" instead of a 500.
+ */
+function isReadOnlyRoot(): boolean {
+  // Vercel sets VERCEL=1; AWS Lambda sets AWS_LAMBDA_FUNCTION_NAME. Both run
+  // from /var/task which is not writable.
+  return Boolean(process.env.VERCEL) || Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME);
+}
+
+const writableRoot = isReadOnlyRoot() ? path.join(os.tmpdir(), "ridemax") : process.cwd();
+const mediaLibraryPath = path.join(writableRoot, "data", "media-library.json");
+const localMediaRoot = path.join(writableRoot, "data", "media");
 const defaultSupabaseBucket = "media";
 
 const mediaAssetSchema = z.object({
@@ -142,6 +161,20 @@ function getMediaStorageStatus(): MediaStorageStatus {
   };
 }
 
+/**
+ * Hard-fails a misconfigured deployment before we ever call `fs.mkdir` on a
+ * read-only filesystem. Previously the admin got a raw ENOENT stack trace in
+ * the UI; now ops sees a clear "configure Supabase/S3" message which maps to a
+ * specific env var fix.
+ */
+function assertWritableBackend(mode: MediaStorageStatus["mode"]) {
+  if (mode === "local" && isReadOnlyRoot()) {
+    throw new Error(
+      "Media storage is not configured for this deployment. Set SUPABASE_SERVICE_ROLE_KEY (and NEXT_PUBLIC_SUPABASE_URL), or RIDEMAX_MEDIA_BUCKET + AWS_REGION, before uploading images.",
+    );
+  }
+}
+
 function mediaUrlForKey(storageKey: string) {
   const status = getMediaStorageStatus();
   return `${status.publicBaseUrl}/${storageKey}`.replace(/([^:]\/)\/+/g, "$1");
@@ -151,6 +184,9 @@ async function ensureMediaLibraryFile() {
   try {
     await fs.access(mediaLibraryPath);
   } catch {
+    // Create the parent directory first so the initial write can't fail with
+    // ENOENT on a fresh container (Vercel /tmp, a fresh checkout, etc.).
+    await fs.mkdir(path.dirname(mediaLibraryPath), { recursive: true });
     await fs.writeFile(mediaLibraryPath, "[]\n", "utf8");
   }
 }
@@ -333,6 +369,7 @@ export async function uploadImageAsset(input: UploadImageInput) {
   } else if (status.mode === "supabase") {
     await writeSupabaseMediaFile(storageKey, bytes, contentType);
   } else {
+    assertWritableBackend(status.mode);
     await writeLocalMediaFile(storageKey, bytes);
   }
 

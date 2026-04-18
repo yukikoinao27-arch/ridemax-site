@@ -146,11 +146,20 @@ export function AdminImageUploadField({
     <div className="mt-2 rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-4">
       {value ? (
         <div className="relative overflow-hidden rounded-[1.25rem] border border-black/10 bg-white">
+          {/*
+           * `unoptimized` is deliberate: admin previews can come from any of
+           * the configured media backends (Supabase, S3, local JSON) and we do
+           * not want a missing remotePatterns entry to degrade the preview to
+           * alt text only. A cache-busting key makes a fresh upload replace a
+           * stale cached broken state immediately.
+           */}
           <Image
+            key={value}
             src={value}
-            alt="Uploaded asset preview"
+            alt="Current uploaded image"
             width={1600}
             height={900}
+            unoptimized
             className="aspect-[16/9] w-full object-cover"
           />
         </div>
@@ -223,10 +232,12 @@ export function AdminImageGalleryField({
           {value.map((imageUrl, index) => (
             <div key={`${imageUrl}-${index}`} className="overflow-hidden rounded-[1.25rem] border border-black/10 bg-white">
               <Image
+                key={imageUrl}
                 src={imageUrl}
-                alt={`Uploaded asset ${index + 1}`}
+                alt={`Gallery image ${index + 1}`}
                 width={1200}
                 height={900}
+                unoptimized
                 className="aspect-[4/3] w-full object-cover"
               />
               <div className="border-t border-black/8 p-3">

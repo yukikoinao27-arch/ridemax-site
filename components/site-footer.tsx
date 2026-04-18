@@ -14,17 +14,18 @@ type SiteFooterProps = {
 };
 
 export function SiteFooter({ logoSrc, logoLightSrc, siteName, description, contact, categories }: SiteFooterProps) {
-  // Admin-configured SVG sources remain available as a fallback inside the
-  // RidemaxLogo component; the full-color JPG wordmark is the preferred asset.
-  void logoSrc;
-  void logoLightSrc;
+  // The footer sits on a dark background, so prefer the admin "Logo (dark
+  // surfaces)" upload when provided, falling back to the standard logo so a
+  // single-asset configuration still renders. RidemaxLogo handles the final
+  // fall back to the bundled SVG lockup when both are missing.
+  const footerLogoSrc = logoLightSrc?.trim() ? logoLightSrc : logoSrc;
 
   return (
     <footer className="bg-[#2b0000] text-white">
       <div className="mx-auto flex max-w-[118rem] flex-col gap-12 px-6 py-20 md:px-10 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-xl">
           <div className="flex items-center gap-4">
-            <RidemaxLogo surface="dark" alt={siteName} className="ridemax-logo h-[56px] w-auto" />
+            <RidemaxLogo src={footerLogoSrc} surface="dark" alt={siteName} className="ridemax-logo h-[56px] w-auto" />
           </div>
           <p className="mt-6 max-w-md text-sm leading-7 text-white/75">{description}</p>
         </div>

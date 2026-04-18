@@ -1,27 +1,32 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Ridemax brand mark renderer.
  *
- * Hides two concerns behind a small interface:
- *  1. The high-resolution JPG (`/ridemax-full-logo.jpg`) is preferred so the
- *     full Team Ridemax Philippines wordmark renders at native resolution.
- *  2. If the JPG is not deployed (e.g. local dev before the asset has been
- *     copied), the component falls back to the existing SVG lockup without
- *     emitting a broken image. Callers don't need to know about the fallback.
+ * Source-of-truth order:
+ *   1. Admin-uploaded logo passed in via `src` (coming from site_settings —
+ *      the "Logo (light surfaces)" and "Logo (dark surfaces)" fields in the
+ *      Settings admin). This is what marketing updates to change the header
+ *      and footer without a deploy.
+ *   2. If the admin-provided `src` errors (e.g. the asset was deleted) or is
+ *      empty, we fall back to the bundled SVG lockup in /public. Those two
+ *      SVGs are the baseline so a fresh install still renders a brand mark.
  *
- * Callers pass a surface hint (`light` / `dark`) so the SVG fallback still
- * swaps to the inverted mark on dark headers. The JPG stays as-is per brand
- * guidelines — no CSS filters, no `brightness(0)`, no `invert()`.
+ * Callers forward a `surface` hint (light/dark) so the SVG fallback still
+ * picks the inverted mark on the dark top-of-page header. The uploaded JPG
+ * stays as-is per brand guidelines — no CSS filters, no `brightness(0)`, no
+ * `invert()`.
  */
 
 type RidemaxLogoSurface = "light" | "dark";
 
 type RidemaxLogoProps = {
-  /** Used for the SVG fallback when the JPG is missing. */
+  /** Admin-configured logo URL (site_settings.logoSrc / logoLightSrc). */
+  src?: string;
+  /** Used for the SVG fallback when `src` is empty or fails to load. */
   surface?: RidemaxLogoSurface;
   /** Rendered width (the height is derived by Next/Image). */
   width?: number;
@@ -35,13 +40,12 @@ type RidemaxLogoProps = {
   priority?: boolean;
 };
 
-const fullLogoSrc = "/ridemax-full-logo.jpg";
-
 function fallbackSrcForSurface(surface: RidemaxLogoSurface) {
   return surface === "dark" ? "/ridemax-logo-light.svg" : "/ridemax-logo.svg";
 }
 
 export function RidemaxLogo({
+  src,
   surface = "light",
   width = 240,
   height = 80,
@@ -49,23 +53,33 @@ export function RidemaxLogo({
   alt = "Team Ridemax Philippines",
   priority,
 }: RidemaxLogoProps) {
-  const [useFallback, setUseFallback] = useState(false);
+  // Reset the fallback flag whenever the admin swaps the uploaded asset —
+  // otherwise a previously-broken URL would stick the component on the SVG
+  // even after the admin re-uploads a working logo.
+  const [hasErrored, setHasErrored] = useState(false);
+  useEffect(() => {
+    setHasErrored(false);
+  }, [src]);
 
-  const src = useFallback ? fallbackSrcForSurface(surface) : fullLogoSrc;
+  const trimmed = (src ?? "").trim();
+  const useAdminSrc = trimmed.length > 0 && !hasErrored;
+  const resolvedSrc = useAdminSrc ? trimmed : fallbackSrcForSurface(surface);
 
   return (
     <Image
-      src={src}
+      // Keying on the source URL forces Next/Image to remount when the admin
+      // uploads a new logo, which avoids a stale cached broken state.
+      key={resolvedSrc}
+      src={resolvedSrc}
       alt={alt}
       width={width}
       height={height}
       className={className}
       priority={priority}
+      unoptimized={useAdminSrc}
       onError={() => {
-        // Next/Image fires onError on 404 for the JPG asset. Swap once and
-        // remember, so we don't loop between sources.
-        if (!useFallback) {
-          setUseFallback(true);
+        if (useAdminSrc) {
+          setHasErrored(true);
         }
       }}
     />

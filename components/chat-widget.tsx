@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { RidemaxLogo } from "@/components/ridemax-logo";
 
 /**
  * Persistent chat shell that mirrors the Wix-like launcher UX.
@@ -17,7 +18,20 @@ import { useRef, useState } from "react";
  * Provider-agnostic on purpose: a real chat transport (WebSocket, webhook,
  * third-party widget) can attach later without changing this surface.
  */
-export function ChatWidget() {
+type ChatWidgetProps = {
+  /** Admin-configured logo for light surfaces (the white chip behind the mark). */
+  logoSrc?: string;
+  /** Fallback admin logo used when `logoSrc` is empty — usually the dark-surface asset. */
+  logoLightSrc?: string;
+  /** Alt text for screen readers — typically the site name. */
+  alt?: string;
+};
+
+export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippines" }: ChatWidgetProps = {}) {
+  // The chat header renders the logo inside an opaque white chip, so the
+  // light-surface upload is the right pick. If only the dark variant was
+  // uploaded we still surface something rather than forcing the SVG fallback.
+  const chatLogoSrc = logoSrc?.trim() ? logoSrc : logoLightSrc ?? "";
   const [open, setOpen] = useState(false);
   const [screen, setScreen] = useState<"welcome" | "chat">("welcome");
   const [message, setMessage] = useState("");
@@ -77,23 +91,20 @@ export function ChatWidget() {
           <div className="flex h-full flex-col p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <Image
-                  src="/ridemax-full-logo.jpg"
-                  alt="Team Ridemax Philippines"
+                {/*
+                 * Logo sits on an opaque white chip so the admin-configured
+                 * mark keeps its native colors on the navy chat surface — no
+                 * CSS inversion, no filters, per brand guidelines. RidemaxLogo
+                 * itself handles the SVG fallback when the upload is missing
+                 * or 404s.
+                 */}
+                <RidemaxLogo
+                  src={chatLogoSrc}
+                  surface="light"
+                  alt={alt}
                   width={220}
                   height={72}
                   className="ridemax-logo h-[56px] w-auto rounded-md bg-white/95 p-1.5 shadow-[0_6px_14px_rgba(0,0,0,0.28)]"
-                  // The chat header sits on a navy background, so the logo needs
-                  // a small opaque chip behind it to preserve contrast. We do
-                  // NOT invert or recolor the logo — the mark ships in its
-                  // native colors per brand guidelines.
-                  onError={(event) => {
-                    // Fall back to the SVG mark if the high-res JPG is absent.
-                    const target = event.currentTarget as HTMLImageElement;
-                    if (!target.src.endsWith("/ridemax-logo-light.svg")) {
-                      target.src = "/ridemax-logo-light.svg";
-                    }
-                  }}
                 />
                 {/* Three-line heading (matches the reference composition). */}
                 <p className="mt-3 pr-2 text-[2rem] font-semibold leading-[1.02]">

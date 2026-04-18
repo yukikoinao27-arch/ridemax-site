@@ -53,7 +53,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             categories={content.productCategories}
           />
         </div>
-        <ChatWidget />
+        <ChatWidget
+          logoSrc={content.site.logoSrc}
+          logoLightSrc={content.site.logoLightSrc}
+          alt={content.site.siteName}
+        />
       </body>
     </html>
   );

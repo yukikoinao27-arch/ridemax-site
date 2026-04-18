@@ -589,7 +589,11 @@ alter table public.promotions enable row level security;
 alter table public.promotion_tags enable row level security;
 alter table public.chat_uploads enable row level security;
 
--- Public visitors may submit contact messages, but only authenticated admins should read them.
+-- Public visitors may submit contact messages, but reads are restricted to
+-- the Next.js admin server (service-role key, which bypasses RLS). We do not
+-- grant `authenticated` read access: the app does not use Supabase Auth for
+-- the admin surface, and leaving a broad policy here would let any future
+-- signed-up user dump the inbox the moment Supabase Auth is enabled.
 drop policy if exists "contact_messages_public_insert" on public.contact_messages;
 create policy "contact_messages_public_insert"
 on public.contact_messages
@@ -597,19 +601,11 @@ for insert
 to anon, authenticated
 with check (true);
 
+-- Old over-broad "authenticated can read everything" policies, explicitly
+-- dropped so an upgraded deployment does not keep them around.
 drop policy if exists "contact_messages_admin_read" on public.contact_messages;
-create policy "contact_messages_admin_read"
-on public.contact_messages
-for select
-to authenticated
-using (auth.role() = 'authenticated');
-
 drop policy if exists "media_assets_admin_read" on public.media_assets;
-create policy "media_assets_admin_read"
-on public.media_assets
-for select
-to authenticated
-using (true);
+drop policy if exists "chat_uploads_admin_read" on public.chat_uploads;
 
 -- Generic read policies:
 -- - Public can read "settings-like" tables and published content
@@ -667,9 +663,17 @@ create policy "category_sections_public_read" on public.category_sections for se
 drop policy if exists "product_items_public_read" on public.product_items;
 create policy "product_items_public_read" on public.product_items for select to anon, authenticated using (published = true);
 
--- Authenticated full access (future: gate via Supabase Auth + roles/RLS).
--- Service role bypasses RLS, so the Next.js admin (which uses the service
--- role key) keeps full write access regardless of these policies.
+-- Authenticated full access on editorial content (future: gate via Supabase
+-- Auth + per-role RLS). Service role bypasses RLS entirely, so the Next.js
+-- admin (which uses the service role key) keeps full write access regardless.
+--
+-- Deliberately excluded from this loop:
+--   * contact_messages — reads are admin-only, writes are already open to anon
+--     through contact_messages_public_insert
+--   * media_assets — reads and writes go through the admin upload API
+--   * chat_uploads — audit log that must never leak to client code
+-- Any upgraded deployment that previously had the blanket policy on those
+-- tables gets it dropped explicitly below.
 do $$
 declare
   tbl text;
@@ -678,10 +682,9 @@ begin
     'site_settings','navigation_links','contact_settings','site_content_documents','social_links','shop_links',
     'home_page','products_page','careers_page','careers_gallery_images','careers_why_join_cards',
     'about_page','about_story_cards','events_awards_page','news_page','events_page','awards_page',
-    'departments','jobs','news_items','events','awards','promotions','project_features','brands','brand_tags',
+    'departments','jobs','news_items','events','awards','promotions','promotion_tags','project_features','brands','brand_tags',
     'product_categories','category_sections','section_paragraphs',
-    'product_items','product_item_highlights','product_item_gallery','product_item_sizes','product_item_tags','product_item_search_keywords',
-    'media_assets','chat_uploads'
+    'product_items','product_item_highlights','product_item_gallery','product_item_sizes','product_item_tags','product_item_search_keywords'
   ]
   loop
     execute format('drop policy if exists "%1$s_authenticated_manage" on public.%1$s;', tbl);
@@ -689,16 +692,22 @@ begin
   end loop;
 end $$;
 
+-- Drop any previously-installed blanket manage policy from the sensitive
+-- tables. These tables are service-role-only by design.
+drop policy if exists "contact_messages_authenticated_manage" on public.contact_messages;
+drop policy if exists "media_assets_authenticated_manage" on public.media_assets;
+drop policy if exists "chat_uploads_authenticated_manage" on public.chat_uploads;
+
 -- ---------------------------------------------------------------------------
--- Architecture additions (see docs/migration.md)
--- The promotions / promotion_tags / chat_uploads tables and their RLS are
--- declared earlier (next to media_assets) so the manage-policies loop above
--- can attach `*_authenticated_manage` policies to them in a single pass.
--- This block adds only what depends on those tables already existing:
--- the updated_at trigger, the public-read policies, and the storage_mode
--- CHECK constraint.
+-- Architecture additions (see docs/architecture.md and docs/migration.md).
+-- The promotions / promotion_tags / chat_uploads tables and their RLS flags
+-- are declared earlier (next to media_assets) so the authenticated-manage
+-- loop above sees them in the table catalog. This section attaches the
+-- triggers, public-read policies, FK indexes, and CHECK constraints that
+-- logically belong to them.
 -- ---------------------------------------------------------------------------
 
+-- updated_at trigger for promotions.
 do $$
 begin
   if not exists (select 1 from pg_trigger where tgname = 'trg_promotions_updated_at') then
@@ -706,17 +715,24 @@ begin
   end if;
 end $$;
 
+-- Published-only public reads mirror the other content tables.
 drop policy if exists "promotions_public_read" on public.promotions;
 create policy "promotions_public_read" on public.promotions for select to anon, authenticated using (published = true);
 
+-- Promotion tags ride along with their parent's published state so an unpublished
+-- promotion cannot leak metadata via its tag rows.
 drop policy if exists "promotion_tags_public_read" on public.promotion_tags;
-create policy "promotion_tags_public_read" on public.promotion_tags for select to anon, authenticated using (true);
+create policy "promotion_tags_public_read"
+on public.promotion_tags for select to anon, authenticated using (
+  exists (
+    select 1 from public.promotions p
+    where p.id = promotion_tags.promotion_id and p.published = true
+  )
+);
 
--- chat_uploads is admin-only by design: visitors do not need to read the log
--- of their own uploads, and exposing it would leak other visitors' URLs.
-drop policy if exists "chat_uploads_admin_read" on public.chat_uploads;
-create policy "chat_uploads_admin_read"
-on public.chat_uploads for select to authenticated using (auth.role() = 'authenticated');
+-- chat_uploads is service-role-only. No anon or authenticated read policy is
+-- declared so the default-deny behavior of RLS applies — the Next.js admin
+-- server still reads the log via the service role key (which bypasses RLS).
 
 -- Constrain storage_mode to known values so a typo can never put the column
 -- into a state the application cannot route. Done as a separate ALTER (not in
@@ -732,3 +748,64 @@ begin
       check (storage_mode in ('s3', 'supabase', 'local'));
   end if;
 end $$;
+
+-- Guard against nonsense date ranges on events.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'events_date_range_check'
+  ) then
+    alter table public.events
+      add constraint events_date_range_check
+      check (end_at >= start_at);
+  end if;
+end $$;
+
+-- Soft email validation on contact_messages. The browser already validates
+-- via HTML5 input type, but database-level enforcement catches rogue API
+-- callers and prevents the inbox from filling with obviously-broken rows.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'contact_messages_email_check'
+  ) then
+    alter table public.contact_messages
+      add constraint contact_messages_email_check
+      check (position('@' in email) > 1 and length(email) between 3 and 320);
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- Foreign-key and hot-query indexes.
+-- Postgres does NOT auto-index foreign key columns; without these indexes a
+-- delete on the parent row falls back to a sequential scan of the child
+-- table, and the common "list published items ordered by sort_order" query
+-- pattern also scans end-to-end. These indexes are cheap (small tables) and
+-- dramatically improve the admin dashboard's tail latency.
+-- ---------------------------------------------------------------------------
+
+create index if not exists idx_navigation_links_parent on public.navigation_links (parent_id);
+create index if not exists idx_jobs_department on public.jobs (department_id);
+create index if not exists idx_brand_tags_brand on public.brand_tags (brand_id);
+create index if not exists idx_product_items_category on public.product_items (category_id);
+create index if not exists idx_category_sections_category on public.category_sections (category_id);
+create index if not exists idx_section_paragraphs_section on public.section_paragraphs (section_id);
+create index if not exists idx_product_item_highlights_item on public.product_item_highlights (item_id);
+create index if not exists idx_product_item_gallery_item on public.product_item_gallery (item_id);
+create index if not exists idx_product_item_sizes_item on public.product_item_sizes (item_id);
+create index if not exists idx_product_item_tags_item on public.product_item_tags (item_id);
+create index if not exists idx_product_item_search_keywords_item on public.product_item_search_keywords (item_id);
+create index if not exists idx_promotion_tags_promotion on public.promotion_tags (promotion_id);
+
+-- "Published + ordered" list queries hit these indexes directly.
+create index if not exists idx_events_published_sort on public.events (published, sort_order);
+create index if not exists idx_events_start_at on public.events (start_at);
+create index if not exists idx_promotions_published_sort on public.promotions (published, sort_order);
+create index if not exists idx_news_items_published_sort on public.news_items (published, sort_order);
+create index if not exists idx_awards_published_sort on public.awards (published, sort_order);
+create index if not exists idx_jobs_published_sort on public.jobs (published, sort_order);
+
+-- Fast "recent submissions" / "recent uploads" queries for the admin inbox.
+create index if not exists idx_contact_messages_created_at on public.contact_messages (created_at desc);
+create index if not exists idx_chat_uploads_created_at on public.chat_uploads (created_at desc);
+create index if not exists idx_media_assets_created_at on public.media_assets (created_at desc);

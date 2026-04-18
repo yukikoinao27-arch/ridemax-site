@@ -80,6 +80,63 @@ const secondaryButtonClass =
 const tertiaryButtonClass =
   "rounded-full border border-black/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#220707] transition hover:-translate-y-0.5 hover:bg-white";
 
+// Compact circular icon button used for reorder / remove controls on list items
+// and page blocks. The visual language matches the sidebar icons: 36×36 circle,
+// border, subtle hover lift. Disabled buttons lose the hover lift and fade out
+// so "can't move up any further" is obvious without surfacing new error UX.
+const iconButtonClass =
+  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-[#220707] transition hover:-translate-y-0.5 hover:bg-[#f7f2f1] disabled:pointer-events-none disabled:opacity-40";
+const destructiveIconButtonClass =
+  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#8d120e]/30 bg-white text-[#8d120e] transition hover:-translate-y-0.5 hover:bg-[#fff4f3] disabled:pointer-events-none disabled:opacity-40";
+const dragHandleClass =
+  "inline-flex h-9 w-9 cursor-grab items-center justify-center rounded-full border border-black/10 bg-white text-[#6a433d] transition hover:-translate-y-0.5 hover:bg-[#f7f2f1] active:cursor-grabbing";
+
+// Lightweight inline SVG icons. Kept local to avoid pulling in an icon library
+// for three glyphs — the admin surface is tightly controlled and already ships
+// its own hand-authored SVG assets elsewhere.
+function ArrowUpIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M12 19V5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ArrowDownIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M12 5v14" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M3 6h18" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 11v6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 11v6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function DragHandleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+      <circle cx="9" cy="6" r="1.5" />
+      <circle cx="15" cy="6" r="1.5" />
+      <circle cx="9" cy="12" r="1.5" />
+      <circle cx="15" cy="12" r="1.5" />
+      <circle cx="9" cy="18" r="1.5" />
+      <circle cx="15" cy="18" r="1.5" />
+    </svg>
+  );
+}
+
 function padDatePart(value: number) {
   return String(value).padStart(2, "0");
 }
@@ -517,23 +574,42 @@ function CollectionSection({
             }`}
           >
             <div className="mb-4 flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#6a433d]">
-                {itemLabel} {index + 1}
-              </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                {/* Drag handle reinforces the drag affordance — the whole row
+                    is draggable, but a visible grip icon makes the behavior
+                    discoverable and mirrors the Wix block editor. */}
+                <span
+                  className={dragHandleClass}
+                  role="img"
+                  aria-label={`Drag to reorder ${itemLabel.toLowerCase()} ${index + 1}`}
+                  title="Drag to reorder"
+                >
+                  <DragHandleIcon />
+                </span>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#6a433d]">
+                  {itemLabel} {index + 1}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
+                  disabled={index === 0}
                   onClick={() => index > 0 && onChange(moveItem(items, index, index - 1))}
-                  className={tertiaryButtonClass}
+                  className={iconButtonClass}
+                  aria-label={`Move ${itemLabel.toLowerCase()} ${index + 1} up`}
+                  title="Move up"
                 >
-                  Up
+                  <ArrowUpIcon />
                 </button>
                 <button
                   type="button"
+                  disabled={index >= items.length - 1}
                   onClick={() => index < items.length - 1 && onChange(moveItem(items, index, index + 1))}
-                  className={tertiaryButtonClass}
+                  className={iconButtonClass}
+                  aria-label={`Move ${itemLabel.toLowerCase()} ${index + 1} down`}
+                  title="Move down"
                 >
-                  Down
+                  <ArrowDownIcon />
                 </button>
                 <button
                   type="button"
@@ -541,9 +617,11 @@ function CollectionSection({
                     onChange(withSequentialOrder(items.filter((_, itemIndex) => itemIndex !== index)));
                     fieldCallbacks.onNotice("success", `${itemLabel} removed.`);
                   }}
-                  className="rounded-full border border-[#8d120e]/30 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e] transition hover:-translate-y-0.5 hover:bg-[#fff4f3]"
+                  className={destructiveIconButtonClass}
+                  aria-label={`Remove ${itemLabel.toLowerCase()} ${index + 1}`}
+                  title="Remove"
                 >
-                  Remove
+                  <TrashIcon />
                 </button>
               </div>
             </div>
@@ -587,6 +665,20 @@ function PageBuilderSection({
   );
   const [highlightedBlockId, setHighlightedBlockId] = useState<string | null>(null);
   const blockRefs = useRef<Record<string, HTMLElement | null>>({});
+  // Drag state scoped to a single page (slug) so dragging a block in one page
+  // never lets you drop it into another — blocks always belong to exactly
+  // one page, and the reorder logic below relies on that invariant.
+  const [blockDrag, setBlockDrag] = useState<{ pageId: string; index: number } | null>(null);
+
+  function reorderBlocks(pageId: string, from: number, to: number) {
+    onChange(
+      pages.map((candidate) =>
+        candidate.id === pageId
+          ? { ...candidate, blocks: withSequentialOrder(moveItem(candidate.blocks, from, to)) }
+          : candidate,
+      ),
+    );
+  }
 
   const sortedPages = [...pages].sort(
     (left, right) =>
@@ -741,63 +833,86 @@ function PageBuilderSection({
                   };
                 });
 
+                const isDraggingThis =
+                  blockDrag?.pageId === page.id && blockDrag.index === index;
+
                 return (
                   <article
                     key={block.id}
                     ref={(node) => {
                       blockRefs.current[block.id] = node;
                     }}
+                    draggable
+                    onDragStart={() => setBlockDrag({ pageId: page.id, index })}
+                    onDragOver={(event) => {
+                      // Only accept drops originating from the same page so
+                      // blocks do not accidentally hop between pages.
+                      if (blockDrag && blockDrag.pageId === page.id) {
+                        event.preventDefault();
+                      }
+                    }}
+                    onDrop={() => {
+                      if (!blockDrag || blockDrag.pageId !== page.id || blockDrag.index === index) {
+                        return;
+                      }
+                      reorderBlocks(page.id, blockDrag.index, index);
+                      setBlockDrag(null);
+                    }}
+                    onDragEnd={() => setBlockDrag(null)}
                     className={`rounded-[1.5rem] border bg-white p-5 transition ${
                       highlightedBlockId === block.id
                         ? "border-[#8d120e]/35 ring-2 ring-[#8d120e]/15"
-                        : "border-black/10"
+                        : isDraggingThis
+                          ? "border-[#8d120e]/40 opacity-60"
+                          : "border-black/10"
                     }`}
                   >
                     <div className="mb-4 flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8d120e]">
-                          Block {index + 1}
-                        </p>
-                        <h3 className="mt-2 text-2xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
-                          {getPageBlockLabel(block)}
-                        </h3>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={dragHandleClass}
+                          role="img"
+                          aria-label={`Drag to reorder block ${index + 1}`}
+                          title="Drag to reorder"
+                        >
+                          <DragHandleIcon />
+                        </span>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8d120e]">
+                            Block {index + 1}
+                          </p>
+                          <h3 className="mt-2 text-2xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
+                            {getPageBlockLabel(block)}
+                          </h3>
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           type="button"
-                          onClick={() =>
-                            index > 0 &&
-                            onChange(
-                              pages.map((candidate) =>
-                                candidate.id === page.id
-                                  ? { ...candidate, blocks: moveItem(candidate.blocks, index, index - 1) }
-                                  : candidate,
-                              ),
-                            )
-                          }
-                          className={tertiaryButtonClass}
+                          disabled={index === 0}
+                          onClick={() => index > 0 && reorderBlocks(page.id, index, index - 1)}
+                          className={iconButtonClass}
+                          aria-label={`Move block ${index + 1} up`}
+                          title="Move up"
                         >
-                          Up
+                          <ArrowUpIcon />
                         </button>
                         <button
                           type="button"
+                          disabled={index >= page.blocks.length - 1}
                           onClick={() =>
                             index < page.blocks.length - 1 &&
-                            onChange(
-                              pages.map((candidate) =>
-                                candidate.id === page.id
-                                  ? { ...candidate, blocks: moveItem(candidate.blocks, index, index + 1) }
-                                  : candidate,
-                              ),
-                            )
+                            reorderBlocks(page.id, index, index + 1)
                           }
-                          className={tertiaryButtonClass}
+                          className={iconButtonClass}
+                          aria-label={`Move block ${index + 1} down`}
+                          title="Move down"
                         >
-                          Down
+                          <ArrowDownIcon />
                         </button>
                         <button
                           type="button"
-                          onClick={() =>
+                          onClick={() => {
                             onChange(
                               pages.map((candidate) =>
                                 candidate.id === page.id
@@ -809,11 +924,14 @@ function PageBuilderSection({
                                     }
                                   : candidate,
                               ),
-                            )
-                          }
-                          className="rounded-full border border-[#8d120e]/30 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e] transition hover:-translate-y-0.5 hover:bg-[#fff4f3]"
+                            );
+                            fieldCallbacks.onNotice("success", "Block removed.");
+                          }}
+                          className={destructiveIconButtonClass}
+                          aria-label={`Remove block ${index + 1}`}
+                          title="Remove"
                         >
-                          Remove
+                          <TrashIcon />
                         </button>
                       </div>
                     </div>

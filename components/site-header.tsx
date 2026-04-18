@@ -17,11 +17,11 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ navigation, logoSrc, logoLightSrc, searchPlaceholder }: SiteHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
-  // The admin can still override the logo sources, but the RidemaxLogo
-  // component will prefer the high-resolution JPG lockup (and fall back to
-  // these configured SVGs only when the JPG is not deployed).
-  void logoSrc;
-  void logoLightSrc;
+  // Pick the admin-configured asset that matches the current header surface:
+  //   • scrolled (light background) → logoSrc
+  //   • top-of-page (dark background) → logoLightSrc, falling back to logoSrc
+  // If both are empty, RidemaxLogo falls back to the bundled SVG lockups.
+  const activeLogoSrc = scrolled ? logoSrc : logoLightSrc || logoSrc;
 
   useEffect(() => {
     const onScroll = () => {
@@ -45,6 +45,7 @@ export function SiteHeader({ navigation, logoSrc, logoLightSrc, searchPlaceholde
       <div className="mx-auto flex max-w-[118rem] items-center gap-4 px-5 py-3 md:px-8 lg:px-10">
         <Link href="/" className="shrink-0">
           <RidemaxLogo
+            src={activeLogoSrc}
             surface={scrolled ? "light" : "dark"}
             className="ridemax-logo h-[56px] w-auto"
             priority
