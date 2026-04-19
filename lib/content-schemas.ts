@@ -116,7 +116,6 @@ const productItemSchema = z.object({
   searchKeywords: z.array(z.string()),
   published: z.boolean(),
   order: z.number().int(),
-  externalId: z.string().optional(),
 });
 
 const externalCatalogCategorySchema = z.object({
@@ -125,11 +124,14 @@ const externalCatalogCategorySchema = z.object({
   description: z.string(),
 });
 
+// `readOnly` is a literal `true` — see CatalogSourceSettings in ridemax-types.
+// The schema rejects `false` at parse time so a hand-edited JSON file can't
+// silently opt out of the catalog invariant.
 const catalogSourceSchema = z.object({
   mode: z.enum(["local-json", "remote-api"]),
   provider: z.string(),
   endpoint: z.string(),
-  readOnly: z.boolean(),
+  readOnly: z.literal(true),
   syncStrategy: z.enum(["api-based-ingestion", "scheduled-sync", "queue-worker"]),
   lastSyncedAt: z.string().optional(),
   fallbackPath: z.string().optional(),

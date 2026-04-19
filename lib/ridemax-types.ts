@@ -114,8 +114,20 @@ export type ProductCategory = {
 
 /**
  * Read-only product data from the external catalog source.
+ *
+ * This shape is the public contract the site renders against, regardless of
+ * whether the current catalog mode is `local-json` or `remote-api`. The admin
+ * surface MUST NOT write to any field here — product data is owned by the
+ * warehouse/ERP system. Any mutation path introduced here is a design bug and
+ * breaks the composable-commerce invariant documented in `docs/architecture.md`.
  */
 export type ProductItem = {
+  /**
+   * Stable identifier owned by the warehouse/catalog system. The value must
+   * persist across syncs and match the warehouse's primary key (or a stable
+   * projection of it). Do not regenerate on import — downstream references
+   * (analytics, cart lines, URLs that outlive a sync window) rely on stability.
+   */
   id: string;
   slug: string;
   categorySlug: string;
@@ -132,7 +144,6 @@ export type ProductItem = {
   searchKeywords: string[];
   published: boolean;
   order: number;
-  externalId?: string;
 };
 
 export type ExternalCatalogCategory = {
@@ -148,21 +159,33 @@ export type CatalogSyncStrategy =
   | "scheduled-sync"
   | "queue-worker";
 
+/**
+ * Settings describing how the site is talking to the upstream catalog today.
+ * `readOnly` is a literal `true` because the site is never authoritative for
+ * product data; if the catalog ever needs writes they happen upstream and
+ * flow back through sync. Keeping the flag at the type level prevents a
+ * "just this once" mutation path from slipping into admin code.
+ */
 export type CatalogSourceSettings = {
   mode: CatalogSourceMode;
   provider: string;
   endpoint: string;
-  readOnly: boolean;
+  readOnly: true;
   syncStrategy: CatalogSyncStrategy;
   lastSyncedAt?: string;
   fallbackPath?: string;
-  notes: string[];
+  notes: readonly string[];
 };
 
+/**
+ * The snapshot the public site renders against. Arrays are `readonly` so
+ * callers use non-mutating operations (filter/find/map/slice) — this is the
+ * seam that keeps the app honest about the CMS-vs-catalog split.
+ */
 export type ExternalProductCatalog = {
   source: CatalogSourceSettings;
-  categories: ExternalCatalogCategory[];
-  items: ProductItem[];
+  categories: readonly ExternalCatalogCategory[];
+  items: readonly ProductItem[];
 };
 
 export type NewsItem = {

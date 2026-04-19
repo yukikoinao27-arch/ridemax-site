@@ -9,7 +9,9 @@ import {
   listPublishedBrands,
 } from "@/lib/server/ridemax-content-repository";
 
-export const dynamic = "force-dynamic";
+// Cache policy inherited from app/products/layout.tsx (ISR 1h).
+// Do not add `force-dynamic` here: this page is read-only catalog display
+// content that belongs on the CDN, not in the server hot path.
 
 type ProductCategoryPageProps = {
   params: Promise<{ slug: string }>;

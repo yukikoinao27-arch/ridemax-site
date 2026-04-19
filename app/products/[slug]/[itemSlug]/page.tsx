@@ -8,7 +8,10 @@ import {
   findProductItem,
 } from "@/lib/server/ridemax-content-repository";
 
-export const dynamic = "force-dynamic";
+// Cache policy inherited from app/products/layout.tsx (ISR 1h). Product detail
+// pages are read-only views over warehouse-owned catalog data; the admin has
+// no write path into this surface, so there is nothing that needs a per-request
+// render.
 
 type ProductDetailPageProps = {
   params: Promise<{ slug: string; itemSlug: string }>;

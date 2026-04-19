@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ProductGallery } from "@/components/product-gallery";
 import { findAdjacentProductItems, findProductItemBySlug } from "@/lib/server/ridemax-content-repository";
 
-export const dynamic = "force-dynamic";
+// Cache policy inherited from app/product-page/layout.tsx (ISR 1h).
 
 type ProductLandingPageProps = {
   params: Promise<{ itemSlug: string }>;

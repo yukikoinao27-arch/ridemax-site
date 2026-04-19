@@ -70,8 +70,7 @@
       ],
       "published": true,
       "order": 1,
-      "categorySlug": "tires",
-      "externalId": "tire-energy-xm2-plus"
+      "categorySlug": "tires"
     },
     {
       "id": "tire-latitude-sport-3",
@@ -109,8 +108,7 @@
       ],
       "published": true,
       "order": 2,
-      "categorySlug": "tires",
-      "externalId": "tire-latitude-sport-3"
+      "categorySlug": "tires"
     },
     {
       "id": "tire-agilis-3",
@@ -146,8 +144,7 @@
       ],
       "published": true,
       "order": 3,
-      "categorySlug": "tires",
-      "externalId": "tire-agilis-3"
+      "categorySlug": "tires"
     },
     {
       "id": "tire-g-force-phenom",
@@ -184,8 +181,7 @@
       ],
       "published": true,
       "order": 4,
-      "categorySlug": "tires",
-      "externalId": "tire-g-force-phenom"
+      "categorySlug": "tires"
     },
     {
       "id": "tire-ko3",
@@ -224,8 +220,7 @@
       ],
       "published": true,
       "order": 5,
-      "categorySlug": "tires",
-      "externalId": "tire-ko3"
+      "categorySlug": "tires"
     },
     {
       "id": "tire-km3",
@@ -263,8 +258,7 @@
       ],
       "published": true,
       "order": 6,
-      "categorySlug": "tires",
-      "externalId": "tire-km3"
+      "categorySlug": "tires"
     },
     {
       "id": "rim-1",
@@ -302,8 +296,7 @@
       ],
       "published": true,
       "order": 1,
-      "categorySlug": "rims",
-      "externalId": "rim-1"
+      "categorySlug": "rims"
     },
     {
       "id": "rim-2",
@@ -340,8 +333,7 @@
       ],
       "published": true,
       "order": 2,
-      "categorySlug": "rims",
-      "externalId": "rim-2"
+      "categorySlug": "rims"
     },
     {
       "id": "rim-3",
@@ -378,8 +370,7 @@
       ],
       "published": true,
       "order": 3,
-      "categorySlug": "rims",
-      "externalId": "rim-3"
+      "categorySlug": "rims"
     },
     {
       "id": "acc-1",
@@ -413,8 +404,7 @@
       ],
       "published": true,
       "order": 1,
-      "categorySlug": "accessories",
-      "externalId": "acc-1"
+      "categorySlug": "accessories"
     },
     {
       "id": "acc-2",
@@ -450,8 +440,7 @@
       ],
       "published": true,
       "order": 2,
-      "categorySlug": "accessories",
-      "externalId": "acc-2"
+      "categorySlug": "accessories"
     },
     {
       "id": "acc-3",
@@ -486,8 +475,7 @@
       ],
       "published": true,
       "order": 3,
-      "categorySlug": "accessories",
-      "externalId": "acc-3"
+      "categorySlug": "accessories"
     },
     {
       "id": "acc-4",
@@ -523,8 +511,7 @@
       ],
       "published": true,
       "order": 4,
-      "categorySlug": "accessories",
-      "externalId": "acc-4"
+      "categorySlug": "accessories"
     }
   ]
 }

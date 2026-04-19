@@ -1414,7 +1414,10 @@ export function AdminDashboard({
                   },
                   { key: "provider", label: "Catalog Provider", type: "text" },
                   { key: "endpoint", label: "Catalog Endpoint", type: "text" },
-                  { key: "readOnly", label: "Read Only", type: "checkbox" },
+                  // Intentionally NOT exposing `readOnly` — it is a type-level
+                  // invariant (`CatalogSourceSettings.readOnly: true`). Admin
+                  // edits must never flip the catalog to write mode; if we
+                  // ever want that, it belongs in a separate role-gated flow.
                   {
                     key: "syncStrategy",
                     label: "Sync Strategy",
@@ -1452,7 +1455,8 @@ export function AdminDashboard({
                       mode: String(value.mode ?? "local-json") as RidemaxSiteContent["catalogSource"]["mode"],
                       provider: String(value.provider ?? ""),
                       endpoint: String(value.endpoint ?? ""),
-                      readOnly: Boolean(value.readOnly ?? true),
+                      // Type-level invariant, not an admin-configurable flag.
+                      readOnly: true,
                       syncStrategy: String(value.syncStrategy ?? "api-based-ingestion") as RidemaxSiteContent["catalogSource"]["syncStrategy"],
                       lastSyncedAt: current.catalogSource.lastSyncedAt,
                       fallbackPath: String(value.fallbackPath ?? ""),
