@@ -262,11 +262,19 @@ function renderCategoryCards(categories: ProductCategory[]) {
               {category.name}
             </h3>
             <p className="mt-4 text-sm leading-7 text-[#4d3b37]">{category.description}</p>
+            {/*
+              Brand red gives the CTA the same optical weight as the header
+              search chip and the primary "Read More" buttons on /, so the
+              label reads cleanly on the light category card background. The
+              previous near-black fill pulled too much weight from the card
+              image and made the label feel muddy on low-contrast monitors.
+            */}
             <Link
               href={`/products/${category.slug}`}
-              className="mt-5 inline-flex items-center bg-[#1d1d1d] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black"
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#E31E24] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(227,30,36,0.25)] transition hover:-translate-y-0.5 hover:bg-[#b8181c]"
             >
               View More
+              <span aria-hidden="true">→</span>
             </Link>
           </div>
         </article>
@@ -559,7 +567,10 @@ function renderBlock(
           />
           {block.aboutCta ? (
             <p className="mt-12 text-center text-sm text-[#4d3b37]">
-              <Link href={block.aboutCta.href} className="text-blue-700 underline">
+              <Link
+                href={block.aboutCta.href}
+                className="font-semibold text-[#0b5ed7] underline decoration-2 underline-offset-4 transition-colors hover:text-[#0a3d89]"
+              >
                 {block.aboutCta.label}
               </Link>
             </p>
@@ -612,6 +623,16 @@ function renderBlock(
               <p className="mt-4 max-w-xl text-sm leading-7 text-[#4d3b37]">
                 {block.summary ?? content.contact.intro}
               </p>
+              {/*
+                The contact block previously packed Email + Social Media into
+                one 2-col grid, which caused the social icons to sit on top of
+                the email on narrow widths and clip the trailing ".com". The
+                new layout keeps Address+Phone as a 2-col pair (short values
+                so they never wrap badly), then promotes Email to its own
+                full-width row with a mailto link and uses a hairline divider
+                before the social row so the icons can never land on top of
+                the email text.
+              */}
               <div className="mt-8 grid gap-6 sm:grid-cols-2">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#220707]">Address</p>
@@ -621,16 +642,21 @@ function renderBlock(
                   <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#220707]">Phone</p>
                   <p className="mt-2 text-[#4d3b37]">{content.contact.phone}</p>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#220707]">Email</p>
-                  <p className="mt-2 text-[#4d3b37]">{content.contact.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#220707]">Social Media</p>
-                  <div className="mt-3">
-                    <SocialLinks links={content.contact.socials} dark />
-                  </div>
-                </div>
+              </div>
+              <div className="mt-6">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#220707]">E-Mail</p>
+                <p className="mt-2 break-all text-[#4d3b37]">
+                  <a
+                    href={`mailto:${content.contact.email}`}
+                    className="underline decoration-[#8d120e]/40 underline-offset-4 transition hover:text-[#8d120e] hover:decoration-[#8d120e]"
+                  >
+                    {content.contact.email}
+                  </a>
+                </p>
+              </div>
+              <div className="mt-6 border-t border-black/10 pt-5">
+                <p className="sr-only">Social Media</p>
+                <SocialLinks links={content.contact.socials} dark />
               </div>
             </div>
             {block.showForm ? <ContactForm /> : null}

@@ -402,11 +402,6 @@ const pageDocumentSchema = z.object({
   blocks: z.array(pageBlockSchema),
 });
 
-const optionSchema = z.object({
-  title: z.string(),
-  summary: z.string(),
-});
-
 export const siteContentSchema = z.object({
   navigation: z.array(navLinkSchema),
   site: siteSettingsSchema,
@@ -422,9 +417,6 @@ export const siteContentSchema = z.object({
   events: z.array(eventItemSchema),
   awards: z.array(awardItemSchema),
   projectFeatures: z.array(projectFeatureSchema),
-  adminOptions: z.array(optionSchema),
-  databaseOptions: z.array(optionSchema),
-  securityOptions: z.array(optionSchema),
 });
 
 export const contactMessageInputSchema = z.object({

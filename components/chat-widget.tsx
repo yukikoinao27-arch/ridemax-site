@@ -1,22 +1,25 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RidemaxLogo } from "@/components/ridemax-logo";
 
 /**
  * Persistent chat shell that mirrors the Wix-like launcher UX.
  *
- * Responsibilities the component hides behind a very small public surface:
- *  - Welcome <-> chat screens (two-step UX the marketing team specified).
- *  - Expand / collapse, so the iframe-style window can grow into a full
- *    side-panel without a second component.
+ * Design responsibilities hidden behind a small public surface:
+ *  - Welcome ↔ chat screens (two-step UX matching the Wix reference).
+ *  - Minimize / expand / close controls surfaced as discrete buttons so
+ *    visitors always have an obvious way out of each state.
  *  - Image upload to `/api/chat-upload`, which proxies to Supabase Storage.
- *    The component does not know or care which backend is wired up; it only
- *    sees a file and a URL, per AGENTS.md guidance on deep modules.
+ *    This component doesn't care which backend is wired up; it only sees a
+ *    file and a URL. Keeps the transport seam shallow-enough for later swap.
+ *  - Inline emoji quick-picker (no heavyweight library) so the send form has
+ *    feature parity with the Wix reference without pulling in a bundle.
  *
- * Provider-agnostic on purpose: a real chat transport (WebSocket, webhook,
- * third-party widget) can attach later without changing this surface.
+ * Brand tokens are centralized at the top of the render tree
+ * (`#E31E24`, `#111111`, `#FFFFFF`) so a future theme override can happen in
+ * one place rather than every button.
  */
 type ChatWidgetProps = {
   /** Admin-configured logo for light surfaces (the white chip behind the mark). */
@@ -26,6 +29,28 @@ type ChatWidgetProps = {
   /** Alt text for screen readers — typically the site name. */
   alt?: string;
 };
+
+// Small, curated quick-picker emoji set. Keeps the picker under a handful of
+// rows without shipping a 200KB emoji catalogue — the Wix widget only shows
+// a compact strip.
+const QUICK_EMOJIS = [
+  "🤙",
+  "👍",
+  "🙏",
+  "🔥",
+  "😊",
+  "😂",
+  "😍",
+  "😎",
+  "🏍️",
+  "🏁",
+  "🛞",
+  "🛠️",
+  "❤️",
+  "✨",
+  "🎉",
+  "🤝",
+] as const;
 
 export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippines" }: ChatWidgetProps = {}) {
   // The chat header renders the logo inside an opaque white chip, so the
@@ -38,7 +63,15 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Close the emoji popover whenever the visitor leaves the chat screen or
+  // closes the widget entirely — prevents a stale picker peeking in later.
+  useEffect(() => {
+    if (screen !== "chat" || !open) setEmojiOpen(false);
+  }, [screen, open]);
 
   /**
    * Forward the selected image to the chat upload proxy. Kept inline because
@@ -78,11 +111,19 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
     }
   }
 
+  function insertEmoji(emoji: string) {
+    setMessage((current) => `${current}${emoji}`);
+    setEmojiOpen(false);
+    // Re-focus the input so the caret lands next to the inserted glyph and
+    // the user can keep typing. Schedule after state flush.
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
   return (
     <div className="pointer-events-none fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-3">
       {open ? (
         <section
-          className={`pointer-events-auto overflow-hidden rounded-[1.25rem] border border-[#0e2f67] bg-[#0a3d89] text-white shadow-[0_22px_60px_rgba(20,16,18,0.3)] transition-[width,height] duration-200 ${
+          className={`pointer-events-auto overflow-hidden rounded-[1.25rem] bg-[#E31E24] text-white shadow-[0_22px_60px_rgba(20,16,18,0.3)] transition-[width,height] duration-200 ${
             expanded
               ? "h-[min(42rem,calc(100vh-6rem))] w-[min(34rem,calc(100vw-1.5rem))]"
               : "h-auto w-[min(22rem,calc(100vw-1.5rem))]"
@@ -93,10 +134,9 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
               <div>
                 {/*
                  * Logo sits on an opaque white chip so the admin-configured
-                 * mark keeps its native colors on the navy chat surface — no
+                 * mark keeps its native colors on the red chat surface — no
                  * CSS inversion, no filters, per brand guidelines. RidemaxLogo
-                 * itself handles the SVG fallback when the upload is missing
-                 * or 404s.
+                 * itself handles the SVG fallback when the upload is missing.
                  */}
                 <RidemaxLogo
                   src={chatLogoSrc}
@@ -106,13 +146,14 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                   height={72}
                   className="ridemax-logo h-[56px] w-auto rounded-md bg-white/95 p-1.5 shadow-[0_6px_14px_rgba(0,0,0,0.28)]"
                 />
-                {/* Three-line heading (matches the reference composition). */}
-                <p className="mt-3 pr-2 text-[2rem] font-semibold leading-[1.02]">
-                  Hi rider!
+                {/* Two-line heading (matches the Wix reference composition). */}
+                <p className="mt-3 pr-2 text-[1.85rem] font-semibold leading-[1.05]">
+                  Hi rider!{" "}
+                  <span aria-hidden="true" className="inline-block align-baseline">
+                    🤙
+                  </span>
                   <br />
-                  Anything we
-                  <br />
-                  can help you?
+                  Anything we can help you?
                 </p>
               </div>
               <div className="flex items-center gap-1">
@@ -131,14 +172,22 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                     <path d="M20 20l-6-6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
+                {/*
+                 * Minimize chevron — matches the Wix widget. Collapses the
+                 * whole surface back to the launcher button so visitors have
+                 * an obvious "hide" affordance separate from closing entirely.
+                 */}
                 <button
                   type="button"
-                  onClick={() => setOpen(false)}
+                  onClick={() => {
+                    setOpen(false);
+                    setExpanded(false);
+                  }}
                   className="rounded-full p-1 text-white/90 transition hover:bg-white/14 hover:text-white"
-                  aria-label="Close chat card"
+                  aria-label="Minimize chat"
                 >
-                  <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <path d="M5 5l10 10M15 5 5 15" />
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
               </div>
@@ -148,7 +197,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
               <div className="mt-4 rounded-2xl bg-white p-3 text-[#1f2430]">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#eff2f8]">
+                    <span className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#fdecec]">
                       <Image src="/rider-avatar.svg" alt="Rider support avatar" width={40} height={40} className="h-10 w-10 object-cover" />
                     </span>
                     <p className="text-sm font-semibold text-[#26315a]">Team Ridemax PH</p>
@@ -158,28 +207,47 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                     ONLINE
                   </span>
                 </div>
-                <p className="mt-3 text-sm">Hi there! Anything we can help you?</p>
+                <p className="mt-3 text-sm">Hi there! Anything and we can help you. 🤙</p>
                 <button
                   type="button"
                   onClick={() => {
                     setMessage("");
                     setScreen("chat");
                   }}
-                  className="mt-4 flex w-full cursor-pointer items-center justify-between rounded-lg bg-[#4269a5] px-3 py-2 text-left text-sm font-semibold text-white transition hover:bg-[#365a92]"
+                  className="mt-4 flex w-full cursor-pointer items-center justify-between rounded-lg bg-[#E31E24] px-3 py-2 text-left text-sm font-semibold text-white transition hover:bg-[#B6161B]"
                 >
                   <span>Start a new chat</span>
-                  <span className="rounded bg-[#5a80bb] px-2 py-1 text-xs uppercase tracking-[0.12em]">Send</span>
+                  <span className="rounded bg-white/15 px-2 py-1 text-xs uppercase tracking-[0.12em]">Send</span>
                 </button>
               </div>
             ) : (
               <div className="mt-4 flex min-h-0 flex-1 flex-col rounded-2xl bg-white p-3 text-[#1f2430]">
-                <div className="flex items-center justify-between gap-2 border-b border-black/10 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#eff2f8]">
-                      <Image src="/rider-avatar.svg" alt="Rider support avatar" width={40} height={40} className="h-10 w-10 object-cover" />
-                    </span>
-                    <p className="text-sm font-semibold text-[#26315a]">Hi there! Anything we can help you?</p>
-                  </div>
+                <div className="flex items-center gap-2 border-b border-black/10 pb-3">
+                  {/*
+                   * Back arrow — returns to the welcome card. Visitors need a
+                   * clear "escape" from the chat composer back to the launcher
+                   * state; the Wix reference ships this as a chevron-left.
+                   */}
+                  <button
+                    type="button"
+                    onClick={() => setScreen("welcome")}
+                    aria-label="Back to chat start"
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#26315a] transition hover:bg-black/5"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M15 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  <span className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#fdecec]">
+                    {/* Headset support avatar (matches the Wix reference). */}
+                    <svg viewBox="0 0 24 24" className="h-6 w-6 text-[#E31E24]" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M4 14v-2a8 8 0 0 1 16 0v2" strokeLinecap="round" />
+                      <path d="M4 14h3v5H5a1 1 0 0 1-1-1v-4Z" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M20 14h-3v5h2a1 1 0 0 0 1-1v-4Z" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M17 19v1a2 2 0 0 1-2 2h-2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                  <p className="text-sm font-semibold text-[#26315a]">Hi there! Anything and we can help you. 🤙</p>
                 </div>
                 <div className={`min-h-0 flex-1 ${expanded ? "overflow-auto" : ""}`}>
                   <div className={expanded ? "h-full" : "h-28"} />
@@ -189,70 +257,140 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                     {uploadError}
                   </p>
                 ) : null}
-                <form
-                  className="relative mt-3 rounded-lg border border-black/12 bg-[#f5f7fc] px-2 py-2"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    // Message delivery lives with the chat transport; keeping
-                    // it inside the form element lets the browser handle
-                    // Enter-to-send and prevents accidental navigation.
-                    setMessage("");
-                  }}
-                >
-                  <label className="sr-only" htmlFor="chat-message">
-                    Write your message
-                  </label>
-                  <input
-                    id="chat-message"
-                    value={message}
-                    onChange={(event) => setMessage(event.target.value)}
-                    placeholder="Write your message..."
-                    className="w-full bg-transparent pr-10 text-sm outline-none"
-                  />
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="hidden"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) {
-                        void handleFileUpload(file);
-                      }
-                      // Reset so selecting the same file twice still fires onChange.
-                      event.target.value = "";
+                {/*
+                 * Emoji popover: anchored above the composer. Positioned with
+                 * absolute on the form wrapper so it stays attached to the
+                 * input without re-flowing the message list.
+                 */}
+                <div className="relative mt-3">
+                  {emojiOpen ? (
+                    <div
+                      role="dialog"
+                      aria-label="Emoji picker"
+                      className="absolute bottom-full left-0 mb-2 grid grid-cols-8 gap-1 rounded-xl border border-black/10 bg-white p-2 shadow-[0_12px_30px_rgba(0,0,0,0.15)]"
+                    >
+                      {QUICK_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => insertEmoji(emoji)}
+                          className="flex h-8 w-8 items-center justify-center rounded-md text-base transition hover:bg-black/5"
+                          aria-label={`Insert ${emoji}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                  <form
+                    className="flex items-center gap-2 rounded-full border border-black/12 bg-[#f5f7fc] px-3 py-2"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      // Message delivery lives with the chat transport; keeping
+                      // it inside the form element lets the browser handle
+                      // Enter-to-send and prevents accidental navigation.
+                      setMessage("");
+                      setEmojiOpen(false);
                     }}
-                  />
-                  {/* Single upload arrow icon anchored inside the right side
-                      of the input. Hover promotes it to the brand blue and
-                      scales slightly (no layout shift because the wrapper has
-                      a fixed size). */}
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    aria-label="Upload image"
-                    className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[#3d4f76] transition duration-200 hover:scale-110 hover:bg-[#0056d9]/10 hover:text-[#0056d9] disabled:cursor-wait disabled:opacity-60"
                   >
-                    {uploading ? (
-                      <svg viewBox="0 0 24 24" className="h-4 w-4 animate-spin" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 12a9 9 0 1 1-3-6.7" strokeLinecap="round" strokeLinejoin="round" />
+                    {/*
+                     * File attach — document with an upward arrow underneath,
+                     * matching the Wix widget's icon vocabulary. The hidden
+                     * <input> is the actual file picker; the visible button is
+                     * the styled affordance.
+                     */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) {
+                          void handleFileUpload(file);
+                        }
+                        // Reset so selecting the same file twice still fires onChange.
+                        event.target.value = "";
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      aria-label="Upload file"
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#3d4f76] transition hover:bg-[#E31E24]/10 hover:text-[#E31E24] disabled:cursor-wait disabled:opacity-60"
+                    >
+                      {uploading ? (
+                        <svg viewBox="0 0 24 24" className="h-4 w-4 animate-spin" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 12a9 9 0 1 1-3-6.7" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                          {/* Document outline */}
+                          <path d="M14 3H7a2 2 0 0 0-2 2v11h11V8l-2-5Z" strokeLinejoin="round" />
+                          <path d="M14 3v5h4" strokeLinejoin="round" />
+                          {/* Upward arrow */}
+                          <path d="M10 15v-5" strokeLinecap="round" />
+                          <path d="M8 12l2-2 2 2" strokeLinecap="round" strokeLinejoin="round" />
+                          {/* Underline under the upload mark */}
+                          <path d="M5 20h11" strokeLinecap="round" />
+                        </svg>
+                      )}
+                    </button>
+                    {/* Emoji picker toggle */}
+                    <button
+                      type="button"
+                      onClick={() => setEmojiOpen((current) => !current)}
+                      aria-label="Insert emoji"
+                      aria-pressed={emojiOpen}
+                      className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition ${
+                        emojiOpen
+                          ? "bg-[#E31E24]/15 text-[#E31E24]"
+                          : "text-[#3d4f76] hover:bg-[#E31E24]/10 hover:text-[#E31E24]"
+                      }`}
+                    >
+                      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                        <circle cx="12" cy="12" r="9" />
+                        <circle cx="9" cy="10" r="0.8" fill="currentColor" />
+                        <circle cx="15" cy="10" r="0.8" fill="currentColor" />
+                        <path d="M8.5 14.5a4.5 4.5 0 0 0 7 0" strokeLinecap="round" />
                       </svg>
-                    ) : (
-                      // Upward-pointing arrow (upload symbol).
-                      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M12 19V5" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M6 11l6-6 6 6" strokeLinecap="round" strokeLinejoin="round" />
+                    </button>
+                    <label className="sr-only" htmlFor="chat-message">
+                      Write your message
+                    </label>
+                    <input
+                      id="chat-message"
+                      ref={inputRef}
+                      value={message}
+                      onChange={(event) => setMessage(event.target.value)}
+                      placeholder="Write your message..."
+                      className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                    />
+                    {/* Send button — paper-plane icon, brand red. */}
+                    <button
+                      type="submit"
+                      disabled={!message.trim()}
+                      aria-label="Send message"
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E31E24] text-white transition hover:bg-[#B6161B] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 11l18-8-8 18-2-8-8-2Z" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
-                    )}
-                  </button>
-                </form>
+                    </button>
+                  </form>
+                </div>
               </div>
             )}
           </div>
         </section>
       ) : null}
 
+      {/*
+       * Launcher button — red call-me-hand (🤙) glyph on red background, just
+       * like the Wix reference. Rendered as an emoji so it inherits the
+       * native system font and doesn't add to the SVG bundle.
+       */}
       <button
         type="button"
         onClick={() => {
@@ -260,12 +398,12 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
           setScreen("welcome");
           setExpanded(false);
         }}
-        className="pointer-events-auto inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#0056d9] text-white shadow-[0_16px_35px_rgba(0,58,153,0.4)] transition hover:scale-[1.03]"
+        className="pointer-events-auto inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#E31E24] text-white shadow-[0_16px_35px_rgba(227,30,36,0.4)] transition hover:scale-[1.03]"
         aria-label={open ? "Hide chat" : "Open chat"}
       >
-        <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.8">
-          <path d="M5 6.5h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-7l-4.5 3v-3H5a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z" />
-        </svg>
+        <span className="text-2xl leading-none" aria-hidden="true">
+          🤙
+        </span>
       </button>
     </div>
   );

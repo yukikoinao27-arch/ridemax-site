@@ -1311,40 +1311,13 @@ export function AdminDashboard({
 
           {view === "overview" ? (
             <>
-              <div className="grid gap-5 md:grid-cols-3">
-                {draft.adminOptions.map((option) => (
-                  <article key={option.title} className="rounded-[1.5rem] border border-black/10 bg-white p-5 shadow-[0_12px_26px_rgba(28,20,19,0.06)]">
-                    <h2 className="text-3xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
-                      {option.title}
-                    </h2>
-                    <p className="mt-4 text-sm leading-7 text-[#4d3b37]">{option.summary}</p>
-                  </article>
-                ))}
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-3">
-                {draft.databaseOptions.map((option) => (
-                  <article key={option.title} className="rounded-[1.5rem] border border-black/10 bg-white p-5 shadow-[0_12px_26px_rgba(28,20,19,0.06)]">
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e]">Database Option</p>
-                    <h2 className="mt-3 text-3xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
-                      {option.title}
-                    </h2>
-                    <p className="mt-4 text-sm leading-7 text-[#4d3b37]">{option.summary}</p>
-                  </article>
-                ))}
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-3">
-                {draft.securityOptions.map((option) => (
-                  <article key={option.title} className="rounded-[1.5rem] border border-black/10 bg-white p-5 shadow-[0_12px_26px_rgba(28,20,19,0.06)]">
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e]">Security</p>
-                    <h2 className="mt-3 text-3xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
-                      {option.title}
-                    </h2>
-                    <p className="mt-4 text-sm leading-7 text-[#4d3b37]">{option.summary}</p>
-                  </article>
-                ))}
-              </div>
+              {/*
+                Internal architecture callouts (Block-Based CMS, Database
+                Options, Security Options) have been deleted — they were
+                dev-facing design notes, not editable content, and marketing
+                users should not see them. The overview now leads straight
+                into the Inbox, which is what editors actually need here.
+              */}
 
               <SectionCard
                 sectionId="inbox"

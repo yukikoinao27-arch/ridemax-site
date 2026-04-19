@@ -466,16 +466,6 @@ export type SearchRecord = {
   keywords?: string[];
 };
 
-export type AdminOption = {
-  title: string;
-  summary: string;
-};
-
-export type SecurityOption = {
-  title: string;
-  summary: string;
-};
-
 export type MediaAssetStorageMode = "s3" | "supabase" | "local";
 
 export type MediaAsset = {
@@ -510,9 +500,6 @@ export type RidemaxSiteContent = {
   events: EventItem[];
   awards: AwardItem[];
   projectFeatures: ProjectFeature[];
-  adminOptions: AdminOption[];
-  databaseOptions: AdminOption[];
-  securityOptions: SecurityOption[];
 };
 
 export type ContactMessage = {

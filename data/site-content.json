@@ -31,16 +31,16 @@
       "href": "/events-awards",
       "children": [
         {
-          "label": "News",
-          "href": "/news"
-        },
-        {
           "label": "Events",
           "href": "/events"
         },
         {
           "label": "Awards",
           "href": "/awards"
+        },
+        {
+          "label": "News",
+          "href": "/news"
         },
         {
           "label": "Promotions",
@@ -58,7 +58,7 @@
     "logoSrc": "/ridemax-logo.svg",
     "logoLightSrc": "/ridemax-logo-light.svg",
     "searchPlaceholder": "Search...",
-    "footerDescription": "Avenir Light is a clean and stylish font favored by designers. It's easy on the eyes and a great go-to font for titles, paragraphs & more."
+    "footerDescription": "Team Ridemax is where bold riders find their edge — premium tires, rims, and accessories backed by a crew that rides alongside you."
   },
   "contact": {
     "address": "96-98 Matutum, Manresa, Quezon City, 1115 Metro Manila",
@@ -209,7 +209,7 @@
           "order": 6,
           "eyebrow": "Video Promotions",
           "title": "Latest Promotions",
-          "summary": "Keep launch videos, showroom reels, and campaign embeds as first-class content without uploading video files to the app server.",
+          "summary": "Watch our latest launches, showroom walkthroughs, and rider-favorite moments — all in one place.",
           "source": "promotions",
           "variant": "promotions",
           "limit": 2,
@@ -250,7 +250,7 @@
       "id": "page-products",
       "slug": "products",
       "title": "Products",
-      "summary": "Browse tires, rims, and accessories from the same shared catalog that powers search, product detail pages, and future admin workflows.",
+      "summary": "Explore the tires, rims, and accessories trusted by riders across the Philippines — built for performance, style, and the long road ahead.",
       "blocks": [
         {
           "id": "products-hero",
@@ -272,7 +272,7 @@
           "type": "collectionGrid",
           "order": 2,
           "title": "Browse by Category",
-          "summary": "Category pages stay CMS-managed for layout and storytelling, while product inventory stays read-only in the external catalog adapter.",
+          "summary": "Shop tires, rims, and accessories built to match how you ride — from daily commutes to weekend trails.",
           "source": "catalogCategories",
           "variant": "categories"
         }
@@ -352,9 +352,9 @@
           "order": 4,
           "eyebrow": "Now Hiring",
           "title": "Join our Team",
-          "summary": "Search live openings by department. The public careers experience reads from the same first-class Jobs collection the admin manages.",
+          "summary": "Browse open roles across our departments and find the position that matches your drive.",
           "featuredTitle": "Featured Roles",
-          "featuredSummary": "Highlight priority hiring without hardcoding separate cards onto the page.",
+          "featuredSummary": "Hot opportunities we're hiring for right now — apply directly and start your journey with Team Ridemax.",
           "aboutCta": {
             "label": "Want to know more about the company? Click here",
             "href": "/about"
@@ -367,14 +367,14 @@
       "id": "page-about",
       "slug": "about",
       "title": "About Us",
-      "summary": "A white, contact-led page with a configurable contact card, direct admin inbox delivery, and a map that points visitors to the Quezon City address.",
+      "summary": "Team Ridemax brings together the tire, rim, and accessory brands riders across the Philippines trust — and the crew that rides alongside them.",
       "blocks": [
         {
           "id": "about-hero",
           "type": "hero",
           "order": 1,
           "title": "About Us",
-          "summary": "A white, contact-led page with a configurable contact card, direct admin inbox delivery, and a map that points visitors to the Quezon City address.",
+          "summary": "Team Ridemax brings together the tire, rim, and accessory brands riders across the Philippines trust — and the crew that rides alongside them.",
           "image": {
             "src": "https://static.wixstatic.com/media/2d031a_9592a62f4d0f46ce833c2e5eeebbf135~mv2.jpg",
             "alt": "Ridemax about hero"
@@ -389,7 +389,7 @@
           "type": "featureGrid",
           "order": 2,
           "title": "Built Around Riders",
-          "summary": "Use reusable cards instead of one-off page copy blocks so the team can evolve the About page without redesigning the admin.",
+          "summary": "From product expertise to community events, everything we do is shaped by the people we ride with.",
           "items": [
             {
               "title": "Built Around Riders",
@@ -397,11 +397,11 @@
             },
             {
               "title": "Prepared For Long-Term Growth",
-              "summary": "The public site and admin use one shared content contract, making it easier to move from local editing to Supabase-backed operations."
+              "summary": "We partner with the brands riders trust and keep growing our lineup so you always have the right gear for the road ahead."
             },
             {
-              "title": "Designed To Stay Manageable",
-              "summary": "Jobs, departments, events, awards, search, products, and contact settings all connect back to the same admin-controlled source."
+              "title": "Designed For Riders",
+              "summary": "Every product we carry, every event we host, and every story we tell is built around what riders actually need — from the first fit-up to the next big ride."
             }
           ]
         },
@@ -1327,53 +1327,11 @@
       "id": "project-4",
       "numberLabel": "04",
       "title": "Upcoming Event Calendar",
-      "summary": "Highlights, cards, and detail links stay ordered so the first event shown on the page can be managed from admin.",
+      "summary": "See what's coming up — rides, launches, and community gatherings you won't want to miss.",
       "image": "https://static.wixstatic.com/media/2d031a_e1b6e3a158524ca38a41a16946cc009c~mv2.jpg",
       "href": "/events",
       "published": true,
       "order": 4
-    }
-  ],
-  "adminOptions": [
-    {
-      "title": "Block-Based CMS",
-      "summary": "Pages are now assembled from reusable blocks so marketing can evolve layouts without adding another custom form."
-    },
-    {
-      "title": "First-Class Promotions",
-      "summary": "Promotions live beside Events, Awards, News, and Jobs as their own collection with hosted video URLs and thumbnails."
-    },
-    {
-      "title": "Read-Only Catalog Adapter",
-      "summary": "Products are no longer admin-owned content. The CMS configures display and merchandising while inventory stays external."
-    }
-  ],
-  "databaseOptions": [
-    {
-      "title": "JSON Bundle Now",
-      "summary": "Use the shared CMS bundle for fast iteration in the dummy AWS account, then move the same contract into PostgreSQL or another durable store later."
-    },
-    {
-      "title": "External Products API",
-      "summary": "Keep catalog ownership in the source system and connect this app through a read-only API seam with fallback data."
-    },
-    {
-      "title": "RDS Ready Contract",
-      "summary": "The new contract is storage-agnostic, so moving from local JSON to RDS is a repository change, not a public UI rewrite."
-    }
-  ],
-  "securityOptions": [
-    {
-      "title": "AWS WAF + App Limits",
-      "summary": "Edge-level protection still matters on EC2. Keep WAF and reverse-proxy throttling in front of sensitive routes."
-    },
-    {
-      "title": "Cookie Session Admin",
-      "summary": "For this app, a server-side session or SSO-backed cookie flow is safer and simpler than shipping raw JWT handling into the browser."
-    },
-    {
-      "title": "Validation Everywhere",
-      "summary": "Input validation still matters after leaving Vercel. Validate admin saves, public forms, and catalog payloads before they hit storage."
     }
   ]
 }

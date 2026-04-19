@@ -21,12 +21,26 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
   const parsed = contactMessageInputSchema.safeParse(body);
 
   if (!parsed.success) {
+    // Project each Zod issue back onto the field it belongs to so the client
+    // can render inline errors without re-validating. Keep the top-level
+    // `error` string for older callers / screen-reader announcements.
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const path = issue.path[0];
+      if (typeof path === "string" && !fieldErrors[path]) {
+        fieldErrors[path] = issue.message;
+      }
+    }
+
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Invalid contact form input." },
+      {
+        error: parsed.error.issues[0]?.message ?? "Invalid contact form input.",
+        fieldErrors,
+      },
       { status: 400 },
     );
   }

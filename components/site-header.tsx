@@ -58,20 +58,36 @@ export function SiteHeader({ navigation, logoSrc, logoLightSrc, searchPlaceholde
               <div key={item.href} className="group relative">
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-2 px-2 py-3 transition ${
+                  aria-haspopup="menu"
+                  className={`flex items-center gap-1 px-2 py-3 transition ${
                     scrolled ? "text-[#2b2b2b] hover:text-[#2b2b2b] hover:opacity-80" : "text-white hover:text-[#f3d2ca]"
                   }`}
                 >
                   <span className={scrolled ? "" : "ridemax-white-depth"}>{item.label}</span>
+                  <svg
+                    aria-hidden="true"
+                    width="10"
+                    height="10"
+                    viewBox="0 0 12 12"
+                    className="transition-transform duration-200 group-hover:rotate-180"
+                  >
+                    <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </Link>
-                <div className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 pt-1 opacity-0 transition group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
-                  <div className={`min-w-40 rounded py-2 shadow-[0_12px_30px_rgba(0,0,0,0.18)] ${scrolled ? "bg-white" : "bg-[#2b2b2b]"}`}>
+                <div className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 translate-y-1 pt-2 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+                  <div
+                    className={`min-w-48 overflow-hidden rounded-xl py-2 shadow-[0_18px_40px_rgba(0,0,0,0.22)] ring-1 ${
+                      scrolled ? "bg-white ring-black/5" : "bg-[#1f1f1f] ring-white/10"
+                    }`}
+                  >
                     {item.children.map((child) => (
                       <Link
                         key={child.href}
                         href={child.href}
-                        className={`block px-4 py-1.5 text-sm transition ${
-                          scrolled ? "text-[#2b2b2b] hover:bg-black/5" : "text-white hover:bg-white/10 hover:text-white"
+                        className={`block px-4 py-2 text-sm transition ${
+                          scrolled
+                            ? "text-[#2b2b2b] hover:bg-[#E31E24]/10 hover:text-[#E31E24]"
+                            : "text-white hover:bg-white/10 hover:text-white"
                         }`}
                       >
                         {child.label}
