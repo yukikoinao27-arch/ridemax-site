@@ -86,6 +86,22 @@ export function AdminSidebar() {
     <aside className="lg:sticky lg:top-24 lg:self-start">
       <nav className="rounded-[1.5rem] border border-black/10 bg-white p-4 shadow-[0_12px_26px_rgba(28,20,19,0.06)]">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8d120e]">CMS Navigation</p>
+        {/*
+         * Search button is the discoverable surface for the command palette.
+         * Keyboard power users hit Ctrl+K; everyone else clicks here and
+         * gets the same modal. The shortcut hint on the right mirrors the
+         * visual language used in Linear, Vercel, and Sanity Studio.
+         */}
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event("admin-palette:open"))}
+          className="mt-4 flex w-full cursor-pointer items-center justify-between rounded-xl border border-black/10 bg-[#f7f2f1] px-3 py-2 text-left text-sm text-[#6a433d] transition hover:bg-[#efe7e5]"
+        >
+          <span>Search…</span>
+          <span className="rounded-md border border-black/10 bg-white px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[#7e5a53]">
+            Ctrl K
+          </span>
+        </button>
         <div className="mt-4 flex flex-col gap-2">
           {routeLinks.map((link) => {
             const isActive = link.href === activeHref;

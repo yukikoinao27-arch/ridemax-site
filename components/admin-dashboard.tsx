@@ -430,19 +430,25 @@ function SaveActionBar({
   dirty,
   saving,
   previewing,
+  publishing,
   saveState,
   lastSavedAt,
   onSave,
   onPreview,
+  onPublish,
+  onOpenRevisions,
 }: {
   canSave: boolean;
   dirty: boolean;
   saving: boolean;
   previewing: boolean;
+  publishing: boolean;
   saveState: SaveState;
   lastSavedAt: string | null;
   onSave: () => void;
   onPreview: () => void;
+  onPublish: () => void;
+  onOpenRevisions: () => void;
 }) {
   if (!canSave) {
     return null;
@@ -451,16 +457,19 @@ function SaveActionBar({
   const lastSavedLabel = lastSavedAt
     ? new Date(lastSavedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : "";
+  // Mental model (Wix): "Save" writes a draft, "Publish" makes it live.
+  // Status copy is phrased around the draft so marketing understands the
+  // site is NOT updated until they press Publish.
   const statusLabel =
     saveState === "saving"
-      ? "Saving to database..."
+      ? "Saving draft..."
       : saveState === "error"
         ? "Save failed. Check the highlighted message."
         : dirty
           ? "Unsaved changes"
           : saveState === "success"
-            ? `Live in database${lastSavedLabel ? ` at ${lastSavedLabel}` : ""}`
-            : "No unpublished edits";
+            ? `Draft saved${lastSavedLabel ? ` at ${lastSavedLabel}` : ""} — press Publish to go live`
+            : "No draft changes";
 
   return (
     <div className="fixed inset-x-4 bottom-4 z-[90] mx-auto max-w-5xl rounded-[1.5rem] border border-black/10 bg-white/95 p-3 shadow-[0_18px_50px_rgba(31,20,19,0.18)] backdrop-blur">
@@ -480,17 +489,120 @@ function SaveActionBar({
           <div>
             <p className="text-sm font-semibold text-[#220707]">{statusLabel}</p>
             <p className="text-xs leading-5 text-[#6a433d]">
-              Saved text, image, and video changes become public after this bar confirms the database accepted them.
+              Save keeps changes as a draft. Publish makes them live on the public site.
             </p>
           </div>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <button type="button" onClick={onPreview} disabled={previewing || saving} className={secondaryButtonClass}>
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+          <button type="button" onClick={onOpenRevisions} className={secondaryButtonClass}>
+            Revisions
+          </button>
+          <button type="button" onClick={onPreview} disabled={previewing || saving || publishing} className={secondaryButtonClass}>
             {previewing ? "Opening Preview..." : "Preview"}
           </button>
-          <button type="button" onClick={onSave} disabled={saving || !dirty} className={primaryButtonClass}>
-            {saving ? "Saving..." : "Save Changes"}
+          <button type="button" onClick={onSave} disabled={saving || publishing || !dirty} className={primaryButtonClass}>
+            {saving ? "Saving..." : "Save Draft"}
           </button>
+          <button
+            type="button"
+            onClick={onPublish}
+            disabled={publishing || saving}
+            className={`inline-flex items-center justify-center rounded-full border border-[#255c2f] bg-[#255c2f] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1e4a26] disabled:cursor-not-allowed disabled:opacity-60`}
+          >
+            {publishing ? "Publishing..." : "Publish"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type RevisionEntry = {
+  id: string;
+  createdAt: string;
+  createdBy: string | null;
+  note: string | null;
+};
+
+function RevisionsDrawer({
+  open,
+  loading,
+  revisions,
+  reverting,
+  onClose,
+  onRevert,
+}: {
+  open: boolean;
+  loading: boolean;
+  revisions: RevisionEntry[];
+  reverting: string | null;
+  onClose: () => void;
+  onRevert: (id: string) => void;
+}) {
+  if (!open) {
+    return null;
+  }
+  return (
+    <div
+      className="fixed inset-0 z-[95] flex justify-end bg-black/40"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="flex h-full w-full max-w-md flex-col bg-white shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-black/10 px-5 py-4">
+          <h2 className="text-lg font-semibold text-[#220707]">Revision History</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="cursor-pointer rounded-full px-3 py-1 text-sm text-[#6a433d] hover:bg-[#f7f2f1]"
+          >
+            Close
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          {loading ? (
+            <p className="text-sm text-[#6a433d]">Loading revisions…</p>
+          ) : revisions.length === 0 ? (
+            <p className="text-sm text-[#6a433d]">No revisions yet. The first publish creates one.</p>
+          ) : (
+            <ul className="space-y-3">
+              {revisions.map((revision) => {
+                const when = new Date(revision.createdAt).toLocaleString();
+                const isReverting = reverting === revision.id;
+                return (
+                  <li
+                    key={revision.id}
+                    className="rounded-xl border border-black/10 bg-[#faf8f7] p-4"
+                  >
+                    <div className="text-sm font-semibold text-[#220707]">{when}</div>
+                    {revision.createdBy ? (
+                      <div className="text-xs text-[#6a433d]">by {revision.createdBy}</div>
+                    ) : null}
+                    {revision.note ? (
+                      <p className="mt-2 text-xs leading-5 text-[#4d3b37]">{revision.note}</p>
+                    ) : null}
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={() => onRevert(revision.id)}
+                        disabled={isReverting}
+                        className="cursor-pointer rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-[#5d0d0a] transition hover:bg-[#fcefee] disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isReverting ? "Reverting…" : "Restore as draft"}
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+        <div className="border-t border-black/10 bg-[#faf8f7] px-5 py-3 text-[0.7rem] leading-5 text-[#7e5a53]">
+          Restore copies the snapshot back into the current draft. Preview it, then press Publish to make it live.
         </div>
       </div>
     </div>

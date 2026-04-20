@@ -28,16 +28,103 @@ import {
 import { getServerSupabaseClient, getServerSupabaseStatus } from "@/lib/server/supabase-server";
 
 const siteContentPath = path.join(process.cwd(), "data", "site-content.json");
+const draftSiteContentPath = path.join(process.cwd(), "data", "site-content.draft.json");
 const previewSiteContentPath = path.join(process.cwd(), "data", "preview-site-content.json");
+const siteContentRevisionsPath = path.join(process.cwd(), "data", "site-content-revisions.json");
 const contactMessagesPath = path.join(process.cwd(), "data", "contact-messages.json");
 const catalogProductsPath = path.join(process.cwd(), "data", "catalog-products.json");
 const primaryContentSlug = "primary";
+const REVISION_LIMIT = 50;
+
+/**
+ * A single snapshot of the published content bundle. Revisions are written
+ * exclusively by {@link publishSiteContent}; the list is how admins recover
+ * from a bad publish.
+ */
+export type SiteContentRevision = {
+  id: string;
+  slug: string;
+  createdAt: string;
+  createdBy: string | null;
+  note: string | null;
+};
+
+type ContentDocumentUpsert = {
+  slug: string;
+  content?: RidemaxSiteContent;
+  draft_content?: RidemaxSiteContent | null;
+  published_content?: RidemaxSiteContent | null;
+  last_published_at?: string | null;
+};
 
 type ContentDocumentTable = {
   upsert: (
-    value: { slug: string; content: RidemaxSiteContent },
+    value: ContentDocumentUpsert,
     options: { onConflict: string },
   ) => Promise<{ error: { message: string } | null }>;
+  select: (columns: string) => {
+    eq: (
+      column: string,
+      value: string,
+    ) => {
+      maybeSingle: () => Promise<{
+        data: {
+          content?: unknown;
+          draft_content?: unknown;
+          published_content?: unknown;
+          last_published_at?: string | null;
+        } | null;
+        error: { message: string } | null;
+      }>;
+    };
+  };
+};
+
+type RevisionRow = {
+  id: number | string;
+  slug: string;
+  created_at: string;
+  created_by: string | null;
+  note: string | null;
+  content?: unknown;
+};
+
+type RevisionsTable = {
+  insert: (value: {
+    slug: string;
+    content: RidemaxSiteContent;
+    note: string | null;
+    created_by: string | null;
+  }) => Promise<{ error: { message: string } | null }>;
+  select: (columns: string) => {
+    eq: (
+      column: string,
+      value: string,
+    ) => {
+      order: (
+        column: string,
+        options: { ascending: boolean },
+      ) => {
+        limit: (
+          count: number,
+        ) => Promise<{ data: RevisionRow[] | null; error: { message: string } | null }>;
+      };
+    };
+  };
+};
+
+type RevisionContentQuery = {
+  select: (columns: string) => {
+    eq: (
+      column: string,
+      value: number,
+    ) => {
+      maybeSingle: () => Promise<{
+        data: (RevisionRow & { content?: unknown }) | null;
+        error: { message: string } | null;
+      }>;
+    };
+  };
 };
 
 type ContactMessageRow = {
@@ -161,33 +248,58 @@ async function readLocalMessages() {
   return readJsonFile<ContactMessage[]>(contactMessagesPath);
 }
 
-async function readSupabaseSiteContent() {
+/**
+ * Read one or both of the draft/published columns from Supabase.
+ *
+ * `mode` picks which column the public getter prefers. `draft` readers fall
+ * back to published_content and then the legacy `content` column so a Draft
+ * Mode request does not 500 before the first draft is saved. `published`
+ * readers fall back to `content` so historical rows rendered pre-migration
+ * continue to work.
+ */
+async function readSupabaseSiteContent(mode: "draft" | "published") {
   const supabase = getServerSupabaseClient();
 
   if (!supabase) {
     return null;
   }
 
-  const response = await supabase
-    .from("site_content_documents")
-    .select("content")
+  const contentTable = supabase.from("site_content_documents") as unknown as ContentDocumentTable;
+  const response = await contentTable
+    .select("content, draft_content, published_content")
     .eq("slug", primaryContentSlug)
     .maybeSingle();
-  const data = response.data as { content?: unknown } | null;
+  const data = response.data;
   const error = response.error;
 
   if (error) {
     throw new Error(error.message);
   }
 
-  if (!data?.content) {
+  if (!data) {
     return null;
   }
 
-  return normalizeSiteContent(siteContentSchema.parse(data.content));
+  const candidates =
+    mode === "draft"
+      ? [data.draft_content, data.published_content, data.content]
+      : [data.published_content, data.content];
+
+  for (const candidate of candidates) {
+    if (candidate) {
+      return normalizeSiteContent(siteContentSchema.parse(candidate));
+    }
+  }
+
+  return null;
 }
 
-async function writeSupabaseSiteContent(content: RidemaxSiteContent) {
+/**
+ * Write the draft bundle. The legacy `content` column is left untouched so
+ * pre-migration readers keep seeing the last published version until the
+ * next publish.
+ */
+async function writeSupabaseDraftContent(content: RidemaxSiteContent) {
   const supabase = getServerSupabaseClient();
 
   if (!supabase) {
@@ -198,7 +310,7 @@ async function writeSupabaseSiteContent(content: RidemaxSiteContent) {
   const { error } = await contentTable.upsert(
     {
       slug: primaryContentSlug,
-      content,
+      draft_content: content,
     },
     {
       onConflict: "slug",
@@ -207,6 +319,58 @@ async function writeSupabaseSiteContent(content: RidemaxSiteContent) {
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  return true;
+}
+
+/**
+ * Publish the current draft: copy draft_content to published_content, mirror
+ * it into the legacy `content` column, stamp last_published_at, and append
+ * an immutable revision. Clears the draft so the sticky save bar in admin
+ * stops showing "unsaved draft" right after a publish.
+ */
+async function writeSupabasePublishedContent(
+  content: RidemaxSiteContent,
+  actor: string | null,
+  note: string | null,
+) {
+  const supabase = getServerSupabaseClient();
+
+  if (!supabase) {
+    return false;
+  }
+
+  const publishedAt = new Date().toISOString();
+
+  const contentTable = supabase.from("site_content_documents") as unknown as ContentDocumentTable;
+  const upsertResult = await contentTable.upsert(
+    {
+      slug: primaryContentSlug,
+      content,
+      published_content: content,
+      draft_content: null,
+      last_published_at: publishedAt,
+    },
+    {
+      onConflict: "slug",
+    },
+  );
+
+  if (upsertResult.error) {
+    throw new Error(upsertResult.error.message);
+  }
+
+  const revisionsTable = supabase.from("site_content_revisions") as unknown as RevisionsTable;
+  const insertResult = await revisionsTable.insert({
+    slug: primaryContentSlug,
+    content,
+    note,
+    created_by: actor,
+  });
+
+  if (insertResult.error) {
+    throw new Error(insertResult.error.message);
   }
 
   return true;
@@ -250,20 +414,24 @@ async function fetchRemoteCatalog(
   });
 }
 
+/**
+ * Read the live content bundle. Public pages call this without arguments;
+ * Draft Mode flips them over to the in-progress draft so marketing can
+ * preview unpublished changes using the real site shell.
+ *
+ * Fallback chain (deep module — callers never see the layers):
+ *   1. Supabase draft/published column, based on Draft Mode
+ *   2. Legacy `preview-site-content.json` for local dev preview
+ *   3. Local draft file (for Draft Mode)
+ *   4. Local published file `site-content.json`
+ */
 export async function getSiteContent(): Promise<RidemaxSiteContent> {
   noStore();
   const preview = await draftMode();
-
-  if (preview.isEnabled) {
-    try {
-      return await readPreviewSiteContent();
-    } catch {
-      // Preview mode is best-effort; fall through to the persisted content.
-    }
-  }
+  const mode = preview.isEnabled ? "draft" : "published";
 
   try {
-    const supabaseContent = await readSupabaseSiteContent();
+    const supabaseContent = await readSupabaseSiteContent(mode);
 
     if (supabaseContent) {
       return supabaseContent;
@@ -272,17 +440,178 @@ export async function getSiteContent(): Promise<RidemaxSiteContent> {
     // The EC2 path prefers the local bundle when Supabase is missing or not seeded.
   }
 
+  if (preview.isEnabled) {
+    try {
+      return await readPreviewSiteContent();
+    } catch {
+      // Preview mode is best-effort; fall through to the persisted content.
+    }
+    try {
+      return normalizeSiteContent(
+        siteContentSchema.parse(await readJsonFile<unknown>(draftSiteContentPath)),
+      );
+    } catch {
+      // No local draft yet — fall through to the published local file.
+    }
+  }
+
   return readLocalSiteContent();
 }
 
+/**
+ * Save a draft. This is what the sticky "Save" bar in admin writes to —
+ * public pages are unaffected until {@link publishSiteContent} runs.
+ */
 export async function saveSiteContent(content: RidemaxSiteContent) {
   const parsed = normalizeSiteContent(siteContentSchema.parse(content));
 
-  if (await writeSupabaseSiteContent(parsed)) {
+  if (await writeSupabaseDraftContent(parsed)) {
     return;
   }
 
-  await writeJsonFile(siteContentPath, parsed);
+  await writeJsonFile(draftSiteContentPath, parsed);
+}
+
+/**
+ * Publish the current draft. When no draft is staged we publish the live
+ * content again — harmless on Supabase, and useful as a "reseed" lever on
+ * the local JSON path. Appends a revision entry so admins can roll back.
+ */
+export async function publishSiteContent(options?: { actor?: string | null; note?: string | null }) {
+  const actor = options?.actor ?? null;
+  const note = options?.note ?? null;
+
+  const supabase = getServerSupabaseClient();
+
+  if (supabase) {
+    // Prefer the staged draft; fall back to the currently published bundle
+    // so callers never accidentally publish stale local state.
+    const staged = (await readSupabaseSiteContent("draft")) ?? (await readSupabaseSiteContent("published"));
+    if (!staged) {
+      throw new Error("Nothing to publish — no draft or published content found.");
+    }
+    await writeSupabasePublishedContent(staged, actor, note);
+    return;
+  }
+
+  // Local JSON fallback: publish = copy draft file (or existing published file)
+  // onto site-content.json and append to the local revisions log.
+  let staged: RidemaxSiteContent;
+  try {
+    staged = normalizeSiteContent(
+      siteContentSchema.parse(await readJsonFile<unknown>(draftSiteContentPath)),
+    );
+  } catch {
+    staged = await readLocalSiteContent();
+  }
+
+  await writeJsonFile(siteContentPath, staged);
+
+  try {
+    await fs.unlink(draftSiteContentPath);
+  } catch {
+    // No draft to clear — fine.
+  }
+
+  const existingRevisions = await readLocalRevisions();
+  const newRevision = {
+    id: `${Date.now()}`,
+    slug: primaryContentSlug,
+    created_at: new Date().toISOString(),
+    created_by: actor,
+    note,
+    content: staged,
+  };
+  const truncated = [newRevision, ...existingRevisions].slice(0, REVISION_LIMIT);
+  await writeJsonFile(siteContentRevisionsPath, truncated);
+}
+
+async function readLocalRevisions(): Promise<Array<RevisionRow & { content?: unknown }>> {
+  try {
+    return await readJsonFile<Array<RevisionRow & { content?: unknown }>>(siteContentRevisionsPath);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * List the most recent revisions for the admin revision drawer. Returns
+ * metadata only — `content` is omitted to keep the response small; callers
+ * load the full bundle with {@link revertSiteContentToRevision}.
+ */
+export async function listContentRevisions(limit = 20): Promise<SiteContentRevision[]> {
+  const supabase = getServerSupabaseClient();
+
+  if (supabase) {
+    const revisionsTable = supabase.from("site_content_revisions") as unknown as RevisionsTable;
+    const response = await revisionsTable
+      .select("id, slug, created_at, created_by, note")
+      .eq("slug", primaryContentSlug)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
+
+    return (response.data ?? []).map(toRevisionMeta);
+  }
+
+  const local = await readLocalRevisions();
+  return local.slice(0, limit).map(toRevisionMeta);
+}
+
+/**
+ * Revert the draft to a prior revision so the admin can preview the old
+ * version and re-publish it. Does not modify published_content directly —
+ * rollback still goes through the Publish button, which keeps a revision
+ * entry in place for audit continuity.
+ */
+export async function revertSiteContentToRevision(revisionId: string) {
+  const supabase = getServerSupabaseClient();
+
+  if (supabase) {
+    const query = supabase.from("site_content_revisions") as unknown as RevisionContentQuery;
+    const response = await query
+      .select("id, slug, created_at, created_by, note, content")
+      .eq("id", Number(revisionId))
+      .maybeSingle();
+
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
+
+    const data = response.data;
+
+    if (!data?.content) {
+      throw new Error("Revision not found.");
+    }
+
+    const parsed = normalizeSiteContent(siteContentSchema.parse(data.content));
+    await writeSupabaseDraftContent(parsed);
+    return parsed;
+  }
+
+  const local = await readLocalRevisions();
+  const match = local.find((row) => String(row.id) === revisionId);
+
+  if (!match?.content) {
+    throw new Error("Revision not found.");
+  }
+
+  const parsed = normalizeSiteContent(siteContentSchema.parse(match.content));
+  await writeJsonFile(draftSiteContentPath, parsed);
+  return parsed;
+}
+
+function toRevisionMeta(row: RevisionRow): SiteContentRevision {
+  return {
+    id: String(row.id),
+    slug: row.slug,
+    createdAt: row.created_at,
+    createdBy: row.created_by ?? null,
+    note: row.note ?? null,
+  };
 }
 
 export async function savePreviewSiteContent(content: RidemaxSiteContent) {
@@ -306,7 +635,7 @@ export async function getStorageMode() {
   }
 
   try {
-    const content = await readSupabaseSiteContent();
+    const content = await readSupabaseSiteContent("published");
     return content ? "Supabase JSONB bundle" : "Local JSON (Supabase bundle not seeded)";
   } catch {
     return "Local JSON (Supabase fallback)";

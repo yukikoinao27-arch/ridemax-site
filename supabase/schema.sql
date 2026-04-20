@@ -42,13 +42,54 @@ create table if not exists public.contact_settings (
 );
 
 -- Shared CMS bundle for the block-based page builder and first-class collections.
+--
+-- Draft/publish model (Wix-style):
+--   content          — legacy / compatibility mirror of the currently published
+--                      bundle. Existing readers that select "content" keep working.
+--   draft_content    — in-progress edits that marketing has saved but not yet
+--                      published. Draft Mode readers serve this.
+--   published_content — the live bundle public pages render against.
+--   last_published_at — wall-clock of the last publish, shown in admin.
+-- A matching row in site_content_revisions is appended on every publish so the
+-- team has a revert trail.
 create table if not exists public.site_content_documents (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
   content jsonb not null,
+  draft_content jsonb,
+  published_content jsonb,
+  last_published_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Idempotent column adds for existing Supabase databases.
+alter table public.site_content_documents
+  add column if not exists draft_content jsonb,
+  add column if not exists published_content jsonb,
+  add column if not exists last_published_at timestamptz;
+
+-- Backfill: existing "content" rows are treated as already published so the
+-- public site does not go blank the first time this migration runs.
+update public.site_content_documents
+   set published_content = content,
+       last_published_at = coalesce(last_published_at, updated_at)
+ where published_content is null
+   and content is not null;
+
+-- Immutable snapshot log for every publish. Written by publishSiteContent();
+-- admins revert by copying a row back into draft_content and re-publishing.
+create table if not exists public.site_content_revisions (
+  id bigserial primary key,
+  slug text not null references public.site_content_documents(slug) on delete cascade,
+  content jsonb not null,
+  note text,
+  created_by text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists site_content_revisions_slug_idx
+  on public.site_content_revisions(slug, created_at desc);
 
 create table if not exists public.social_links (
   id uuid primary key default gen_random_uuid(),

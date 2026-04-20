@@ -102,7 +102,10 @@ export function AdminCommandPalette() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
 
-  // Global Ctrl+K / Cmd+K. Also Esc closes.
+  // Global Ctrl+K / Cmd+K. Also Esc closes. Plus a window-level
+  // "admin-palette:open" event so click targets outside this component
+  // (e.g. the sidebar search button) can open the palette without prop
+  // drilling or context setup.
   useEffect(() => {
     function onKeydown(event: KeyboardEvent) {
       const isPaletteShortcut =
@@ -116,8 +119,15 @@ export function AdminCommandPalette() {
         setOpen(false);
       }
     }
+    function onOpenEvent() {
+      setOpen(true);
+    }
     window.addEventListener("keydown", onKeydown);
-    return () => window.removeEventListener("keydown", onKeydown);
+    window.addEventListener("admin-palette:open", onOpenEvent);
+    return () => {
+      window.removeEventListener("keydown", onKeydown);
+      window.removeEventListener("admin-palette:open", onOpenEvent);
+    };
   }, []);
 
   // Lazily fetch the index the first time the palette opens. Refresh on
