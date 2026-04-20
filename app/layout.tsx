@@ -2,6 +2,7 @@
 import { Montserrat, Oswald } from "next/font/google";
 import type { ReactNode } from "react";
 import { PublicChatWidget } from "@/components/public-chat-widget";
+import { PublicSiteShell } from "@/components/public-site-shell";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getSiteContent } from "@/lib/server/ridemax-content-repository";
@@ -36,23 +37,28 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en" data-scroll-behavior="smooth" className={`${bodyFont.variable} ${titleFont.variable}`}>
       <body className="min-h-screen bg-[#f7f4f1] text-[#220707] antialiased">
-        <div className="flex min-h-screen flex-col">
-          <SiteHeader
-            navigation={content.navigation}
-            logoSrc={content.site.logoSrc}
-            logoLightSrc={content.site.logoLightSrc}
-            searchPlaceholder={content.site.searchPlaceholder}
-          />
-          <div className="flex-1">{children}</div>
-          <SiteFooter
-            logoSrc={content.site.logoSrc}
-            logoLightSrc={content.site.logoLightSrc}
-            siteName={content.site.siteName}
-            description={content.site.footerDescription}
-            contact={content.contact}
-            categories={content.productCategories}
-          />
-        </div>
+        <PublicSiteShell
+          header={
+            <SiteHeader
+              navigation={content.navigation}
+              logoSrc={content.site.logoSrc}
+              logoLightSrc={content.site.logoLightSrc}
+              searchPlaceholder={content.site.searchPlaceholder}
+            />
+          }
+          footer={
+            <SiteFooter
+              logoSrc={content.site.logoSrc}
+              logoLightSrc={content.site.logoLightSrc}
+              siteName={content.site.siteName}
+              description={content.site.footerDescription}
+              contact={content.contact}
+              categories={content.productCategories}
+            />
+          }
+        >
+          {children}
+        </PublicSiteShell>
         <PublicChatWidget
           logoSrc={content.site.logoSrc}
           logoLightSrc={content.site.logoLightSrc}

@@ -3,7 +3,7 @@ import { isAdminAuthenticated } from "@/lib/server/admin-auth";
 import { listContentRevisions } from "@/lib/server/ridemax-content-repository";
 
 /**
- * Revision history for the admin drawer. Metadata only — the full
+ * Revision history for the admin drawer. Metadata only; the full
  * content bundle is fetched during revert (POST /revisions/[id]/revert).
  */
 export async function GET() {

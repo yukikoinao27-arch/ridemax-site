@@ -8,8 +8,8 @@ import { publishSiteContent } from "@/lib/server/ridemax-content-repository";
  * button; the repository copies draft_content onto published_content,
  * appends an immutable revision, and stamps last_published_at.
  *
- * Cache revalidation is the same fan-out the legacy save endpoint uses —
- * marketing expects the public site to refresh immediately on publish.
+ * Cache revalidation is the same fan-out the legacy save endpoint uses.
+ * Marketing expects the public site to refresh immediately on publish.
  */
 export async function POST(request: Request) {
   if (!(await isAdminAuthenticated())) {

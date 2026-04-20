@@ -1,5 +1,5 @@
 import {
-  getSiteContent,
+  getDraftSiteContent,
   listContactMessages,
 } from "@/lib/server/ridemax-content-repository";
 import { pageSlugOptions } from "@/lib/page-builder";
@@ -102,13 +102,13 @@ function pageLabel(slug: string) {
 /**
  * Build a flat, client-safe search index for the admin command palette.
  *
- * The palette is a deep module (§3 Deep Modules): callers supply a query,
+ * The palette is a deep module: callers supply a query,
  * the index owns everything about what is searchable and where each entry
  * points to. Results are sorted by kind grouping, then alphabetically, so
  * the palette itself does not need to care about ordering.
  */
 export async function getAdminSearchIndex(): Promise<AdminSearchEntry[]> {
-  const content = await getSiteContent();
+  const content = await getDraftSiteContent();
   const messageCount = (await listContactMessages()).length;
 
   const pages: AdminSearchEntry[] = content.pages.map((page) => ({
@@ -141,7 +141,7 @@ export async function getAdminSearchIndex(): Promise<AdminSearchEntry[]> {
   const events: AdminSearchEntry[] = content.events.map((item) => ({
     id: `event-${item.id}`,
     label: item.title,
-    description: `${item.teaserDate} · ${item.location}`,
+    description: `${item.teaserDate} - ${item.location}`,
     href: "/admin/events#content-events",
     kind: "event",
     keywords: [item.slug, item.venue],
@@ -150,7 +150,7 @@ export async function getAdminSearchIndex(): Promise<AdminSearchEntry[]> {
   const awards: AdminSearchEntry[] = content.awards.map((item) => ({
     id: `award-${item.id}`,
     label: item.title,
-    description: `${item.year} · ${item.summary}`,
+    description: `${item.year} - ${item.summary}`,
     href: "/admin/events#content-awards",
     kind: "award",
     keywords: [item.slug],
@@ -168,7 +168,7 @@ export async function getAdminSearchIndex(): Promise<AdminSearchEntry[]> {
   const jobs: AdminSearchEntry[] = content.jobs.map((item) => ({
     id: `job-${item.id}`,
     label: item.title,
-    description: `${item.location} · ${item.type}`,
+    description: `${item.location} - ${item.type}`,
     href: "/admin/careers#careers-jobs",
     kind: "job",
     keywords: [item.slug, item.departmentSlug],

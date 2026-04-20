@@ -71,7 +71,7 @@ type ToastMessage = {
   message: string;
 };
 
-type SaveState = "idle" | "saving" | "success" | "error";
+type SaveState = "idle" | "saving" | "success" | "published" | "error";
 
 type FieldCallbacks = {
   onNotice: (tone: AdminNoticeTone, message: string) => void;
@@ -465,10 +465,12 @@ function SaveActionBar({
       ? "Saving draft..."
       : saveState === "error"
         ? "Save failed. Check the highlighted message."
+        : saveState === "published" && !dirty
+          ? "Published - public site is live"
         : dirty
           ? "Unsaved changes"
           : saveState === "success"
-            ? `Draft saved${lastSavedLabel ? ` at ${lastSavedLabel}` : ""} — press Publish to go live`
+            ? `Draft saved${lastSavedLabel ? ` at ${lastSavedLabel}` : ""} - press Publish to go live`
             : "No draft changes";
 
   return (
@@ -477,14 +479,14 @@ function SaveActionBar({
         <div className="flex items-center gap-3">
           <span
             className={`inline-flex h-9 w-9 items-center justify-center rounded-full ${
-              saveState === "success" && !dirty
+              (saveState === "success" || saveState === "published") && !dirty
                 ? "bg-[#255c2f] text-white"
                 : saveState === "error"
                   ? "bg-[#fff4f3] text-[#8d120e]"
                   : "bg-[#f7f2f1] text-[#5d0d0a]"
             }`}
           >
-            {saveState === "success" && !dirty ? <CheckIcon /> : <span className="h-2.5 w-2.5 rounded-full bg-current" />}
+            {(saveState === "success" || saveState === "published") && !dirty ? <CheckIcon /> : <span className="h-2.5 w-2.5 rounded-full bg-current" />}
           </span>
           <div>
             <p className="text-sm font-semibold text-[#220707]">{statusLabel}</p>
@@ -506,7 +508,8 @@ function SaveActionBar({
           <button
             type="button"
             onClick={onPublish}
-            disabled={publishing || saving}
+            disabled={publishing || saving || dirty}
+            title={dirty ? "Save the draft before publishing." : undefined}
             className={`inline-flex items-center justify-center rounded-full border border-[#255c2f] bg-[#255c2f] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1e4a26] disabled:cursor-not-allowed disabled:opacity-60`}
           >
             {publishing ? "Publishing..." : "Publish"}
@@ -565,7 +568,7 @@ function RevisionsDrawer({
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {loading ? (
-            <p className="text-sm text-[#6a433d]">Loading revisions…</p>
+            <p className="text-sm text-[#6a433d]">Loading revisions...</p>
           ) : revisions.length === 0 ? (
             <p className="text-sm text-[#6a433d]">No revisions yet. The first publish creates one.</p>
           ) : (
@@ -592,7 +595,7 @@ function RevisionsDrawer({
                         disabled={isReverting}
                         className="cursor-pointer rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-[#5d0d0a] transition hover:bg-[#fcefee] disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        {isReverting ? "Reverting…" : "Restore as draft"}
+                        {isReverting ? "Reverting..." : "Restore as draft"}
                       </button>
                     </div>
                   </li>
@@ -1546,8 +1549,13 @@ export function AdminDashboard({
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>(initialMediaAssets);
   const [saving, setSaving] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [revisionsOpen, setRevisionsOpen] = useState(false);
+  const [revisionsLoading, setRevisionsLoading] = useState(false);
+  const [revisions, setRevisions] = useState<RevisionEntry[]>([]);
+  const [revertingRevisionId, setRevertingRevisionId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const departmentOptions = useMemo(
@@ -1624,7 +1632,7 @@ export function AdminDashboard({
       setSavedDraft(draft);
       setLastSavedAt(new Date().toISOString());
       setSaveState("success");
-      fieldCallbacks.onNotice("success", payload.message ?? "Content saved successfully.");
+      fieldCallbacks.onNotice("success", payload.message ?? "Draft saved.");
     } catch {
       setSaveState("error");
       fieldCallbacks.onNotice("error", "Unable to save the content bundle.");
@@ -1671,6 +1679,104 @@ export function AdminDashboard({
     }
   }
 
+  async function loadRevisions() {
+    setRevisionsLoading(true);
+
+    try {
+      const response = await fetch("/api/admin/revisions", { cache: "no-store" });
+      const payload = (await response.json()) as {
+        revisions?: RevisionEntry[];
+        error?: string;
+      };
+
+      if (!response.ok) {
+        fieldCallbacks.onNotice("error", payload.error ?? "Unable to load revisions.");
+        return;
+      }
+
+      setRevisions(payload.revisions ?? []);
+    } catch {
+      fieldCallbacks.onNotice("error", "Unable to load revisions.");
+    } finally {
+      setRevisionsLoading(false);
+    }
+  }
+
+  function handleOpenRevisions() {
+    setRevisionsOpen(true);
+    void loadRevisions();
+  }
+
+  async function handlePublish() {
+    if (hasUnsavedChanges) {
+      fieldCallbacks.onNotice("error", "Save the draft before publishing.");
+      return;
+    }
+
+    setPublishing(true);
+
+    try {
+      const response = await fetch("/api/admin/publish", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ note: "Manual publish from admin." }),
+      });
+      const payload = (await response.json()) as { error?: string; message?: string };
+
+      if (!response.ok) {
+        fieldCallbacks.onNotice("error", payload.error ?? "Unable to publish.");
+        return;
+      }
+
+      setSaveState("published");
+      setLastSavedAt(new Date().toISOString());
+      fieldCallbacks.onNotice("success", payload.message ?? "Published.");
+      if (revisionsOpen) {
+        void loadRevisions();
+      }
+    } catch {
+      fieldCallbacks.onNotice("error", "Unable to publish.");
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  async function handleRevertRevision(revisionId: string) {
+    setRevertingRevisionId(revisionId);
+
+    try {
+      const response = await fetch(`/api/admin/revisions/${revisionId}/revert`, {
+        method: "POST",
+      });
+      const payload = (await response.json()) as {
+        content?: RidemaxSiteContent;
+        error?: string;
+        message?: string;
+      };
+
+      if (!response.ok || !payload.content) {
+        fieldCallbacks.onNotice("error", payload.error ?? "Unable to restore revision.");
+        return;
+      }
+
+      setDraft(payload.content);
+      setSavedDraft(payload.content);
+      setLastSavedAt(new Date().toISOString());
+      setSaveState("success");
+      setRevisionsOpen(false);
+      fieldCallbacks.onNotice(
+        "success",
+        payload.message ?? "Revision copied into draft. Preview and publish when ready.",
+      );
+    } catch {
+      fieldCallbacks.onNotice("error", "Unable to restore revision.");
+    } finally {
+      setRevertingRevisionId(null);
+    }
+  }
+
   async function handleArchiveMessage(messageId: string) {
     try {
       const response = await fetch(`/api/admin/messages/${messageId}/archive`, {
@@ -1700,10 +1806,21 @@ export function AdminDashboard({
         dirty={hasUnsavedChanges}
         saving={saving}
         previewing={previewing}
+        publishing={publishing}
         saveState={saveState}
         lastSavedAt={lastSavedAt}
         onSave={handleSave}
         onPreview={handlePreview}
+        onPublish={handlePublish}
+        onOpenRevisions={handleOpenRevisions}
+      />
+      <RevisionsDrawer
+        open={revisionsOpen}
+        loading={revisionsLoading}
+        revisions={revisions}
+        reverting={revertingRevisionId}
+        onClose={() => setRevisionsOpen(false)}
+        onRevert={handleRevertRevision}
       />
       <div className={`space-y-8 ${canSave ? "pb-28" : ""}`}>
           <section className="rounded-[2rem] border border-black/10 bg-white p-7 shadow-[0_16px_40px_rgba(28,20,19,0.06)]">

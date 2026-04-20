@@ -97,7 +97,7 @@ export function AdminSidebar() {
           onClick={() => window.dispatchEvent(new Event("admin-palette:open"))}
           className="mt-4 flex w-full cursor-pointer items-center justify-between rounded-xl border border-black/10 bg-[#f7f2f1] px-3 py-2 text-left text-sm text-[#6a433d] transition hover:bg-[#efe7e5]"
         >
-          <span>Search…</span>
+          <span>Search...</span>
           <span className="rounded-md border border-black/10 bg-white px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[#7e5a53]">
             Ctrl K
           </span>

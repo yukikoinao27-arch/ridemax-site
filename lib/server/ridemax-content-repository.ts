@@ -419,7 +419,7 @@ async function fetchRemoteCatalog(
  * Draft Mode flips them over to the in-progress draft so marketing can
  * preview unpublished changes using the real site shell.
  *
- * Fallback chain (deep module — callers never see the layers):
+ * Fallback chain (deep module: callers never see the layers):
  *   1. Supabase draft/published column, based on Draft Mode
  *   2. Legacy `preview-site-content.json` for local dev preview
  *   3. Local draft file (for Draft Mode)
@@ -451,7 +451,7 @@ export async function getSiteContent(): Promise<RidemaxSiteContent> {
         siteContentSchema.parse(await readJsonFile<unknown>(draftSiteContentPath)),
       );
     } catch {
-      // No local draft yet — fall through to the published local file.
+      // No local draft yet. Fall through to the published local file.
     }
   }
 
@@ -459,8 +459,35 @@ export async function getSiteContent(): Promise<RidemaxSiteContent> {
 }
 
 /**
- * Save a draft. This is what the sticky "Save" bar in admin writes to —
- * public pages are unaffected until {@link publishSiteContent} runs.
+ * Read the staged editor bundle for authenticated admin screens. Unlike
+ * public reads, this always prefers the persisted draft so a refresh does not
+ * hide work that marketing saved but has not published yet.
+ */
+export async function getDraftSiteContent(): Promise<RidemaxSiteContent> {
+  noStore();
+
+  try {
+    const supabaseContent = await readSupabaseSiteContent("draft");
+
+    if (supabaseContent) {
+      return supabaseContent;
+    }
+  } catch {
+    // The EC2 path prefers the local bundle when Supabase is missing or not seeded.
+  }
+
+  try {
+    return normalizeSiteContent(
+      siteContentSchema.parse(await readJsonFile<unknown>(draftSiteContentPath)),
+    );
+  } catch {
+    return readLocalSiteContent();
+  }
+}
+
+/**
+ * Save a draft. This is what the sticky "Save" bar in admin writes to.
+ * Public pages are unaffected until {@link publishSiteContent} runs.
  */
 export async function saveSiteContent(content: RidemaxSiteContent) {
   const parsed = normalizeSiteContent(siteContentSchema.parse(content));
@@ -474,7 +501,7 @@ export async function saveSiteContent(content: RidemaxSiteContent) {
 
 /**
  * Publish the current draft. When no draft is staged we publish the live
- * content again — harmless on Supabase, and useful as a "reseed" lever on
+ * content again. Harmless on Supabase, and useful as a "reseed" lever on
  * the local JSON path. Appends a revision entry so admins can roll back.
  */
 export async function publishSiteContent(options?: { actor?: string | null; note?: string | null }) {
@@ -488,7 +515,7 @@ export async function publishSiteContent(options?: { actor?: string | null; note
     // so callers never accidentally publish stale local state.
     const staged = (await readSupabaseSiteContent("draft")) ?? (await readSupabaseSiteContent("published"));
     if (!staged) {
-      throw new Error("Nothing to publish — no draft or published content found.");
+      throw new Error("Nothing to publish - no draft or published content found.");
     }
     await writeSupabasePublishedContent(staged, actor, note);
     return;
@@ -510,7 +537,7 @@ export async function publishSiteContent(options?: { actor?: string | null; note
   try {
     await fs.unlink(draftSiteContentPath);
   } catch {
-    // No draft to clear — fine.
+    // No draft to clear. Fine.
   }
 
   const existingRevisions = await readLocalRevisions();
@@ -536,7 +563,7 @@ async function readLocalRevisions(): Promise<Array<RevisionRow & { content?: unk
 
 /**
  * List the most recent revisions for the admin revision drawer. Returns
- * metadata only — `content` is omitted to keep the response small; callers
+ * metadata only. `content` is omitted to keep the response small; callers
  * load the full bundle with {@link revertSiteContentToRevision}.
  */
 export async function listContentRevisions(limit = 20): Promise<SiteContentRevision[]> {
@@ -563,7 +590,7 @@ export async function listContentRevisions(limit = 20): Promise<SiteContentRevis
 
 /**
  * Revert the draft to a prior revision so the admin can preview the old
- * version and re-publish it. Does not modify published_content directly —
+ * version and re-publish it. Does not modify published_content directly.
  * rollback still goes through the Publish button, which keeps a revision
  * entry in place for audit continuity.
  */

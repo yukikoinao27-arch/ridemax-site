@@ -45,7 +45,7 @@ export type SectionDecoration = {
 
 /**
  * Card preset controls the mobile-safe layout shape of a single card inside
- * a collection grid. Marketing picks an intent — the preset owns the grid
+ * a collection grid. Marketing picks an intent; the preset owns the grid
  * column counts, the image aspect ratio, and the text placement. Presets do
  * NOT expose per-breakpoint knobs; that is the whole point. Adding new
  * variants here is a design decision, not a marketing decision.

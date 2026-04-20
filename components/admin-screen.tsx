@@ -8,7 +8,7 @@ import {
 import { listMediaAssets } from "@/lib/server/media-library";
 import {
   getAdminMetrics,
-  getSiteContent,
+  getDraftSiteContent,
   listContactMessages,
 } from "@/lib/server/ridemax-content-repository";
 
@@ -91,7 +91,7 @@ export async function AdminScreen({ view, error }: AdminScreenProps) {
   }
 
   const [content, metrics, messages, mediaAssets] = await Promise.all([
-    getSiteContent(),
+    getDraftSiteContent(),
     getAdminMetrics(),
     listContactMessages(),
     listMediaAssets(),

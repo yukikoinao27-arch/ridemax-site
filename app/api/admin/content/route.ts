@@ -1,15 +1,14 @@
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { siteContentSchema } from "@/lib/content-schemas";
 import { isAdminAuthenticated } from "@/lib/server/admin-auth";
-import { getSiteContent, saveSiteContent } from "@/lib/server/ridemax-content-repository";
+import { getDraftSiteContent, saveSiteContent } from "@/lib/server/ridemax-content-repository";
 
 export async function GET() {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  return NextResponse.json(await getSiteContent());
+  return NextResponse.json(await getDraftSiteContent());
 }
 
 export async function PUT(request: Request) {
@@ -28,13 +27,6 @@ export async function PUT(request: Request) {
   }
 
   await saveSiteContent(parsed.data);
-  revalidatePath("/", "layout");
-  revalidatePath("/search");
-  revalidatePath("/products");
-  revalidatePath("/careers");
-  revalidatePath("/events");
-  revalidatePath("/awards");
-  revalidatePath("/promotions");
 
-  return NextResponse.json({ message: "Content saved successfully." });
+  return NextResponse.json({ message: "Draft saved." });
 }

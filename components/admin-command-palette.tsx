@@ -9,8 +9,8 @@ import type { AdminSearchEntry } from "@/lib/server/admin-search-index";
  *
  * Opens on Ctrl+K / Cmd+K from anywhere in /admin. Marketing types a word,
  * gets fuzzy-matched results across pages, collections, and jump-to-page
- * actions, and presses Enter to navigate. Proven pattern — Linear, Notion,
- * Sanity Studio, Vercel — chosen because it replaces sidebar scroll with a
+ * actions, and presses Enter to navigate. Proven pattern: Linear, Notion,
+ * Sanity Studio, Vercel. Chosen because it replaces sidebar scroll with a
  * single keyboard shortcut without adding new UI surface.
  *
  * The palette itself owns the modal, the keyboard handling, and the result
@@ -112,14 +112,24 @@ export function AdminCommandPalette() {
         (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
       if (isPaletteShortcut) {
         event.preventDefault();
-        setOpen((prev) => !prev);
+        setOpen((prev) => {
+          const next = !prev;
+          if (next) {
+            setQuery("");
+            setActiveIndex(0);
+          }
+          return next;
+        });
         return;
       }
       if (event.key === "Escape") {
         setOpen(false);
+        setQuery("");
       }
     }
     function onOpenEvent() {
+      setQuery("");
+      setActiveIndex(0);
       setOpen(true);
     }
     window.addEventListener("keydown", onKeydown);
@@ -156,44 +166,46 @@ export function AdminCommandPalette() {
     };
   }, [open]);
 
-  // Focus the input when the palette opens and reset state on close.
+  // Focus the input when the palette opens. Query/index resets happen in
+  // event handlers so render stays derived and lint-clean.
   useEffect(() => {
     if (open) {
       inputRef.current?.focus();
-      setActiveIndex(0);
-    } else {
-      setQuery("");
     }
   }, [open]);
 
   const filtered = useMemo(() => filterEntries(entries, query), [entries, query]);
-
-  // Clamp active index when the filtered list shrinks.
-  useEffect(() => {
-    if (activeIndex >= filtered.length) {
-      setActiveIndex(0);
-    }
-  }, [filtered.length, activeIndex]);
+  const safeActiveIndex =
+    filtered.length === 0 ? -1 : Math.min(activeIndex, filtered.length - 1);
 
   if (!open) {
     return null;
   }
 
-  function commit(entry: AdminSearchEntry) {
+  function closePalette() {
     setOpen(false);
+    setQuery("");
+  }
+
+  function commit(entry: AdminSearchEntry) {
+    closePalette();
     router.push(entry.href);
   }
 
   function onInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
+      if (filtered.length > 0) {
+        setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
+      }
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
-      setActiveIndex((i) => Math.max(i - 1, 0));
+      if (filtered.length > 0) {
+        setActiveIndex((i) => Math.max(i - 1, 0));
+      }
     } else if (event.key === "Enter") {
       event.preventDefault();
-      const entry = filtered[activeIndex];
+      const entry = filtered[safeActiveIndex];
       if (entry) {
         commit(entry);
       }
@@ -205,7 +217,7 @@ export function AdminCommandPalette() {
       aria-modal="true"
       role="dialog"
       className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-24"
-      onClick={() => setOpen(false)}
+      onClick={closePalette}
     >
       <div
         className="w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl"
@@ -215,9 +227,12 @@ export function AdminCommandPalette() {
           <input
             ref={inputRef}
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setActiveIndex(0);
+            }}
             onKeyDown={onInputKeyDown}
-            placeholder="Search pages, content, or actions…"
+            placeholder="Search pages, content, or actions..."
             className="w-full bg-transparent text-base text-[#220707] outline-none placeholder:text-[#a0918d]"
           />
         </div>
@@ -226,7 +241,7 @@ export function AdminCommandPalette() {
             <li className="px-4 py-6 text-center text-sm text-[#6a433d]">No results</li>
           ) : (
             filtered.map((entry, index) => {
-              const isActive = index === activeIndex;
+              const isActive = index === safeActiveIndex;
               return (
                 <li key={entry.id}>
                   <button
@@ -255,7 +270,7 @@ export function AdminCommandPalette() {
           )}
         </ul>
         <div className="border-t border-black/10 bg-[#faf8f7] px-4 py-2 text-[0.7rem] uppercase tracking-[0.14em] text-[#8a736f]">
-          <span>↑↓ navigate · Enter open · Esc close</span>
+          <span>Up/Down navigate | Enter open | Esc close</span>
         </div>
       </div>
     </div>
