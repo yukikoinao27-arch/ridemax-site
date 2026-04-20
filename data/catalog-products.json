@@ -1,0 +1,517 @@
+{
+  "source": {
+    "mode": "local-json",
+    "provider": "ridemax-seed-catalog",
+    "endpoint": "",
+    "readOnly": true,
+    "syncStrategy": "api-based-ingestion",
+    "fallbackPath": "data/catalog-products.json",
+    "notes": [
+      "Treat the catalog as read-only external data. The CMS should manage only display rules, taxonomy, and merchandising.",
+      "Switch mode to remote-api when the supplier or ERP endpoint is ready, then keep this local file as the fallback path.",
+      "Prefer API-based ingestion first. Move to queue-worker only when payload size or sync volume starts blocking the web app."
+    ]
+  },
+  "categories": [
+    {
+      "slug": "tires",
+      "name": "Tires",
+      "description": "Explore top tire brands built for performance, safety, and durability. Perfect for every ride, on any road."
+    },
+    {
+      "slug": "rims",
+      "name": "Rims",
+      "description": "Bold wheel options for statement builds, premium street profiles, and cleaner off-road fitment."
+    },
+    {
+      "slug": "accessories",
+      "name": "Accessories",
+      "description": "Off-road accessories, brake kits, suspension, and air fresheners presented in a clean white layout."
+    }
+  ],
+  "items": [
+    {
+      "id": "tire-energy-xm2-plus",
+      "slug": "michelin-energy-xm2-plus",
+      "brand": "Michelin",
+      "title": "MICHELIN Energy XM2+ - A Tire That Lasts",
+      "summary": "A long-lasting summer road tire built for everyday reliability and safety.",
+      "description": "The MICHELIN Energy XM2+ is a long-lasting summer road tire built for everyday reliability and safety. Designed to deliver excellent durability, superior wet braking, and consistent performance even when worn, it offers unbeatable value and protection for your daily drive.",
+      "highlights": [
+        "Outstanding longevity that lasts longer than the average of premium competitors.",
+        "Robust construction that resists damage from rough or uneven roads.",
+        "Shorter wet braking distances for improved safety on rainy days.",
+        "Reliable performance even when worn for long-term confidence."
+      ],
+      "sku": "ENERGYXM2+",
+      "image": "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+        "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+        "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png"
+      ],
+      "sizes": [
+        "185/65R15",
+        "195/65R15",
+        "205/55R16",
+        "215/55R17"
+      ],
+      "tags": [
+        "Tire",
+        "PCR",
+        "Road"
+      ],
+      "searchKeywords": [
+        "tires",
+        "michelin",
+        "xm2",
+        "summer",
+        "road"
+      ],
+      "published": true,
+      "order": 1,
+      "categorySlug": "tires"
+    },
+    {
+      "id": "tire-latitude-sport-3",
+      "slug": "michelin-latitude-sport-3",
+      "brand": "Michelin",
+      "title": "MICHELIN Latitude Sport 3 - The High-Performance SUV Tire",
+      "summary": "A premium SUV tire designed for high-speed stability, wet grip, and sharper steering response.",
+      "description": "Built for performance SUVs, the MICHELIN Latitude Sport 3 brings together precise steering, strong braking, and confident highway behavior for drivers who want a more refined high-speed experience.",
+      "highlights": [
+        "Precise steering feel for premium SUV applications.",
+        "Improved wet grip for more confident braking.",
+        "Stable highway behavior under heavier vehicle loads."
+      ],
+      "sku": "LATSPORT3",
+      "image": "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+        "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png"
+      ],
+      "sizes": [
+        "235/55R19",
+        "255/50R20",
+        "275/45R21"
+      ],
+      "tags": [
+        "Tire",
+        "PCR",
+        "SUV"
+      ],
+      "searchKeywords": [
+        "tires",
+        "latitude",
+        "suv",
+        "michelin"
+      ],
+      "published": true,
+      "order": 2,
+      "categorySlug": "tires"
+    },
+    {
+      "id": "tire-agilis-3",
+      "slug": "michelin-agilis-3",
+      "brand": "Michelin",
+      "title": "MICHELIN Agilis 3",
+      "summary": "A work-ready commercial tire tuned for durability, efficiency, and dependable everyday service.",
+      "description": "MICHELIN Agilis 3 is designed for vans and commercial vehicles that need dependable durability, lower rolling resistance, and long service life in demanding daily operation.",
+      "highlights": [
+        "Built for commercial daily use.",
+        "Engineered to balance longevity and efficiency.",
+        "Designed for vans and heavy service routes."
+      ],
+      "sku": "AGILIS3",
+      "image": "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png"
+      ],
+      "sizes": [
+        "215/75R16",
+        "225/75R16"
+      ],
+      "tags": [
+        "Tire",
+        "TBR",
+        "Commercial"
+      ],
+      "searchKeywords": [
+        "tires",
+        "agilis",
+        "commercial",
+        "michelin"
+      ],
+      "published": true,
+      "order": 3,
+      "categorySlug": "tires"
+    },
+    {
+      "id": "tire-g-force-phenom",
+      "slug": "bfgoodrich-g-force-phenom",
+      "brand": "BFGoodrich",
+      "title": "BFGoodrich G- FORCE PHENOM",
+      "summary": "A performance tire focused on responsive handling, sporty confidence, and everyday grip.",
+      "description": "The BFGoodrich G- FORCE PHENOM is designed for drivers who want more responsive handling, road feel, and a sportier personality from their street build.",
+      "highlights": [
+        "Sharper steering response.",
+        "Sport-driven road performance.",
+        "Built for strong dry and wet grip."
+      ],
+      "sku": "GFORCEPHENOM",
+      "image": "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png"
+      ],
+      "sizes": [
+        "225/45R17",
+        "235/40R18",
+        "245/40R18"
+      ],
+      "tags": [
+        "Tire",
+        "PCR",
+        "Performance"
+      ],
+      "searchKeywords": [
+        "tires",
+        "bfgoodrich",
+        "phenom",
+        "street"
+      ],
+      "published": true,
+      "order": 4,
+      "categorySlug": "tires"
+    },
+    {
+      "id": "tire-ko3",
+      "slug": "bfgoodrich-all-terrain-ta-ko3",
+      "brand": "BFGoodrich",
+      "title": "BFGoodrich All-Terrain T/A KO3",
+      "summary": "A trail-proven all-terrain tire built for mixed road use, stronger sidewalls, and dependable grip.",
+      "description": "The BFGoodrich All-Terrain T/A KO3 is built for drivers who want one tire that can confidently handle daily roads, loose terrain, and off-road weekends without losing its rugged character.",
+      "highlights": [
+        "Balanced on-road and off-road usability.",
+        "Stronger sidewall confidence for rough routes.",
+        "A more aggressive tread stance for adventure builds."
+      ],
+      "sku": "KO3",
+      "image": "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+        "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png"
+      ],
+      "sizes": [
+        "265/70R17",
+        "285/70R17",
+        "33x12.50R18"
+      ],
+      "tags": [
+        "Tire",
+        "PCLT",
+        "Offroad"
+      ],
+      "searchKeywords": [
+        "tires",
+        "ko3",
+        "all terrain",
+        "bfgoodrich",
+        "offroad"
+      ],
+      "published": true,
+      "order": 5,
+      "categorySlug": "tires"
+    },
+    {
+      "id": "tire-km3",
+      "slug": "bfgoodrich-mud-terrain-ta-km3",
+      "brand": "BFGoodrich",
+      "title": "BFGoodrich Mud-Terrain T/A KM3",
+      "summary": "A deep-void mud-terrain tire made for heavier off-road demands, loose terrain, and stronger trail bite.",
+      "description": "The BFGoodrich Mud-Terrain T/A KM3 is designed for aggressive off-road builds that need stronger mud evacuation, climbing grip, and rugged sidewall confidence.",
+      "highlights": [
+        "Built for more aggressive trail use.",
+        "Deep tread voids for mud and loose terrain.",
+        "Rugged sidewall support for rougher routes."
+      ],
+      "sku": "KM3",
+      "image": "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png"
+      ],
+      "sizes": [
+        "285/75R16",
+        "35x12.50R17",
+        "37x12.50R18"
+      ],
+      "tags": [
+        "Tire",
+        "PCLT",
+        "Mud Terrain"
+      ],
+      "searchKeywords": [
+        "tires",
+        "km3",
+        "mud terrain",
+        "bfgoodrich",
+        "offroad"
+      ],
+      "published": true,
+      "order": 6,
+      "categorySlug": "tires"
+    },
+    {
+      "id": "rim-1",
+      "slug": "forge-six",
+      "brand": "Fuel Off-Road",
+      "title": "Forge Six",
+      "summary": "Split-spoke design that keeps the profile light while staying visually strong.",
+      "description": "Forge Six delivers a cleaner street profile with enough visual weight to stand out on SUVs and pickups.",
+      "highlights": [
+        "Split-spoke face.",
+        "Premium street-friendly finish.",
+        "Strong fit for SUVs and pickups."
+      ],
+      "sku": "FORGESIX",
+      "image": "https://static.wixstatic.com/media/2d031a_4181d0f8f7c64880ade1b22458e23a67~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4181d0f8f7c64880ade1b22458e23a67~mv2.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_4181d0f8f7c64880ade1b22458e23a67~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4181d0f8f7c64880ade1b22458e23a67~mv2.png",
+        "https://static.wixstatic.com/media/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png"
+      ],
+      "sizes": [
+        "18x9",
+        "20x10",
+        "22x10"
+      ],
+      "tags": [
+        "Rim",
+        "Street",
+        "SUV"
+      ],
+      "searchKeywords": [
+        "rims",
+        "wheels",
+        "fuel",
+        "street"
+      ],
+      "published": true,
+      "order": 1,
+      "categorySlug": "rims"
+    },
+    {
+      "id": "rim-2",
+      "slug": "trail-mesh",
+      "brand": "Fuel Off-Road",
+      "title": "Trail Mesh",
+      "summary": "Beadlock-inspired face made for off-road builds and more rugged visual weight.",
+      "description": "Trail Mesh is shaped for off-road builds that want stronger visual weight and a tougher face design.",
+      "highlights": [
+        "Beadlock-inspired styling.",
+        "Strong visual weight for 4x4 builds.",
+        "Ideal for rugged tire pairings."
+      ],
+      "sku": "TRAILMESH",
+      "image": "https://static.wixstatic.com/media/2d031a_4b2434479f4c4bb19e75b87c5d6b1942~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4b2434479f4c4bb19e75b87c5d6b1942~mv2.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_4b2434479f4c4bb19e75b87c5d6b1942~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4b2434479f4c4bb19e75b87c5d6b1942~mv2.png"
+      ],
+      "sizes": [
+        "17x8.5",
+        "18x9",
+        "20x9"
+      ],
+      "tags": [
+        "Rim",
+        "Off-road",
+        "4x4"
+      ],
+      "searchKeywords": [
+        "rims",
+        "wheels",
+        "fuel",
+        "off-road"
+      ],
+      "published": true,
+      "order": 2,
+      "categorySlug": "rims"
+    },
+    {
+      "id": "rim-3",
+      "slug": "street-halo",
+      "brand": "Work Wheels",
+      "title": "Street Halo",
+      "summary": "Polished multi-spoke option for cleaner street builds and premium brand pairings.",
+      "description": "Street Halo brings a more polished street look with a premium multi-spoke design for cleaner builds.",
+      "highlights": [
+        "Polished multi-spoke face.",
+        "Street-focused finish.",
+        "Premium visual character."
+      ],
+      "sku": "STREETHALO",
+      "image": "https://static.wixstatic.com/media/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png"
+      ],
+      "sizes": [
+        "19x8.5",
+        "20x9.5",
+        "22x10"
+      ],
+      "tags": [
+        "Rim",
+        "Street",
+        "Premium"
+      ],
+      "searchKeywords": [
+        "rims",
+        "wheels",
+        "work",
+        "street"
+      ],
+      "published": true,
+      "order": 3,
+      "categorySlug": "rims"
+    },
+    {
+      "id": "acc-1",
+      "slug": "off-road-recovery-kit",
+      "brand": "Rigid",
+      "title": "Off-road Recovery Kit",
+      "summary": "Curated tow, traction, and storage setup built for more confident out-of-town runs.",
+      "description": "A practical kit built around traction boards, recovery essentials, and cleaner storage for trail-ready vehicles.",
+      "highlights": [
+        "Recovery-first product bundle.",
+        "Useful for long drives and trail days.",
+        "Built to keep equipment organized and ready."
+      ],
+      "sku": "RECOVERYKIT",
+      "image": "https://static.wixstatic.com/media/2d031a_562f4a6f488c4658a734691885f575c6~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_562f4a6f488c4658a734691885f575c6~mv2.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_562f4a6f488c4658a734691885f575c6~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_562f4a6f488c4658a734691885f575c6~mv2.png"
+      ],
+      "sizes": [
+        "Standard Kit"
+      ],
+      "tags": [
+        "Accessory",
+        "Off-road",
+        "Recovery"
+      ],
+      "searchKeywords": [
+        "accessories",
+        "recovery",
+        "off-road"
+      ],
+      "published": true,
+      "order": 1,
+      "categorySlug": "accessories"
+    },
+    {
+      "id": "acc-2",
+      "slug": "peak-control-coilover",
+      "brand": "Profender",
+      "title": "Peak Control Coilover",
+      "summary": "Ride-height and damping upgrade for more controlled handling over rough surfaces.",
+      "description": "A suspension-focused product for customers who want improved ride control, confidence, and posture over changing road conditions.",
+      "highlights": [
+        "Ride-height and damping support.",
+        "Better control on uneven roads.",
+        "Works for road and light trail use."
+      ],
+      "sku": "PEAKCOILOVER",
+      "image": "https://static.wixstatic.com/media/2d031a_5c9efccb07364f299ee64fe91cb54c6b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_5c9efccb07364f299ee64fe91cb54c6b~mv2.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_5c9efccb07364f299ee64fe91cb54c6b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_5c9efccb07364f299ee64fe91cb54c6b~mv2.png"
+      ],
+      "sizes": [
+        "Front Pair",
+        "Full Set"
+      ],
+      "tags": [
+        "Accessory",
+        "Suspension",
+        "Lift"
+      ],
+      "searchKeywords": [
+        "accessories",
+        "coilover",
+        "suspension",
+        "profender"
+      ],
+      "published": true,
+      "order": 2,
+      "categorySlug": "accessories"
+    },
+    {
+      "id": "acc-3",
+      "slug": "apex-brake-kit",
+      "brand": "Team Ridemax",
+      "title": "Apex Brake Kit",
+      "summary": "A brake upgrade package made for stronger response, improved confidence, and cleaner pedal feel.",
+      "description": "A brake-focused upgrade package designed for drivers who want sharper stopping feel and stronger confidence under load.",
+      "highlights": [
+        "Cleaner braking response.",
+        "Built for heavier builds and daily control.",
+        "Improves confidence in repeated stops."
+      ],
+      "sku": "APEXBRAKE",
+      "image": "https://static.wixstatic.com/media/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png"
+      ],
+      "sizes": [
+        "Front Kit",
+        "Front and Rear"
+      ],
+      "tags": [
+        "Accessory",
+        "Brake kit",
+        "Performance"
+      ],
+      "searchKeywords": [
+        "accessories",
+        "brake kit",
+        "brakes"
+      ],
+      "published": true,
+      "order": 3,
+      "categorySlug": "accessories"
+    },
+    {
+      "id": "acc-4",
+      "slug": "signature-cabin-freshener",
+      "brand": "Team Ridemax",
+      "title": "Signature Cabin Freshener",
+      "summary": "Small accessory, strong branding, and an easy fit for lifestyle merchandising.",
+      "description": "A simple brand-led lifestyle product built for everyday use, giftability, and easy add-on merchandising.",
+      "highlights": [
+        "Lifestyle-friendly add-on item.",
+        "Easy brand merch extension.",
+        "Works well for giftable bundles."
+      ],
+      "sku": "CABINFRESH",
+      "image": "https://static.wixstatic.com/media/2d031a_3562ffe2ec5f4d28a663028829717722~mv2.png/v1/fill/w_566,h_450,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/1.png",
+      "gallery": [
+        "https://static.wixstatic.com/media/2d031a_3562ffe2ec5f4d28a663028829717722~mv2.png/v1/fill/w_566,h_450,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/1.png"
+      ],
+      "sizes": [
+        "Classic",
+        "Citrus",
+        "Black Ice"
+      ],
+      "tags": [
+        "Accessory",
+        "Air Freshener",
+        "Lifestyle"
+      ],
+      "searchKeywords": [
+        "accessories",
+        "air freshener",
+        "cabin"
+      ],
+      "published": true,
+      "order": 4,
+      "categorySlug": "accessories"
+    }
+  ]
+}

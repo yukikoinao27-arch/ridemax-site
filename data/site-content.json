@@ -1,0 +1,1337 @@
+{
+  "navigation": [
+    {
+      "label": "Home",
+      "href": "/"
+    },
+    {
+      "label": "Products",
+      "href": "/products",
+      "children": [
+        {
+          "label": "Tires",
+          "href": "/products/tires"
+        },
+        {
+          "label": "Rims",
+          "href": "/products/rims"
+        },
+        {
+          "label": "Accessories",
+          "href": "/products/accessories"
+        }
+      ]
+    },
+    {
+      "label": "Careers",
+      "href": "/careers"
+    },
+    {
+      "label": "Events and Awards",
+      "href": "/events-awards",
+      "children": [
+        {
+          "label": "Events",
+          "href": "/events"
+        },
+        {
+          "label": "Awards",
+          "href": "/awards"
+        },
+        {
+          "label": "News",
+          "href": "/news"
+        },
+        {
+          "label": "Promotions",
+          "href": "/promotions"
+        }
+      ]
+    },
+    {
+      "label": "About Us",
+      "href": "/about"
+    }
+  ],
+  "site": {
+    "siteName": "Team Ridemax",
+    "logoSrc": "/ridemax-logo.svg",
+    "logoLightSrc": "/ridemax-logo-light.svg",
+    "searchPlaceholder": "Search...",
+    "footerDescription": "Team Ridemax is where bold riders find their edge — premium tires, rims, and accessories backed by a crew that rides alongside you."
+  },
+  "contact": {
+    "address": "96-98 Matutum, Manresa, Quezon City, 1115 Metro Manila",
+    "phone": "+63 917 555 0148",
+    "email": "teamridemaxphilippines@gmail.com",
+    "mapQuery": "96-98 Matutum, Manresa, Quezon City, 1115 Metro Manila",
+    "mapZoom": 15,
+    "intro": "Have a question or need more information? Get in touch with us and our team will be happy to assist you.",
+    "socials": [
+      {
+        "platform": "facebook",
+        "label": "Facebook",
+        "href": "https://facebook.com"
+      },
+      {
+        "platform": "instagram",
+        "label": "Instagram",
+        "href": "https://instagram.com"
+      },
+      {
+        "platform": "linkedin",
+        "label": "LinkedIn",
+        "href": "https://linkedin.com"
+      },
+      {
+        "platform": "x",
+        "label": "X",
+        "href": "https://x.com"
+      },
+      {
+        "platform": "tiktok",
+        "label": "TikTok",
+        "href": "https://tiktok.com"
+      },
+      {
+        "platform": "youtube",
+        "label": "YouTube",
+        "href": "https://youtube.com"
+      }
+    ],
+    "shops": [
+      {
+        "label": "Shopee",
+        "href": "https://shopee.ph"
+      },
+      {
+        "label": "Lazada",
+        "href": "https://lazada.com.ph"
+      },
+      {
+        "label": "TikTok Shop",
+        "href": "https://shop.tiktok.com"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "page-home",
+      "slug": "home",
+      "title": "Home",
+      "summary": "This is where bold riders find their edge. Explore content, gear, and experiences crafted for those who enjoy pushing limits, breaking boundaries, and embracing the thrill of every ride.",
+      "blocks": [
+        {
+          "id": "home-hero",
+          "type": "hero",
+          "order": 1,
+          "title": "EXCELLENCE IN EVERY RIDE",
+          "summary": "This is where bold riders find their edge. Explore content, gear, and experiences crafted for those who enjoy pushing limits, breaking boundaries, and embracing the thrill of every ride.",
+          "image": {
+            "src": "https://static.wixstatic.com/media/2d031a_b711eb5b8fc6470e93fd0fe40e64ee12~mv2.jpg",
+            "alt": "Ridemax showroom hero"
+          },
+          "dark": true,
+          "minHeight": "min-h-[38rem]",
+          "align": "center",
+          "tone": "default"
+        },
+        {
+          "id": "home-category-tiles",
+          "type": "categoryTiles",
+          "order": 2,
+          "title": "Browse By Category",
+          "summary": "Choose the product line you want to explore first.",
+          "tiles": [
+            {
+              "label": "Tires",
+              "href": "/products/tires"
+            },
+            {
+              "label": "Rims",
+              "href": "/products/rims"
+            },
+            {
+              "label": "Off road Accessories",
+              "href": "/products/accessories#off-road-accessories"
+            },
+            {
+              "label": "Brake kits",
+              "href": "/products/accessories#brake-kits"
+            },
+            {
+              "label": "Suspension",
+              "href": "/products/accessories#suspension"
+            },
+            {
+              "label": "Air Freshener",
+              "href": "/products/accessories#air-freshener"
+            }
+          ]
+        },
+        {
+          "id": "home-brand-marquee",
+          "type": "brandMarquee",
+          "order": 3,
+          "eyebrow": "Featured Brand of the Month",
+          "title": "Featured Brand of the Month",
+          "summary": "Leader of top Off-road brands across the Philippines.",
+          "direction": "right-to-left"
+        },
+        {
+          "id": "home-brand-grid",
+          "type": "collectionGrid",
+          "order": 4,
+          "title": "Featured Brand of the Month",
+          "summary": "Leader of top Off-road brands across the Philippines.",
+          "source": "brands",
+          "variant": "brands",
+          "limit": 5
+        },
+        {
+          "id": "home-news-grid",
+          "type": "collectionGrid",
+          "order": 5,
+          "title": "What's New?",
+          "summary": "Catch up on the latest updates and exciting news right here! We've got all the fresh and fun details you need.",
+          "source": "news",
+          "variant": "news",
+          "limit": 3,
+          "featuredOnly": true,
+          "cta": {
+            "label": "See More",
+            "href": "/news"
+          }
+        },
+        {
+          "id": "home-promotions-grid",
+          "type": "collectionGrid",
+          "order": 6,
+          "eyebrow": "Video Promotions",
+          "title": "Latest Promotions",
+          "summary": "Watch our latest launches, showroom walkthroughs, and rider-favorite moments — all in one place.",
+          "source": "promotions",
+          "variant": "promotions",
+          "limit": 2,
+          "featuredOnly": true,
+          "cta": {
+            "label": "Browse Promotions",
+            "href": "/promotions"
+          }
+        },
+        {
+          "id": "home-events-grid",
+          "type": "collectionGrid",
+          "order": 7,
+          "title": "Upcoming Events",
+          "summary": "Stay updated on the latest rides and upcoming gatherings. Gear up for exciting events you won't want to miss.",
+          "source": "events",
+          "variant": "events",
+          "limit": 3,
+          "cta": {
+            "label": "See More",
+            "href": "/events"
+          }
+        },
+        {
+          "id": "home-contact",
+          "type": "contact",
+          "order": 8,
+          "eyebrow": "Contact",
+          "title": "Get In Touch",
+          "summary": "Have a question or need more information? Get in touch with us and our team will be happy to assist you.",
+          "contactTitle": "Get In Touch",
+          "showForm": true,
+          "showMap": false
+        }
+      ]
+    },
+    {
+      "id": "page-products",
+      "slug": "products",
+      "title": "Products",
+      "summary": "Explore the tires, rims, and accessories trusted by riders across the Philippines — built for performance, style, and the long road ahead.",
+      "blocks": [
+        {
+          "id": "products-hero",
+          "type": "hero",
+          "order": 1,
+          "title": "Products",
+          "summary": "Browse tires, rims, and accessories from the same shared catalog that powers search, product detail pages, and future admin workflows.",
+          "image": {
+            "src": "https://static.wixstatic.com/media/2d031a_9592a62f4d0f46ce833c2e5eeebbf135~mv2.jpg",
+            "alt": "Ridemax products hero"
+          },
+          "dark": true,
+          "minHeight": "min-h-[30rem]",
+          "align": "center",
+          "tone": "default"
+        },
+        {
+          "id": "products-grid",
+          "type": "collectionGrid",
+          "order": 2,
+          "title": "Browse by Category",
+          "summary": "Shop tires, rims, and accessories built to match how you ride — from daily commutes to weekend trails.",
+          "source": "catalogCategories",
+          "variant": "categories"
+        }
+      ]
+    },
+    {
+      "id": "page-careers",
+      "slug": "careers",
+      "title": "Drive Your Career Forward",
+      "summary": "Every big journey starts with one step, take yours here.",
+      "blocks": [
+        {
+          "id": "careers-hero",
+          "type": "hero",
+          "order": 1,
+          "title": "Drive Your Career Forward",
+          "summary": "Every big journey starts with one step, take yours here.",
+          "image": {
+            "src": "https://static.wixstatic.com/media/2d031a_159b76cd43da43d4ba76487bee702d7b~mv2.jpg/v1/fit/w_960,h_720,q_90,enc_avif,quality_auto/2d031a_159b76cd43da43d4ba76487bee702d7b~mv2.jpg",
+            "alt": "Ridemax careers hero"
+          },
+          "dark": true,
+          "minHeight": "min-h-[28rem]",
+          "align": "center",
+          "tone": "accent"
+        },
+        {
+          "id": "careers-gallery",
+          "type": "imageMarquee",
+          "order": 2,
+          "title": "",
+          "summary": "",
+          "images": [
+            "https://static.wixstatic.com/media/2d031a_159b76cd43da43d4ba76487bee702d7b~mv2.jpg/v1/fit/w_960,h_720,q_90,enc_avif,quality_auto/2d031a_159b76cd43da43d4ba76487bee702d7b~mv2.jpg",
+            "https://static.wixstatic.com/media/2d031a_260a0bd536c141a2a15b6af510a6e412~mv2.jpg/v1/fit/w_960,h_720,q_90,enc_avif,quality_auto/2d031a_260a0bd536c141a2a15b6af510a6e412~mv2.jpg",
+            "https://static.wixstatic.com/media/2d031a_52ee445ecb5e46e28cba69c50c87f169~mv2.jpg/v1/fit/w_960,h_720,q_90,enc_avif,quality_auto/2d031a_52ee445ecb5e46e28cba69c50c87f169~mv2.jpg",
+            "https://static.wixstatic.com/media/2d031a_59e0581c653a444d9d90b54ae5d2d3c9~mv2.jpg/v1/fit/w_960,h_720,q_90,enc_avif,quality_auto/2d031a_59e0581c653a444d9d90b54ae5d2d3c9~mv2.jpg",
+            "https://static.wixstatic.com/media/2d031a_d0b110091f104564a8dcccfdb9498cab~mv2.jpg/v1/fit/w_960,h_720,q_90,enc_avif,quality_auto/2d031a_d0b110091f104564a8dcccfdb9498cab~mv2.jpg",
+            "https://static.wixstatic.com/media/2d031a_be01dd9ea9564c23a7ef810db7c4e0ca~mv2.jpg/v1/crop/x_0,y_841,w_4672,h_6035/fill/w_998,h_1330,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Careers%20(1%20of%201).jpg"
+          ],
+          "direction": "right-to-left",
+          "altPrefix": "Ridemax careers gallery",
+          "background": "bg-[#E31E24] text-white"
+        },
+        {
+          "id": "careers-why-join",
+          "type": "showcase",
+          "order": 3,
+          "eyebrow": "Why Join Us",
+          "title": "Fuel your passion with purpose",
+          "summary": "Build a marketing career inside an automotive brand that needs content, events, and product storytelling to keep shipping.",
+          "accent": "grow, create, and make an impact with us.",
+          "image": "https://static.wixstatic.com/media/2d031a_be01dd9ea9564c23a7ef810db7c4e0ca~mv2.jpg/v1/crop/x_0,y_841,w_4672,h_6035/fill/w_998,h_1330,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Careers%20(1%20of%201).jpg",
+          "imageAlt": "Ridemax careers showcase",
+          "items": [
+            {
+              "title": "Drive Your Passion Forward",
+              "summary": "Turn your love for cars into a career that keeps you moving. Every project fuels excitement and innovation, whether you're on the road, behind the build, or crafting new ideas."
+            },
+            {
+              "title": "Empowered Team Culture",
+              "summary": "We're not just coworkers, we're a crew. Your ideas are heard, your efforts are valued, and your voice makes a difference."
+            },
+            {
+              "title": "Fuel Your Future",
+              "summary": "With opportunities to learn, lead, and grow, you'll build a career that's as dynamic and fast-paced as the world you love."
+            },
+            {
+              "title": "Shift Into A Career That Excites You",
+              "summary": "From hands-on projects to creative breakthroughs, you'll be part of a team that values drive, curiosity, and ambition."
+            }
+          ]
+        },
+        {
+          "id": "careers-jobs",
+          "type": "jobsList",
+          "order": 4,
+          "eyebrow": "Now Hiring",
+          "title": "Join our Team",
+          "summary": "Browse open roles across our departments and find the position that matches your drive.",
+          "featuredTitle": "Featured Roles",
+          "featuredSummary": "Hot opportunities we're hiring for right now — apply directly and start your journey with Team Ridemax.",
+          "aboutCta": {
+            "label": "Want to know more about the company? Click here",
+            "href": "/about"
+          },
+          "showFeatured": true
+        }
+      ]
+    },
+    {
+      "id": "page-about",
+      "slug": "about",
+      "title": "About Us",
+      "summary": "Team Ridemax brings together the tire, rim, and accessory brands riders across the Philippines trust — and the crew that rides alongside them.",
+      "blocks": [
+        {
+          "id": "about-hero",
+          "type": "hero",
+          "order": 1,
+          "title": "About Us",
+          "summary": "Team Ridemax brings together the tire, rim, and accessory brands riders across the Philippines trust — and the crew that rides alongside them.",
+          "image": {
+            "src": "https://static.wixstatic.com/media/2d031a_9592a62f4d0f46ce833c2e5eeebbf135~mv2.jpg",
+            "alt": "Ridemax about hero"
+          },
+          "dark": true,
+          "minHeight": "min-h-[30rem]",
+          "align": "center",
+          "tone": "default"
+        },
+        {
+          "id": "about-story",
+          "type": "featureGrid",
+          "order": 2,
+          "title": "Built Around Riders",
+          "summary": "From product expertise to community events, everything we do is shaped by the people we ride with.",
+          "items": [
+            {
+              "title": "Built Around Riders",
+              "summary": "Team Ridemax brings product knowledge, brand partnerships, events, and community storytelling together in one place."
+            },
+            {
+              "title": "Prepared For Long-Term Growth",
+              "summary": "We partner with the brands riders trust and keep growing our lineup so you always have the right gear for the road ahead."
+            },
+            {
+              "title": "Designed For Riders",
+              "summary": "Every product we carry, every event we host, and every story we tell is built around what riders actually need — from the first fit-up to the next big ride."
+            }
+          ]
+        },
+        {
+          "id": "about-contact",
+          "type": "contact",
+          "order": 3,
+          "eyebrow": "Contact",
+          "title": "Let's Connect",
+          "summary": "Have a question or need more information? Get in touch with us and our team will be happy to assist you.",
+          "contactTitle": "Let's Connect",
+          "showForm": true,
+          "showMap": true
+        }
+      ]
+    },
+    {
+      "id": "page-events-awards",
+      "slug": "events-awards",
+      "title": "Events and Awards",
+      "summary": "A clean white alternating layout with image and copy swapping sides for each project, just like the reference page.",
+      "blocks": [
+        {
+          "id": "events-awards-hero",
+          "type": "hero",
+          "order": 1,
+          "title": "Events and Awards",
+          "summary": "A clean white alternating layout with image and copy swapping sides for each project, just like the reference page.",
+          "image": {
+            "src": "https://static.wixstatic.com/media/a3c153_3592f141741849e8b2cb99afa8e3a412~mv2.jpg",
+            "alt": "Events and awards hero"
+          },
+          "dark": false,
+          "minHeight": "min-h-[24rem]",
+          "align": "center",
+          "tone": "default"
+        },
+        {
+          "id": "events-awards-intro",
+          "type": "richText",
+          "order": 2,
+          "eyebrow": "Welcome",
+          "title": "Our Work",
+          "summary": "Project-style highlights stay reusable here instead of being buried inside a one-off combined page form."
+        },
+        {
+          "id": "events-awards-projects",
+          "type": "projectList",
+          "order": 3,
+          "title": "Project Highlights",
+          "summary": "Alternate events, awards, and editorial storytelling from one reusable project list block."
+        }
+      ]
+    },
+    {
+      "id": "page-news",
+      "slug": "news",
+      "title": "News",
+      "summary": "Latest updates, category stories, and educational content.",
+      "blocks": [
+        {
+          "id": "news-hero",
+          "type": "hero",
+          "order": 1,
+          "title": "News",
+          "summary": "Latest updates, category stories, and educational content.",
+          "image": {
+            "src": "https://static.wixstatic.com/media/2d031a_b711eb5b8fc6470e93fd0fe40e64ee12~mv2.jpg",
+            "alt": "News hero"
+          },
+          "dark": true,
+          "minHeight": "min-h-[24rem]",
+          "align": "center",
+          "tone": "default"
+        },
+        {
+          "id": "news-grid",
+          "type": "collectionGrid",
+          "order": 2,
+          "title": "Latest Stories",
+          "summary": "Publish news from a first-class collection and reuse it across the homepage, search, and future campaign pages.",
+          "source": "news",
+          "variant": "news"
+        }
+      ]
+    },
+    {
+      "id": "page-events",
+      "slug": "events",
+      "title": "Upcoming Events",
+      "summary": "Get ready for upcoming events! From big meetups to local rides, here's what's on the horizon.",
+      "blocks": [
+        {
+          "id": "events-hero",
+          "type": "hero",
+          "order": 1,
+          "title": "Upcoming Events",
+          "summary": "Get ready for upcoming events! From big meetups to local rides, here's what's on the horizon.",
+          "image": {
+            "src": "https://static.wixstatic.com/media/2d031a_e1b6e3a158524ca38a41a16946cc009c~mv2.jpg",
+            "alt": "Events hero"
+          },
+          "dark": true,
+          "minHeight": "min-h-[22rem]",
+          "align": "center",
+          "tone": "default"
+        },
+        {
+          "id": "events-grid",
+          "type": "collectionGrid",
+          "order": 2,
+          "title": "Upcoming Events",
+          "summary": "Manage cards, detail pages, and countdown dates from one Events collection.",
+          "source": "events",
+          "variant": "events"
+        },
+        {
+          "id": "events-calendar",
+          "type": "calendar",
+          "order": 3,
+          "title": "This Month's Event Calendar",
+          "summary": "A lightweight calendar block can be reused on future campaign pages too."
+        }
+      ]
+    },
+    {
+      "id": "page-awards",
+      "slug": "awards",
+      "title": "Awards",
+      "summary": "Recognition that reinforces the Ridemax brand story.",
+      "blocks": [
+        {
+          "id": "awards-hero",
+          "type": "hero",
+          "order": 1,
+          "title": "Awards",
+          "summary": "Recognition that reinforces the Ridemax brand story.",
+          "image": {
+            "src": "https://static.wixstatic.com/media/a3c153_6f27754e06844d62a1708b316797fc08~mv2.jpg",
+            "alt": "Awards hero"
+          },
+          "dark": false,
+          "minHeight": "min-h-[24rem]",
+          "align": "center",
+          "tone": "default"
+        },
+        {
+          "id": "awards-grid",
+          "type": "collectionGrid",
+          "order": 2,
+          "title": "Recognition",
+          "summary": "Awards stay independent from events so the team can promote them without mixing schemas.",
+          "source": "awards",
+          "variant": "awards"
+        }
+      ]
+    },
+    {
+      "id": "page-promotions",
+      "slug": "promotions",
+      "title": "Promotions",
+      "summary": "Video-led promotions, launch reels, and evergreen campaign embeds.",
+      "blocks": [
+        {
+          "id": "promotions-hero",
+          "type": "hero",
+          "order": 1,
+          "title": "Promotions",
+          "summary": "Store only YouTube or Vimeo URLs plus thumbnails so marketing can publish video-led campaigns without managing large uploads.",
+          "image": {
+            "src": "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+            "alt": "Promotions hero"
+          },
+          "dark": true,
+          "minHeight": "min-h-[24rem]",
+          "align": "center",
+          "tone": "accent"
+        },
+        {
+          "id": "promotions-grid",
+          "type": "collectionGrid",
+          "order": 2,
+          "eyebrow": "Video Campaigns",
+          "title": "Latest Promotions",
+          "summary": "Promotions are a first-class collection now, not a hidden subsection under events.",
+          "source": "promotions",
+          "variant": "promotions"
+        }
+      ]
+    }
+  ],
+  "productCategories": [
+    {
+      "slug": "tires",
+      "name": "Tires",
+      "description": "Explore top tire brands built for performance, safety, and durability. Perfect for every ride, on any road.",
+      "heroTitle": "Tire Brands",
+      "heroSummary": "Explore top tire brands built for performance, safety, and durability. Perfect for every ride, on any road.",
+      "heroImage": {
+        "src": "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_1440,h_810,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+        "alt": "Tires category visual"
+      },
+      "featuredImage": "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+      "browseTitle": "Featured Tires",
+      "browseSummary": "Open a tire detail page to view the gallery, description, highlights, SKU, and available sizes.",
+      "sectionTitle": "Types of Tires",
+      "sectionSummary": "Choose tires that match your ride and your lifestyle.",
+      "sections": [
+        {
+          "id": "tire-section-pcr",
+          "slug": "pcr",
+          "title": "PCR Tires",
+          "subtitle": "(Passenger Car Radial)",
+          "image": "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_1200,h_900,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+          "imageAlt": "PCR tires",
+          "paragraphs": [
+            "Passenger Car Radial tires are designed for everyday vehicles, providing a smooth, stable, and fuel-efficient ride on paved roads.",
+            "Ideal for city driving, highway commutes, and long-distance travel, these tires offer reliable performance, comfort, and safety for daily use.",
+            "This suits drivers with a practical and urban lifestyle, especially those who value efficiency, consistency, and dependable handling for regular journeys."
+          ],
+          "published": true,
+          "order": 1
+        },
+        {
+          "id": "tire-section-pclt",
+          "slug": "pclt",
+          "title": "PCLT",
+          "subtitle": "(Passenger Car and Light Truck)",
+          "image": "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_1200,h_900,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+          "imageAlt": "PCLT tires",
+          "paragraphs": [
+            "Specially designed for rugged terrain, these tires offer enhanced traction, durability, and control on dirt, gravel, mud, and uneven surfaces.",
+            "Perfect for off-the-beaten-track journeys, trail rides, and outdoor exploration.",
+            "This suits riders with an adventurous lifestyle who love exploring nature, tackling challenging trails, and seeking the thrill of off-road adventures."
+          ],
+          "published": true,
+          "order": 2
+        },
+        {
+          "id": "tire-section-tbr",
+          "slug": "tbr",
+          "title": "TBR Tires",
+          "subtitle": "(Trucks and Bus Radial)",
+          "image": "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_1200,h_900,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+          "imageAlt": "TBR tires",
+          "paragraphs": [
+            "Truck and Bus Radial tires are engineered for heavy-duty vehicles, delivering strength, durability, and long-lasting performance on highways and commercial routes.",
+            "Designed to handle heavy loads and frequent long-distance travel, these tires are ideal for trucks, buses, and other commercial vehicles that demand reliability and stability.",
+            "This suits a professional, work-focused lifestyle where efficiency, safety, and endurance are essential for daily operations and long-haul journeys."
+          ],
+          "published": true,
+          "order": 3
+        }
+      ]
+    },
+    {
+      "slug": "rims",
+      "name": "Rims",
+      "description": "Bold wheel options for statement builds, premium street profiles, and cleaner off-road fitment.",
+      "heroTitle": "Rims",
+      "heroSummary": "Explore wheel styles that feel premium, look confident, and keep the same strong spacing rhythm from the reference site.",
+      "heroImage": {
+        "src": "https://static.wixstatic.com/media/2d031a_4181d0f8f7c64880ade1b22458e23a67~mv2.png/v1/fit/w_1440,h_810,q_90,enc_avif,quality_auto/2d031a_4181d0f8f7c64880ade1b22458e23a67~mv2.png",
+        "alt": "Rims category visual"
+      },
+      "featuredImage": "https://static.wixstatic.com/media/2d031a_4181d0f8f7c64880ade1b22458e23a67~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4181d0f8f7c64880ade1b22458e23a67~mv2.png",
+      "browseTitle": "Featured Rims",
+      "browseSummary": "Wheel pages stay simple today, but the structure is ready for more fitment fields later.",
+      "sectionTitle": "Wheel Styles",
+      "sectionSummary": "Choose rims that fit the look and stance of your build.",
+      "sections": [
+        {
+          "id": "rim-section-street",
+          "slug": "street",
+          "title": "Street",
+          "subtitle": "Refined daily fitment",
+          "paragraphs": [
+            "Street-focused wheel sets are designed for clean fitment, balanced proportions, and a more polished everyday look.",
+            "They work well for premium SUVs, pickups, and road-first builds that still want more personality."
+          ],
+          "published": true,
+          "order": 1
+        },
+        {
+          "id": "rim-section-off-road",
+          "slug": "off-road",
+          "title": "Off-road",
+          "subtitle": "Rugged presence",
+          "paragraphs": [
+            "Off-road wheel styles add more visual weight, stronger spoke character, and a tougher stance for trail-oriented builds.",
+            "These options fit drivers who want a more assertive, adventure-ready look."
+          ],
+          "published": true,
+          "order": 2
+        }
+      ]
+    },
+    {
+      "slug": "accessories",
+      "name": "Accessories",
+      "description": "Off-road accessories, brake kits, suspension, and air fresheners presented in a clean white layout.",
+      "heroTitle": "Accessories",
+      "heroSummary": "Off-road accessories, brake kits, suspension, and lifestyle add-ons built around a cleaner catalog experience.",
+      "heroImage": {
+        "src": "https://static.wixstatic.com/media/2d031a_562f4a6f488c4658a734691885f575c6~mv2.png/v1/fit/w_1440,h_810,q_90,enc_avif,quality_auto/2d031a_562f4a6f488c4658a734691885f575c6~mv2.png",
+        "alt": "Accessories category visual"
+      },
+      "featuredImage": "https://static.wixstatic.com/media/2d031a_562f4a6f488c4658a734691885f575c6~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_562f4a6f488c4658a734691885f575c6~mv2.png",
+      "browseTitle": "Featured Accessories",
+      "browseSummary": "Browse the categories highlighted on the homepage, then open the detail page for the exact product line you want.",
+      "sectionTitle": "Accessory Categories",
+      "sectionSummary": "Jump straight into the accessory group you are looking for.",
+      "sections": [
+        {
+          "id": "accessory-off-road",
+          "slug": "off-road-accessories",
+          "title": "Off road Accessories",
+          "subtitle": "Trail-ready gear",
+          "paragraphs": [
+            "Lighting, recovery tools, rooftop solutions, and practical add-ons that prepare the build for more demanding routes.",
+            "This section is built for customers who want function, visibility, and stronger all-around trail utility."
+          ],
+          "published": true,
+          "order": 1
+        },
+        {
+          "id": "accessory-brake-kits",
+          "slug": "brake-kits",
+          "title": "Brake Kits",
+          "subtitle": "Stronger stopping confidence",
+          "paragraphs": [
+            "Brake kits improve control, consistency, and stopping confidence for heavier builds or more spirited driving.",
+            "This is ideal for customers who want a stronger performance feel and better confidence under load."
+          ],
+          "published": true,
+          "order": 2
+        },
+        {
+          "id": "accessory-suspension",
+          "slug": "suspension",
+          "title": "Suspension",
+          "subtitle": "Ride height and control",
+          "paragraphs": [
+            "Suspension upgrades help control body movement, improve ride posture, and support both road and trail use.",
+            "This suits drivers who want a more planted ride, a more commanding stance, or better capability off-road."
+          ],
+          "published": true,
+          "order": 3
+        },
+        {
+          "id": "accessory-air-freshener",
+          "slug": "air-freshener",
+          "title": "Air Freshener",
+          "subtitle": "Lifestyle finishing detail",
+          "paragraphs": [
+            "A small category with a strong branding role for the cabin and easy lifestyle merchandising.",
+            "It works well for simple add-on purchases, gifts, and brand-led everyday use."
+          ],
+          "published": true,
+          "order": 4
+        }
+      ]
+    }
+  ],
+  "catalogSource": {
+    "mode": "local-json",
+    "provider": "ridemax-seed-catalog",
+    "endpoint": "",
+    "readOnly": true,
+    "syncStrategy": "api-based-ingestion",
+    "fallbackPath": "data/catalog-products.json",
+    "notes": [
+      "Treat the catalog as read-only external data. The CMS should manage only display rules, taxonomy, and merchandising.",
+      "Switch mode to remote-api when the supplier or ERP endpoint is ready, then keep this local file as the fallback path.",
+      "Prefer API-based ingestion first. Move to queue-worker only when payload size or sync volume starts blocking the web app."
+    ]
+  },
+  "brands": [
+    {
+      "id": "brand-apollo",
+      "slug": "apollo-tyres",
+      "label": "Apollo Tyres",
+      "title": "Apollo Tyres",
+      "summary": "Explore top tire brands built for performance, safety, and durability. Perfect for every ride, on any road.",
+      "image": "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+      "href": "/products/tires?brand=apollo-tyres",
+      "categorySlug": "tires",
+      "tags": [
+        "PCR",
+        "Offroad"
+      ],
+      "published": true,
+      "order": 1
+    },
+    {
+      "id": "brand-arivo",
+      "slug": "arivo-tires",
+      "label": "Arivo Tires",
+      "title": "Arivo Tires",
+      "summary": "Road and off-road tire lines presented in a cleaner product experience with search-friendly detail pages.",
+      "image": "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+      "href": "/products/tires?brand=arivo-tires",
+      "categorySlug": "tires",
+      "tags": [
+        "PCR",
+        "Offroad"
+      ],
+      "published": true,
+      "order": 2
+    },
+    {
+      "id": "brand-bfgoodrich",
+      "slug": "bfgoodrich",
+      "label": "BFGoodrich",
+      "title": "BFGoodrich",
+      "summary": "Trail-driven tire options for stronger sidewall confidence, rough-terrain traction, and aggressive build presence.",
+      "image": "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+      "href": "/products/tires?brand=bfgoodrich",
+      "categorySlug": "tires",
+      "tags": [
+        "PCR",
+        "Offroad"
+      ],
+      "published": true,
+      "order": 3
+    },
+    {
+      "id": "brand-michelin",
+      "slug": "michelin",
+      "label": "Michelin",
+      "title": "Michelin",
+      "summary": "Premium road-focused tires built for everyday safety, long wear, and more confident wet braking.",
+      "image": "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+      "href": "/products/tires?brand=michelin",
+      "categorySlug": "tires",
+      "tags": [
+        "PCR",
+        "TBR"
+      ],
+      "published": true,
+      "order": 4
+    },
+    {
+      "id": "brand-atlander",
+      "slug": "atlander-tires",
+      "label": "Atlander Tires",
+      "title": "Atlander Tires",
+      "summary": "Durable road and light off-road patterns designed for everyday utility and practical value.",
+      "image": "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+      "href": "/products/tires?brand=atlander-tires",
+      "categorySlug": "tires",
+      "tags": [
+        "PCR",
+        "Offroad"
+      ],
+      "published": true,
+      "order": 5
+    },
+    {
+      "id": "brand-cooper",
+      "slug": "cooper-tires",
+      "label": "Cooper Tires",
+      "title": "Cooper Tires",
+      "summary": "Balanced tire options for drivers needing dependable grip and long-wear road performance.",
+      "image": "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+      "href": "/products/tires?brand=cooper-tires",
+      "categorySlug": "tires",
+      "tags": [
+        "PCR",
+        "Offroad"
+      ],
+      "published": true,
+      "order": 6
+    },
+    {
+      "id": "brand-linglong",
+      "slug": "linglong-tires",
+      "label": "Linglong Tires",
+      "title": "Linglong Tires",
+      "summary": "Cost-efficient road tire choices with practical durability for daily and commercial use.",
+      "image": "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+      "href": "/products/tires?brand=linglong-tires",
+      "categorySlug": "tires",
+      "tags": [
+        "PCR",
+        "Offroad"
+      ],
+      "published": true,
+      "order": 7
+    },
+    {
+      "id": "brand-monsta",
+      "slug": "monsta",
+      "label": "Monsta",
+      "title": "Monsta",
+      "summary": "Aggressive tread styling built around rugged traction and adventure-first applications.",
+      "image": "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+      "href": "/products/tires?brand=monsta",
+      "categorySlug": "tires",
+      "tags": [
+        "PCR",
+        "Offroad"
+      ],
+      "published": true,
+      "order": 8
+    },
+    {
+      "id": "brand-patriot",
+      "slug": "patriot-tires",
+      "label": "Patriot Tires",
+      "title": "Patriot Tires",
+      "summary": "All-terrain-focused lineups for road confidence and durable off-road capability.",
+      "image": "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+      "href": "/products/tires?brand=patriot-tires",
+      "categorySlug": "tires",
+      "tags": [
+        "PCR",
+        "Offroad"
+      ],
+      "published": true,
+      "order": 9
+    },
+    {
+      "id": "brand-venom",
+      "slug": "venom-power",
+      "label": "Venom Power",
+      "title": "Venom Power",
+      "summary": "Sporty and all-terrain variants designed for high-visual-impact SUV and pickup builds.",
+      "image": "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+      "href": "/products/tires?brand=venom-power",
+      "categorySlug": "tires",
+      "tags": [
+        "PCR",
+        "Offroad"
+      ],
+      "published": true,
+      "order": 10
+    },
+    {
+      "id": "brand-fuel",
+      "slug": "fuel-off-road",
+      "label": "Fuel Off-Road",
+      "title": "Fuel Off-Road",
+      "summary": "Bold wheel profiles for statement builds, larger diameters, and stronger visual impact on-road or off-road.",
+      "image": "https://static.wixstatic.com/media/2d031a_4181d0f8f7c64880ade1b22458e23a67~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4181d0f8f7c64880ade1b22458e23a67~mv2.png",
+      "href": "/products/rims?brand=fuel-off-road",
+      "categorySlug": "rims",
+      "tags": [
+        "Street",
+        "Off-road"
+      ],
+      "published": true,
+      "order": 5
+    },
+    {
+      "id": "brand-work",
+      "slug": "work-wheels",
+      "label": "Work Wheels",
+      "title": "Work Wheels",
+      "summary": "Wheel collections with cleaner street fitment, strong finishes, and premium aftermarket presence.",
+      "image": "https://static.wixstatic.com/media/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png",
+      "href": "/products/rims?brand=work-wheels",
+      "categorySlug": "rims",
+      "tags": [
+        "Street",
+        "Premium"
+      ],
+      "published": true,
+      "order": 6
+    },
+    {
+      "id": "brand-profender",
+      "slug": "profender",
+      "label": "Profender",
+      "title": "Profender",
+      "summary": "Suspension-driven upgrades built around ride control, lift support, and more confident handling.",
+      "image": "https://static.wixstatic.com/media/2d031a_5c9efccb07364f299ee64fe91cb54c6b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_5c9efccb07364f299ee64fe91cb54c6b~mv2.png",
+      "href": "/products/accessories#suspension",
+      "categorySlug": "accessories",
+      "tags": [
+        "Suspension",
+        "Lift"
+      ],
+      "published": true,
+      "order": 7
+    },
+    {
+      "id": "brand-rigid",
+      "slug": "rigid",
+      "label": "Rigid",
+      "title": "Rigid",
+      "summary": "Lighting and adventure accessories that help night runs and trail setups feel more complete.",
+      "image": "https://static.wixstatic.com/media/2d031a_562f4a6f488c4658a734691885f575c6~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_562f4a6f488c4658a734691885f575c6~mv2.png",
+      "href": "/products/accessories#off-road-accessories",
+      "categorySlug": "accessories",
+      "tags": [
+        "Lighting",
+        "Off-road"
+      ],
+      "published": true,
+      "order": 8
+    }
+  ],
+  "promotions": [
+    {
+      "id": "promo-apollo-grip-series",
+      "slug": "apollo-grip-series",
+      "title": "Apollo Grip Series",
+      "summary": "A short launch reel for the latest Apollo road and off-road tire lineup.",
+      "description": "Feature tire fitment highlights, sidewall detail shots, and a quick CTA for event activations and showroom visits.",
+      "videoUrl": "https://www.youtube.com/watch?v=ysz5S6PUM-U",
+      "thumbnail": "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+      "publishDate": "2026-04-05T09:00:00+08:00",
+      "ctaLabel": "View Event",
+      "ctaHref": "/events/apollo-grip-lab",
+      "tags": [
+        "Launch",
+        "Video",
+        "Apollo"
+      ],
+      "published": true,
+      "featured": true,
+      "order": 1
+    },
+    {
+      "id": "promo-trail-ready-builds",
+      "slug": "trail-ready-builds",
+      "title": "Trail Ready Builds",
+      "summary": "A campaign cut focused on Ridemax-supported off-road setups and community builds.",
+      "description": "Highlight adventure-first accessories, suspension upgrades, and the riders behind the latest community showcase.",
+      "videoUrl": "https://vimeo.com/76979871",
+      "thumbnail": "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+      "publishDate": "2026-03-20T11:30:00+08:00",
+      "ctaLabel": "Explore Accessories",
+      "ctaHref": "/products/accessories",
+      "tags": [
+        "Campaign",
+        "Off-road",
+        "Community"
+      ],
+      "published": true,
+      "featured": true,
+      "order": 2
+    },
+    {
+      "id": "promo-showroom-spotlight",
+      "slug": "showroom-spotlight",
+      "title": "Showroom Spotlight",
+      "summary": "A quick promotion that turns current showroom displays into reusable marketing content.",
+      "description": "Built for social reuse, paid landing pages, and in-store loop playback without uploading heavy video files into the CMS.",
+      "videoUrl": "https://www.youtube.com/watch?v=ysz5S6PUM-U",
+      "thumbnail": "https://static.wixstatic.com/media/2d031a_b711eb5b8fc6470e93fd0fe40e64ee12~mv2.jpg",
+      "publishDate": "2026-02-28T14:00:00+08:00",
+      "ctaLabel": "Contact the Team",
+      "ctaHref": "/about",
+      "tags": [
+        "Showroom",
+        "Evergreen"
+      ],
+      "published": true,
+      "featured": false,
+      "order": 3
+    }
+  ],
+  "departments": [
+    {
+      "id": "dept-marketing",
+      "slug": "marketing",
+      "name": "Marketing",
+      "published": true,
+      "order": 1
+    },
+    {
+      "id": "dept-finance",
+      "slug": "finance-accounting",
+      "name": "Finance and Accounting",
+      "published": true,
+      "order": 2
+    },
+    {
+      "id": "dept-creative",
+      "slug": "marketing-creative",
+      "name": "Marketing/Creative",
+      "published": true,
+      "order": 3
+    },
+    {
+      "id": "dept-tech",
+      "slug": "technology",
+      "name": "Technology",
+      "published": true,
+      "order": 4
+    },
+    {
+      "id": "dept-biz",
+      "slug": "business-admin",
+      "name": "Business and Admin",
+      "published": true,
+      "order": 5
+    }
+  ],
+  "jobs": [
+    {
+      "id": "job-creative-marketing-designer",
+      "slug": "creative-marketing-designer",
+      "departmentSlug": "marketing-creative",
+      "title": "Creative Marketing Designer",
+      "location": "Quezon City, Metro Manila",
+      "type": "Full Time",
+      "summary": "Turn campaigns, category launches, and event promotions into striking visual assets and landing pages.",
+      "description": "Lead layout development for campaigns, design story-driven visuals for product launches, and support the website, social, and event marketing pipeline.",
+      "published": true,
+      "featured": true,
+      "order": 1
+    },
+    {
+      "id": "job-content-community-lead",
+      "slug": "content-community-lead",
+      "departmentSlug": "marketing",
+      "title": "Content and Community Lead",
+      "location": "Quezon City, Metro Manila",
+      "type": "Full Time",
+      "summary": "Own event coverage, product storytelling, and rider community content across the site and social channels.",
+      "description": "Plan editorial calendars, cover upcoming events, coordinate with partner brands, and keep the Ridemax voice sharp across web and social.",
+      "published": true,
+      "featured": true,
+      "order": 2
+    },
+    {
+      "id": "job-finance-officer",
+      "slug": "finance-officer",
+      "departmentSlug": "finance-accounting",
+      "title": "Finance Officer",
+      "location": "Quezon City, Metro Manila",
+      "type": "Full Time",
+      "summary": "Support reporting, reconciliations, and fast-moving operational finance for a growing automotive brand.",
+      "description": "Own daily finance workflows, reporting accuracy, and coordination with the wider business and admin teams.",
+      "published": true,
+      "featured": false,
+      "order": 3
+    },
+    {
+      "id": "job-web-operations-specialist",
+      "slug": "web-operations-specialist",
+      "departmentSlug": "technology",
+      "title": "Web Operations Specialist",
+      "location": "Hybrid | Quezon City",
+      "type": "Full Time",
+      "summary": "Manage website updates, content publishing, landing pages, and admin operations across the marketing platform.",
+      "description": "Maintain public pages, coordinate with marketing for releases, and help grow the internal admin and reporting workflows.",
+      "published": true,
+      "featured": false,
+      "order": 4
+    }
+  ],
+  "newsItems": [
+    {
+      "id": "news-1",
+      "slug": "tire-bulge-explained",
+      "title": "Tire Bulge Explained",
+      "excerpt": "Learn the common reasons behind tire bulging and how to spot it early.",
+      "summary": "Learn the common reasons behind tire bulging and how to spot early warning signs before they become expensive problems.",
+      "image": "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+      "published": true,
+      "featured": true,
+      "order": 1
+    },
+    {
+      "id": "news-2",
+      "slug": "next-level-suspension",
+      "title": "Next-Level Suspension",
+      "excerpt": "Get a first look at the improved suspension built to elevate ride comfort.",
+      "summary": "A closer look at ride-control upgrades that improve comfort, posture, and confidence on unpredictable roads.",
+      "image": "https://static.wixstatic.com/media/2d031a_5c9efccb07364f299ee64fe91cb54c6b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_5c9efccb07364f299ee64fe91cb54c6b~mv2.png",
+      "published": true,
+      "featured": true,
+      "order": 2
+    },
+    {
+      "id": "news-3",
+      "slug": "four-reasons-to-upgrade",
+      "title": "4 Reasons to Upgrade",
+      "excerpt": "Learn how customizing your pickup or SUV can enhance capability.",
+      "summary": "See how smart modifications can improve capability, comfort, and daily usability for pickups and SUVs.",
+      "image": "https://static.wixstatic.com/media/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png",
+      "published": true,
+      "featured": true,
+      "order": 3
+    }
+  ],
+  "events": [
+    {
+      "id": "event-1",
+      "slug": "bumper-2-bumper-manila",
+      "title": "Bumper 2 Bumper Manila",
+      "teaserDate": "Sun, Dec 13 | Pasay City",
+      "location": "Pasay City",
+      "venue": "GXQJ+P46, Pasay City, Metro Manila, Philippines",
+      "startAt": "2026-12-13T14:00:00+08:00",
+      "endAt": "2026-12-13T22:00:00+08:00",
+      "summary": "B2B Manila is almost here - bigger rides, louder energy, and the best car culture in the city.",
+      "description": "For updates, visit their Facebook page: b2bcarshow. See you there!",
+      "image": "https://static.wixstatic.com/media/2d031a_cbbf1a4eb316482d885d1b7e9973323f~mv2.jpg",
+      "detailImage": "https://static.wixstatic.com/media/2d031a_cbbf1a4eb316482d885d1b7e9973323f~mv2.jpg",
+      "published": true,
+      "featured": true,
+      "order": 1,
+      "shareLinks": {
+        "facebook": "https://facebook.com",
+        "x": "https://x.com",
+        "linkedin": "https://linkedin.com"
+      }
+    },
+    {
+      "id": "event-2",
+      "slug": "apollo-grip-lab",
+      "title": "Apollo Grip Lab",
+      "teaserDate": "Sat, Jun 07 | Clark, Pampanga",
+      "location": "Clark, Pampanga",
+      "venue": "Clark Freeport, Pampanga",
+      "startAt": "2026-06-07T10:00:00+08:00",
+      "endAt": "2026-06-07T18:00:00+08:00",
+      "summary": "A marketing showcase for tire lines, fitment stories, and hands-on education for customers.",
+      "description": "Expect demos, brand talk sessions, and curated builds centered around road and off-road grip.",
+      "image": "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+      "detailImage": "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+      "published": true,
+      "featured": false,
+      "order": 2,
+      "shareLinks": {
+        "facebook": "https://facebook.com",
+        "x": "https://x.com",
+        "linkedin": "https://linkedin.com"
+      }
+    },
+    {
+      "id": "event-3",
+      "slug": "ridemax-trail-meet-south",
+      "title": "Ridemax Trail Meet South",
+      "teaserDate": "Sat, Apr 25 | Nuvali, Laguna",
+      "location": "Nuvali, Laguna",
+      "venue": "Nuvali Trails, Laguna",
+      "startAt": "2026-04-25T09:00:00+08:00",
+      "endAt": "2026-04-25T17:00:00+08:00",
+      "summary": "A community ride day with trail-ready builds, partner activations, and product demos.",
+      "description": "A lighter community-first event with convoy stories, product displays, and photo moments throughout the day.",
+      "image": "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+      "detailImage": "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+      "published": true,
+      "featured": false,
+      "order": 3,
+      "shareLinks": {
+        "facebook": "https://facebook.com",
+        "x": "https://x.com",
+        "linkedin": "https://linkedin.com"
+      }
+    }
+  ],
+  "awards": [
+    {
+      "id": "award-1",
+      "slug": "best-booth-experience-2025",
+      "year": "2025",
+      "title": "Best Booth Experience",
+      "summary": "Recognized for a branded event setup that felt polished, interactive, and easy to explore.",
+      "image": "https://static.wixstatic.com/media/a3c153_3592f141741849e8b2cb99afa8e3a412~mv2.jpg",
+      "published": true,
+      "order": 1
+    },
+    {
+      "id": "award-2",
+      "slug": "community-ride-partner-2025",
+      "year": "2025",
+      "title": "Community Ride Partner",
+      "summary": "Awarded for consistent support of rider meetups, convoy routes, and local off-road communities.",
+      "image": "https://static.wixstatic.com/media/a3c153_6f27754e06844d62a1708b316797fc08~mv2.jpg",
+      "published": true,
+      "order": 2
+    },
+    {
+      "id": "award-3",
+      "slug": "trail-ready-build-showcase-2024",
+      "year": "2024",
+      "title": "Trail Ready Build Showcase",
+      "summary": "Selected for standout execution in a build showcase focused on capability and clean presentation.",
+      "image": "https://static.wixstatic.com/media/a3c153_3592f141741849e8b2cb99afa8e3a412~mv2.jpg",
+      "published": true,
+      "order": 3
+    }
+  ],
+  "projectFeatures": [
+    {
+      "id": "project-1",
+      "numberLabel": "01",
+      "title": "Bumper 2 Bumper Manila",
+      "summary": "A feature story for one of the biggest upcoming community showcases, paired with full event details and a live countdown page.",
+      "image": "https://static.wixstatic.com/media/2d031a_cbbf1a4eb316482d885d1b7e9973323f~mv2.jpg",
+      "href": "/events/bumper-2-bumper-manila",
+      "published": true,
+      "order": 1
+    },
+    {
+      "id": "project-2",
+      "numberLabel": "02",
+      "title": "Latest Product News",
+      "summary": "Fresh category stories, educational content, and campaign updates that mirror the white editorial blocks from the Wix pages.",
+      "image": "https://static.wixstatic.com/media/a3c153_6f27754e06844d62a1708b316797fc08~mv2.jpg",
+      "href": "/news",
+      "published": true,
+      "order": 2
+    },
+    {
+      "id": "project-3",
+      "numberLabel": "03",
+      "title": "Community Recognition",
+      "summary": "Awards and milestones are surfaced with the same alternating visual rhythm so the page feels consistent from top to bottom.",
+      "image": "https://static.wixstatic.com/media/a3c153_3592f141741849e8b2cb99afa8e3a412~mv2.jpg",
+      "href": "/awards",
+      "published": true,
+      "order": 3
+    },
+    {
+      "id": "project-4",
+      "numberLabel": "04",
+      "title": "Upcoming Event Calendar",
+      "summary": "See what's coming up — rides, launches, and community gatherings you won't want to miss.",
+      "image": "https://static.wixstatic.com/media/2d031a_e1b6e3a158524ca38a41a16946cc009c~mv2.jpg",
+      "href": "/events",
+      "published": true,
+      "order": 4
+    }
+  ]
+}

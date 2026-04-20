@@ -1,0 +1,119 @@
+"use client";
+
+import Link from "next/link";
+import { useDeferredValue, useEffect, useState } from "react";
+import type { SearchRecord } from "@/lib/ridemax-types";
+
+type SearchFormProps = {
+  defaultValue?: string;
+  compact?: boolean;
+  className?: string;
+  placeholder?: string;
+  theme?: "dark" | "light";
+};
+
+export function SearchForm({
+  defaultValue,
+  compact = false,
+  className = "",
+  placeholder = "Search...",
+  theme = "dark",
+}: SearchFormProps) {
+  const [query, setQuery] = useState(defaultValue ?? "");
+  const [results, setResults] = useState<SearchRecord[]>([]);
+  const [open, setOpen] = useState(false);
+  const deferredQuery = useDeferredValue(query);
+  const showResults = open && deferredQuery.trim().length >= 2 && results.length > 0;
+
+  useEffect(() => {
+    if (deferredQuery.trim().length < 2) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(deferredQuery)}`, {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          setResults([]);
+          return;
+        }
+
+        const payload = (await response.json()) as { results?: SearchRecord[] };
+        setResults((payload.results ?? []).slice(0, compact ? 4 : 6));
+      } catch {
+        setResults([]);
+      }
+    }, 120);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [compact, deferredQuery]);
+
+  return (
+    <div className={`relative ${compact ? "w-[14rem]" : "w-full max-w-xl"} ${className}`.trim()}>
+      <form
+        action="/search"
+        className={`relative flex items-center overflow-hidden rounded-full border backdrop-blur-sm ${
+          theme === "light"
+            ? "border-black/14 bg-white text-[#2b2b2b]"
+            : "border-white/18 bg-white/18 text-white"
+        } ${compact ? "w-[14rem]" : "w-full max-w-xl"}`.trim()}
+      >
+        <svg
+          aria-hidden="true"
+          className={`pointer-events-none absolute left-3 h-4 w-4 ${
+            theme === "light" ? "text-[#2b2b2b]/85" : "text-white/80"
+          }`}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </svg>
+        <input
+          type="search"
+          name="q"
+          value={query}
+          placeholder={placeholder}
+          autoComplete="off"
+          onFocus={() => setOpen(true)}
+          onBlur={() => window.setTimeout(() => setOpen(false), 120)}
+          onChange={(event) => setQuery(event.target.value)}
+          className={`w-full bg-transparent outline-none ${
+            theme === "light" ? "text-[#2b2b2b] placeholder:text-[#2b2b2b]/70" : "text-white placeholder:text-white/75"
+          } ${compact ? "py-2 pl-9 pr-3 text-xs" : "py-3 pl-10 pr-4 text-sm"}`}
+        />
+      </form>
+
+      {showResults ? (
+        <div className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-50 overflow-hidden rounded-[1.5rem] border border-white/8 bg-[#574441]/96 p-2 shadow-[0_24px_55px_rgba(0,0,0,0.28)] backdrop-blur-md">
+          {results.map((result) => (
+            <Link
+              key={`${result.kind}-${result.href}-${result.title}`}
+              href={result.href}
+              className="block rounded-[1.1rem] px-4 py-3 text-white transition hover:bg-white/10"
+            >
+              <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#f0c5bd]">
+                {result.kind}
+              </div>
+              <div className="mt-1 text-sm font-semibold">{result.title}</div>
+              {!compact ? (
+                <div className="mt-1 text-xs leading-5 text-white/74">{result.summary}</div>
+              ) : null}
+            </Link>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}

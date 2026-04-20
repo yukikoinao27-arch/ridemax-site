@@ -1,0 +1,19 @@
+<svg width="420" height="140" viewBox="0 0 420 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="ridemax-shadow-dark" x="0" y="0" width="420" height="140" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#140B0A" flood-opacity="0.18" />
+    </filter>
+  </defs>
+  <g filter="url(#ridemax-shadow-dark)">
+    <circle cx="70" cy="70" r="48" fill="#1D1514" />
+    <circle cx="70" cy="70" r="54" stroke="#1D1514" stroke-width="6" />
+    <path d="M42 71L57 48L68 62L78 41L98 71H42Z" fill="#F7F4F1" />
+    <path d="M48 84C56 74 64 69 72 69C80 69 88 74 96 84" stroke="#F7F4F1" stroke-width="5" stroke-linecap="round" />
+    <path d="M51 92C58 88 64 86 70 86C76 86 82 88 89 92" stroke="#E31E24" stroke-width="4" stroke-linecap="round" />
+    <text x="128" y="34" fill="#4F3D39" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" letter-spacing="5">TEAM</text>
+    <text x="126" y="88" fill="#1D1514" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="58" font-weight="900" letter-spacing="1">RIDE</text>
+    <text x="270" y="88" fill="#E31E24" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="58" font-weight="900" letter-spacing="1">MAX</text>
+    <rect x="274" y="99" width="114" height="24" rx="12" fill="#1D1514" />
+    <text x="291" y="116" fill="#F7F4F1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="2">PHILIPPINES</text>
+  </g>
+</svg>
