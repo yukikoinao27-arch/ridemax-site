@@ -290,12 +290,21 @@ async function readSupabaseSiteContent(mode: "draft" | "published") {
   }
 
   const contentTable = supabase.from("site_content_documents") as unknown as ContentDocumentTable;
-  const response = await contentTable
+  let response = await contentTable
     .select("content, draft_content, published_content")
     .eq("slug", primaryContentSlug)
     .maybeSingle();
-  const data = response.data;
-  const error = response.error;
+
+  // Graceful degradation: if the draft/publish migration hasn't been applied yet,
+  // re-query with only the legacy column so reads keep working without a migration gate.
+  if (response.error && isDraftPublishMigrationError(response.error.message)) {
+    response = await contentTable
+      .select("content")
+      .eq("slug", primaryContentSlug)
+      .maybeSingle() as typeof response;
+  }
+
+  const { data, error } = response;
 
   if (error) {
     throwSupabaseError(error.message);
@@ -323,6 +332,10 @@ async function readSupabaseSiteContent(mode: "draft" | "published") {
  * Write the draft bundle. The legacy `content` column is left untouched so
  * pre-migration readers keep seeing the last published version until the
  * next publish.
+ *
+ * If the draft/publish migration hasn't been applied yet (draft_content column
+ * missing) we fall back to writing the legacy `content` column so saves work
+ * even on an unmigrated database.
  */
 async function writeSupabaseDraftContent(content: RidemaxSiteContent) {
   const supabase = getServerSupabaseClient();
@@ -343,6 +356,16 @@ async function writeSupabaseDraftContent(content: RidemaxSiteContent) {
   );
 
   if (error) {
+    if (isDraftPublishMigrationError(error.message)) {
+      // Migration not yet applied — write to the legacy content column so
+      // saves are not blocked until the admin runs the schema migration.
+      const fallback = await contentTable.upsert(
+        { slug: primaryContentSlug, content },
+        { onConflict: "slug" },
+      );
+      if (fallback.error) throwSupabaseError(fallback.error.message);
+      return true;
+    }
     throwSupabaseError(error.message);
   }
 

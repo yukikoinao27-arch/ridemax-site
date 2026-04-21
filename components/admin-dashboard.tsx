@@ -1123,13 +1123,13 @@ function PageBuilderSection({
                 key={page.id}
                 type="button"
                 onClick={() => setActivePageId(page.id)}
-                className={`rounded-[1.25rem] border px-4 py-3 text-left shadow-sm transition duration-150 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/20 ${
+                className={`group rounded-[1.25rem] border px-4 py-3 text-left shadow-sm transition-all duration-150 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/30 ${
                   isActive
-                    ? "border-[#8d120e]/30 bg-[#fff4f3] text-[#5d0d0a]"
-                    : "border-black/10 bg-[#faf8f7] text-[#220707] hover:-translate-y-0.5 hover:border-[#8d120e]/25 hover:bg-white hover:shadow-[0_10px_24px_rgba(31,20,19,0.08)]"
+                    ? "border-[#8d120e]/40 bg-[#fff4f3] text-[#5d0d0a] shadow-[0_4px_14px_rgba(141,18,14,0.12)]"
+                    : "cursor-pointer border-black/10 bg-[#faf8f7] text-[#220707] hover:-translate-y-1 hover:border-[#8d120e]/40 hover:bg-white hover:shadow-[0_8px_22px_rgba(31,20,19,0.11)]"
                 }`}
               >
-                <span className="text-sm font-semibold uppercase tracking-[0.14em]">
+                <span className={`text-sm font-semibold uppercase tracking-[0.14em] transition-colors duration-100 ${isActive ? "text-[#8d120e]" : "group-hover:text-[#8d120e]"}`}>
                   {pageSlugOptions.find((option) => option.value === page.slug)?.label ?? page.slug}
                 </span>
                 <span className="mt-2 block text-xs text-[#7e5a53]">{page.blocks.length} block(s)</span>

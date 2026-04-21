@@ -26,7 +26,12 @@ export async function PUT(request: Request) {
     );
   }
 
-  await saveSiteContent(parsed.data);
+  try {
+    await saveSiteContent(parsed.data);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to save the content bundle.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 
   return NextResponse.json({ message: "Draft saved." });
 }
