@@ -158,6 +158,31 @@ type ContactMessagesTable = {
   };
 };
 
+function isDraftPublishMigrationError(message: string) {
+  return (
+    message.includes("draft_content") ||
+    message.includes("published_content") ||
+    message.includes("last_published_at") ||
+    message.includes("site_content_revisions")
+  );
+}
+
+function draftPublishMigrationMessage(message: string) {
+  return [
+    "Supabase is missing the CMS draft/publish migration.",
+    "Run the idempotent migration block in supabase/schema.sql for site_content_documents and site_content_revisions, then retry Publish.",
+    `Original database error: ${message}`,
+  ].join(" ");
+}
+
+function throwSupabaseError(message: string): never {
+  throw new Error(
+    isDraftPublishMigrationError(message)
+      ? draftPublishMigrationMessage(message)
+      : message,
+  );
+}
+
 function sortByOrder<T extends { order: number }>(items: ReadonlyArray<T>) {
   return [...items].sort((left, right) => left.order - right.order);
 }
@@ -273,7 +298,7 @@ async function readSupabaseSiteContent(mode: "draft" | "published") {
   const error = response.error;
 
   if (error) {
-    throw new Error(error.message);
+    throwSupabaseError(error.message);
   }
 
   if (!data) {
@@ -318,7 +343,7 @@ async function writeSupabaseDraftContent(content: RidemaxSiteContent) {
   );
 
   if (error) {
-    throw new Error(error.message);
+    throwSupabaseError(error.message);
   }
 
   return true;
@@ -358,7 +383,7 @@ async function writeSupabasePublishedContent(
   );
 
   if (upsertResult.error) {
-    throw new Error(upsertResult.error.message);
+    throwSupabaseError(upsertResult.error.message);
   }
 
   const revisionsTable = supabase.from("site_content_revisions") as unknown as RevisionsTable;
@@ -370,7 +395,7 @@ async function writeSupabasePublishedContent(
   });
 
   if (insertResult.error) {
-    throw new Error(insertResult.error.message);
+    throwSupabaseError(insertResult.error.message);
   }
 
   return true;

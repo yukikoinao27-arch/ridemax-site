@@ -44,6 +44,7 @@ type AdminDashboardProps = {
   storageMode: string;
   initialMediaAssets: MediaAsset[];
   view: AdminView;
+  previewMode: boolean;
 };
 
 type FieldType =
@@ -79,19 +80,22 @@ type FieldCallbacks = {
 };
 
 const primaryButtonClass =
-  "inline-flex h-11 cursor-pointer items-center justify-center rounded-full bg-[#8d120e] px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#a51611] disabled:cursor-not-allowed disabled:opacity-70";
+  "inline-flex h-11 cursor-pointer items-center justify-center rounded-full bg-[#8d120e] px-5 text-sm font-semibold text-white shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:bg-[#a51611] hover:shadow-[0_12px_26px_rgba(141,18,14,0.18)] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/30 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-sm";
 const secondaryButtonClass =
-  "inline-flex h-11 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-5 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-[#f7f2f1] disabled:cursor-not-allowed disabled:opacity-70";
+  "inline-flex h-11 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-5 text-sm font-semibold text-[#220707] shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-[#8d120e]/25 hover:bg-[#f7f2f1] hover:shadow-[0_10px_24px_rgba(31,20,19,0.10)] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/25 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-sm";
 // Compact circular icon button used for reorder / remove controls on list items
 // and page blocks. The visual language matches the sidebar icons: 36x36 circle,
 // border, subtle hover lift. Disabled buttons lose the hover lift and fade out
 // so "can't move up any further" is obvious without surfacing new error UX.
 const iconButtonClass =
-  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-[#220707] transition hover:-translate-y-0.5 hover:bg-[#f7f2f1] disabled:pointer-events-none disabled:opacity-40";
+  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-[#220707] shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-[#8d120e]/25 hover:bg-[#f7f2f1] hover:shadow-[0_10px_22px_rgba(31,20,19,0.10)] active:translate-y-0 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/25 disabled:pointer-events-none disabled:opacity-40";
 const destructiveIconButtonClass =
-  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#8d120e]/30 bg-white text-[#8d120e] transition hover:-translate-y-0.5 hover:bg-[#fff4f3] disabled:pointer-events-none disabled:opacity-40";
+  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#8d120e]/30 bg-white text-[#8d120e] shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:bg-[#fff4f3] hover:shadow-[0_10px_22px_rgba(141,18,14,0.12)] active:translate-y-0 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/25 disabled:pointer-events-none disabled:opacity-40";
 const dragHandleClass =
-  "inline-flex h-9 w-9 cursor-grab items-center justify-center rounded-full border border-black/10 bg-white text-[#6a433d] transition hover:-translate-y-0.5 hover:bg-[#f7f2f1] active:cursor-grabbing";
+  "inline-flex h-9 w-9 cursor-grab items-center justify-center rounded-full border border-black/10 bg-white text-[#6a433d] shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-[#8d120e]/25 hover:bg-[#f7f2f1] hover:shadow-[0_10px_22px_rgba(31,20,19,0.10)] active:translate-y-0 active:scale-[0.94] active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/25";
+const fieldControlClass =
+  "mt-2 w-full rounded-[1.25rem] border border-black/12 bg-white px-3 py-3 outline-none transition duration-150 ease-out hover:border-[#8d120e]/30 hover:shadow-[0_8px_20px_rgba(31,20,19,0.07)] focus:border-[#8d120e] focus:shadow-[0_0_0_3px_rgba(141,18,14,0.08)] focus-visible:ring-2 focus-visible:ring-[#8d120e]/20";
+const rowActionRailClass = "flex min-w-max shrink-0 flex-nowrap items-center justify-end gap-2";
 
 // Lightweight inline SVG icons. Kept local to avoid pulling in an icon library
 // for three glyphs - the admin surface is tightly controlled and already ships
@@ -650,7 +654,7 @@ function renderField(
       <textarea
         value={String(value)}
         onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
-        className="mt-2 w-full rounded-[1.25rem] border border-black/12 px-3 py-3 outline-none transition focus:border-[#8d120e]"
+        className={fieldControlClass}
       />
     );
   }
@@ -673,7 +677,7 @@ function renderField(
       <select
         value={String(value)}
         onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
-        className="mt-2 w-full rounded-[1.25rem] border border-black/12 px-3 py-3 outline-none transition focus:border-[#8d120e]"
+        className={fieldControlClass}
       >
         {field.options?.map((option) => (
           <option key={option.value} value={option.value}>
@@ -689,7 +693,7 @@ function renderField(
       type={field.type === "datetime" ? "datetime-local" : "text"}
       value={String(value)}
       onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
-      className="mt-2 w-full rounded-[1.25rem] border border-black/12 px-3 py-3 outline-none transition focus:border-[#8d120e]"
+      className={fieldControlClass}
     />
   );
 }
@@ -847,16 +851,17 @@ function CollectionSection({
                 }
 
                 onChange(moveItem(items, dragIndex, index));
+                fieldCallbacks.onNotice("success", `${itemLabel} moved.`);
                 setDragIndex(null);
               }}
               onDragEnd={() => setDragIndex(null)}
-              className={`rounded-[1.5rem] border bg-[#faf8f7] p-4 transition ${
+              className={`rounded-[1.5rem] border bg-[#faf8f7] p-4 transition duration-150 ease-out hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(31,20,19,0.08)] ${
                 highlightedIndex === index
                   ? "border-[#8d120e]/35 ring-2 ring-[#8d120e]/15"
                   : "border-black/10"
               }`}
             >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 items-center justify-between gap-3 overflow-x-auto pb-1">
                 <div className="flex min-w-0 items-center gap-3">
                   <span
                     className={dragHandleClass}
@@ -900,10 +905,13 @@ function CollectionSection({
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className={rowActionRailClass}>
                   <button
                     type="button"
-                    onClick={() => setExpandedIndexes((current) => ({ ...current, [index]: !isExpanded }))}
+                    onClick={() => {
+                      setExpandedIndexes((current) => ({ ...current, [index]: !isExpanded }));
+                      fieldCallbacks.onNotice("info", isExpanded ? `${itemLabel} collapsed.` : `Editing ${itemLabel.toLowerCase()}.`);
+                    }}
                     className={secondaryButtonClass}
                     aria-expanded={isExpanded}
                   >
@@ -912,7 +920,12 @@ function CollectionSection({
                   <button
                     type="button"
                     disabled={index === 0}
-                    onClick={() => index > 0 && onChange(moveItem(items, index, index - 1))}
+                    onClick={() => {
+                      if (index > 0) {
+                        onChange(moveItem(items, index, index - 1));
+                        fieldCallbacks.onNotice("success", `${itemLabel} moved up.`);
+                      }
+                    }}
                     className={iconButtonClass}
                     aria-label={`Move ${itemLabel.toLowerCase()} ${index + 1} up`}
                     title="Move up"
@@ -922,7 +935,12 @@ function CollectionSection({
                   <button
                     type="button"
                     disabled={index >= items.length - 1}
-                    onClick={() => index < items.length - 1 && onChange(moveItem(items, index, index + 1))}
+                    onClick={() => {
+                      if (index < items.length - 1) {
+                        onChange(moveItem(items, index, index + 1));
+                        fieldCallbacks.onNotice("success", `${itemLabel} moved down.`);
+                      }
+                    }}
                     className={iconButtonClass}
                     aria-label={`Move ${itemLabel.toLowerCase()} ${index + 1} down`}
                     title="Move down"
@@ -1105,10 +1123,10 @@ function PageBuilderSection({
                 key={page.id}
                 type="button"
                 onClick={() => setActivePageId(page.id)}
-                className={`rounded-[1.25rem] border px-4 py-3 text-left transition ${
+                className={`rounded-[1.25rem] border px-4 py-3 text-left shadow-sm transition duration-150 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/20 ${
                   isActive
                     ? "border-[#8d120e]/30 bg-[#fff4f3] text-[#5d0d0a]"
-                    : "border-black/10 bg-[#faf8f7] text-[#220707] hover:-translate-y-0.5 hover:bg-white"
+                    : "border-black/10 bg-[#faf8f7] text-[#220707] hover:-translate-y-0.5 hover:border-[#8d120e]/25 hover:bg-white hover:shadow-[0_10px_24px_rgba(31,20,19,0.08)]"
                 }`}
               >
                 <span className="text-sm font-semibold uppercase tracking-[0.14em]">
@@ -1136,7 +1154,7 @@ function PageBuilderSection({
                       ),
                     )
                   }
-                  className="mt-2 w-full rounded-[1.25rem] border border-black/12 px-3 py-3 outline-none transition focus:border-[#8d120e]"
+                className={fieldControlClass}
                 />
               </label>
               <label className="md:col-span-2">
@@ -1152,7 +1170,7 @@ function PageBuilderSection({
                       ),
                     )
                   }
-                  className="mt-2 w-full rounded-[1.25rem] border border-black/12 px-3 py-3 outline-none transition focus:border-[#8d120e]"
+                  className={fieldControlClass}
                 />
               </label>
             </div>
@@ -1170,7 +1188,7 @@ function PageBuilderSection({
                   onChange={(event) =>
                     setPendingBlockTypes((current) => ({ ...current, [activePage.id]: event.target.value }))
                   }
-                  className="rounded-[1.25rem] border border-black/12 px-3 py-3 outline-none transition focus:border-[#8d120e]"
+                  className={fieldControlClass}
                 >
                   {availableBlockOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -1235,10 +1253,11 @@ function PageBuilderSection({
                         return;
                       }
                       reorderBlocks(activePage.id, blockDrag.index, index);
+                      fieldCallbacks.onNotice("success", "Block moved.");
                       setBlockDrag(null);
                     }}
                     onDragEnd={() => setBlockDrag(null)}
-                    className={`rounded-[1.5rem] border bg-white p-5 transition ${
+                    className={`rounded-[1.5rem] border bg-white p-5 transition duration-150 ease-out hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(31,20,19,0.08)] ${
                       highlightedBlockId === block.id
                         ? "border-[#8d120e]/35 ring-2 ring-[#8d120e]/15"
                         : isDraggingThis
@@ -1246,7 +1265,7 @@ function PageBuilderSection({
                           : "border-black/10"
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center justify-between gap-3 overflow-x-auto pb-1">
                       <div className="flex min-w-0 items-center gap-3">
                         <span
                           className={dragHandleClass}
@@ -1265,12 +1284,13 @@ function PageBuilderSection({
                           </h3>
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center justify-end gap-2">
+                      <div className={rowActionRailClass}>
                         <button
                           type="button"
-                          onClick={() =>
-                            setExpandedBlockIds((current) => ({ ...current, [block.id]: !isExpanded }))
-                          }
+                          onClick={() => {
+                            setExpandedBlockIds((current) => ({ ...current, [block.id]: !isExpanded }));
+                            fieldCallbacks.onNotice("info", isExpanded ? "Block collapsed." : "Editing block.");
+                          }}
                           className={secondaryButtonClass}
                           aria-expanded={isExpanded}
                         >
@@ -1279,7 +1299,12 @@ function PageBuilderSection({
                         <button
                           type="button"
                           disabled={index === 0}
-                          onClick={() => index > 0 && reorderBlocks(activePage.id, index, index - 1)}
+                          onClick={() => {
+                            if (index > 0) {
+                              reorderBlocks(activePage.id, index, index - 1);
+                              fieldCallbacks.onNotice("success", "Block moved up.");
+                            }
+                          }}
                           className={iconButtonClass}
                           aria-label={`Move block ${index + 1} up`}
                           title="Move up"
@@ -1289,10 +1314,12 @@ function PageBuilderSection({
                         <button
                           type="button"
                           disabled={index >= activePage.blocks.length - 1}
-                          onClick={() =>
-                            index < activePage.blocks.length - 1 &&
-                            reorderBlocks(activePage.id, index, index + 1)
-                          }
+                          onClick={() => {
+                            if (index < activePage.blocks.length - 1) {
+                              reorderBlocks(activePage.id, index, index + 1);
+                              fieldCallbacks.onNotice("success", "Block moved down.");
+                            }
+                          }}
                           className={iconButtonClass}
                           aria-label={`Move block ${index + 1} down`}
                           title="Move down"
@@ -1542,6 +1569,7 @@ export function AdminDashboard({
   storageMode,
   initialMediaAssets,
   view,
+  previewMode,
 }: AdminDashboardProps) {
   const [draft, setDraft] = useState<RidemaxSiteContent>(initialContent);
   const [savedDraft, setSavedDraft] = useState<RidemaxSiteContent>(initialContent);
@@ -1835,11 +1863,16 @@ export function AdminDashboard({
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                <a href="/api/admin/preview/disable?path=/admin" className={secondaryButtonClass}>
-                  Exit Preview
-                </a>
-              </div>
+              {previewMode ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="rounded-full border border-[#8d120e]/20 bg-[#fff4f3] px-4 py-2 text-sm font-semibold text-[#8d120e]">
+                    Preview mode is active
+                  </span>
+                  <a href="/api/admin/preview/disable?path=/admin" className={secondaryButtonClass}>
+                    Exit Preview
+                  </a>
+                </div>
+              ) : null}
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-6">

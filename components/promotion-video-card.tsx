@@ -7,6 +7,23 @@ type PromotionVideoCardProps = {
   promotion: PromotionItem;
 };
 
+function autoplayEmbedUrl(embedUrl: string) {
+  const url = new URL(embedUrl);
+  url.searchParams.set("autoplay", "1");
+  url.searchParams.set("muted", "1");
+  url.searchParams.set("playsinline", "1");
+  url.searchParams.set("loop", "1");
+
+  if (url.hostname.includes("youtube.com") && !url.searchParams.has("playlist")) {
+    const videoId = url.pathname.split("/").filter(Boolean).at(-1);
+    if (videoId) {
+      url.searchParams.set("playlist", videoId);
+    }
+  }
+
+  return url.toString();
+}
+
 export function PromotionVideoCard({ promotion }: PromotionVideoCardProps) {
   const embed = getVideoEmbed(promotion.videoUrl);
 
@@ -16,7 +33,7 @@ export function PromotionVideoCard({ promotion }: PromotionVideoCardProps) {
         {embed ? (
           <iframe
             title={promotion.title}
-            src={embed.embedUrl}
+            src={autoplayEmbedUrl(embed.embedUrl)}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             className="h-full w-full border-0"

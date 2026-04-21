@@ -1,4 +1,5 @@
 import { AdminDashboard, type AdminView } from "@/components/admin-dashboard";
+import { draftMode } from "next/headers";
 import {
   isAdminAuthenticated,
   isAdminPasswordConfigured,
@@ -25,6 +26,7 @@ export async function AdminScreen({ view, error }: AdminScreenProps) {
   const hasConfiguredPassword = isAdminPasswordConfigured();
   const misconfiguredInProduction = isAdminPasswordMisconfigured();
   const authenticated = await isAdminAuthenticated();
+  const preview = await draftMode();
 
   if (misconfiguredInProduction) {
     return (
@@ -107,6 +109,7 @@ export async function AdminScreen({ view, error }: AdminScreenProps) {
       storageMode={metrics.storageMode}
       initialMediaAssets={mediaAssets}
       view={view}
+      previewMode={preview.isEnabled}
     />
   );
 }
