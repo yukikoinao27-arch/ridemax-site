@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { siteContentSchema } from "@/lib/content-schemas";
-import { isAdminAuthenticated } from "@/lib/server/admin-auth";
+import { getAdminIdentity, isAdminAuthenticated } from "@/lib/server/admin-auth";
+import { logAdminActivity } from "@/lib/server/admin-activity-log";
 import { getDraftSiteContent, saveSiteContent } from "@/lib/server/ridemax-content-repository";
 
 export async function GET() {
@@ -32,6 +33,18 @@ export async function PUT(request: Request) {
     const message = error instanceof Error ? error.message : "Unable to save the content bundle.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
+
+  await logAdminActivity({
+    actorEmail: await getAdminIdentity(),
+    action: "save_draft",
+    entityType: "site_content",
+    entityId: "primary",
+    metadata: {
+      pages: parsed.data.pages.length,
+      promotions: parsed.data.promotions.length,
+      jobs: parsed.data.jobs.length,
+    },
+  });
 
   return NextResponse.json({ message: "Draft saved." });
 }

@@ -6,6 +6,7 @@ import {
   isAdminPasswordMisconfigured,
   isAdminProtectionEnabled,
 } from "@/lib/server/admin-auth";
+import { listJobApplications } from "@/lib/server/job-applications";
 import { listMediaAssets } from "@/lib/server/media-library";
 import {
   getAdminMetrics,
@@ -75,14 +76,30 @@ export async function AdminScreen({ view, error }: AdminScreenProps) {
             ) : null}
             <form action="/api/admin/login" method="post" className="mt-8 space-y-4">
               <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6a433d]">
+                  Your Work Email <span className="font-normal text-[#9b7771]">(for the activity log)</span>
+                </span>
+                <input
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                  className="mt-2 w-full border border-black/12 px-3 py-3 outline-none focus:border-[#8d120e]"
+                />
+              </label>
+              <label className="block">
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6a433d]">Admin Password</span>
                 <input
                   name="password"
                   type="password"
+                  autoComplete="current-password"
                   className="mt-2 w-full border border-black/12 px-3 py-3 outline-none focus:border-[#8d120e]"
                 />
               </label>
-              <button type="submit" className="inline-flex bg-[#8d120e] px-6 py-3 text-sm font-semibold text-white">
+              <button
+                type="submit"
+                className="inline-flex cursor-pointer bg-[#8d120e] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#a51611]"
+              >
                 Unlock Admin
               </button>
             </form>
@@ -92,11 +109,12 @@ export async function AdminScreen({ view, error }: AdminScreenProps) {
     );
   }
 
-  const [content, metrics, messages, mediaAssets] = await Promise.all([
+  const [content, metrics, messages, mediaAssets, jobApplications] = await Promise.all([
     getDraftSiteContent(),
     getAdminMetrics(),
     listContactMessages(),
     listMediaAssets(),
+    listJobApplications(),
   ]);
 
   // The outer `<main>` + grid shell are provided by `app/admin/layout.tsx` so
@@ -108,6 +126,7 @@ export async function AdminScreen({ view, error }: AdminScreenProps) {
       messages={messages}
       storageMode={metrics.storageMode}
       initialMediaAssets={mediaAssets}
+      initialJobApplications={jobApplications}
       view={view}
       previewMode={preview.isEnabled}
     />

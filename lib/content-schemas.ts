@@ -440,4 +440,16 @@ export const contactMessageInputSchema = z.object({
   message: z.string().trim().min(1).max(5000),
 });
 
+export const jobApplicationInputSchema = z.object({
+  jobSlug: z.string().trim().min(1).max(200),
+  jobTitle: z.string().trim().max(200).default(""),
+  fullName: z.string().trim().min(1).max(160),
+  email: z.string().trim().email().max(200),
+  phone: z.string().trim().max(40).default(""),
+  message: z.string().trim().max(5000).default(""),
+  resumeUrl: z.string().trim().url().max(500).or(z.literal("")).default(""),
+});
+
+export type JobApplicationInput = z.infer<typeof jobApplicationInputSchema>;
+
 export { externalProductCatalogSchema };

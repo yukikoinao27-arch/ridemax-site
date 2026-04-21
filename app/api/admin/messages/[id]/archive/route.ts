@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/server/admin-auth";
+import { getAdminIdentity, isAdminAuthenticated } from "@/lib/server/admin-auth";
+import { logAdminActivity } from "@/lib/server/admin-activity-log";
 import { archiveContactMessage } from "@/lib/server/ridemax-content-repository";
 
 type RouteContext = {
@@ -21,6 +22,14 @@ export async function POST(_request: Request, context: RouteContext) {
   }
 
   await archiveContactMessage(messageId);
+
+  await logAdminActivity({
+    actorEmail: await getAdminIdentity(),
+    action: "archive_message",
+    entityType: "contact_message",
+    entityId: messageId,
+    metadata: null,
+  });
 
   return NextResponse.json({ message: "Message archived." });
 }

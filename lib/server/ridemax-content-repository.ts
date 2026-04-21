@@ -167,6 +167,16 @@ function isDraftPublishMigrationError(message: string) {
   );
 }
 
+// First-ever draft save fails the NOT NULL check on `content` because the
+// row doesn't exist yet. Detect that so we can seed the column.
+function isContentNotNullError(message: string) {
+  return (
+    message.includes("null value") &&
+    message.includes('"content"') &&
+    message.includes("site_content_documents")
+  );
+}
+
 function draftPublishMigrationMessage(message: string) {
   return [
     "Supabase is missing the CMS draft/publish migration.",
@@ -356,6 +366,17 @@ async function writeSupabaseDraftContent(content: RidemaxSiteContent) {
   );
 
   if (error) {
+    if (isContentNotNullError(error.message)) {
+      // No row exists yet for this slug. Seed `content` with the draft so the
+      // NOT NULL constraint is satisfied; subsequent draft saves will land in
+      // the UPDATE branch and leave the published column untouched.
+      const seed = await contentTable.upsert(
+        { slug: primaryContentSlug, content, draft_content: content },
+        { onConflict: "slug" },
+      );
+      if (seed.error) throwSupabaseError(seed.error.message);
+      return true;
+    }
     if (isDraftPublishMigrationError(error.message)) {
       // Migration not yet applied — write to the legacy content column so
       // saves are not blocked until the admin runs the schema migration.
@@ -406,7 +427,18 @@ async function writeSupabasePublishedContent(
   );
 
   if (upsertResult.error) {
-    throwSupabaseError(upsertResult.error.message);
+    if (isDraftPublishMigrationError(upsertResult.error.message)) {
+      // Migration not yet applied on this Supabase instance — keep publish
+      // working by writing only the legacy `content` column. The revisions
+      // table may still be missing, handled a few lines below.
+      const fallback = await contentTable.upsert(
+        { slug: primaryContentSlug, content },
+        { onConflict: "slug" },
+      );
+      if (fallback.error) throwSupabaseError(fallback.error.message);
+    } else {
+      throwSupabaseError(upsertResult.error.message);
+    }
   }
 
   const revisionsTable = supabase.from("site_content_revisions") as unknown as RevisionsTable;
@@ -418,6 +450,14 @@ async function writeSupabasePublishedContent(
   });
 
   if (insertResult.error) {
+    if (isDraftPublishMigrationError(insertResult.error.message)) {
+      // Revisions table missing — publish still succeeded on the primary row,
+      // so surface a soft warning via console rather than failing the request.
+      console.warn(
+        "[cms] Publish succeeded but revision not recorded — run supabase/schema.sql to create site_content_revisions.",
+      );
+      return true;
+    }
     throwSupabaseError(insertResult.error.message);
   }
 

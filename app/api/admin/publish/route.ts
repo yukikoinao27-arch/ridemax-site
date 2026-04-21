@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/server/admin-auth";
+import { getAdminIdentity, isAdminAuthenticated } from "@/lib/server/admin-auth";
+import { logAdminActivity } from "@/lib/server/admin-activity-log";
 import { publishSiteContent } from "@/lib/server/ridemax-content-repository";
 
 /**
@@ -20,12 +21,21 @@ export async function POST(request: Request) {
     note?: string;
   };
 
+  const actor = await getAdminIdentity();
   try {
-    await publishSiteContent({ note: body.note ?? null });
+    await publishSiteContent({ actor, note: body.note ?? null });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to publish.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
+
+  await logAdminActivity({
+    actorEmail: actor,
+    action: "publish",
+    entityType: "site_content",
+    entityId: "primary",
+    metadata: body.note ? { note: body.note } : null,
+  });
 
   revalidatePath("/", "layout");
   revalidatePath("/search");

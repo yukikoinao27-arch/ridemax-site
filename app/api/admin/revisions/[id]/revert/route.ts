@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/server/admin-auth";
+import { getAdminIdentity, isAdminAuthenticated } from "@/lib/server/admin-auth";
+import { logAdminActivity } from "@/lib/server/admin-activity-log";
 import { revertSiteContentToRevision } from "@/lib/server/ridemax-content-repository";
 
 /**
@@ -16,6 +17,13 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
 
   try {
     const content = await revertSiteContentToRevision(id);
+    await logAdminActivity({
+      actorEmail: await getAdminIdentity(),
+      action: "revert_revision",
+      entityType: "site_content_revision",
+      entityId: id,
+      metadata: null,
+    });
     return NextResponse.json({
       message: "Revision copied into draft. Preview and publish when ready.",
       content,

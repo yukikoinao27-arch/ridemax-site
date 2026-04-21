@@ -28,6 +28,7 @@ import type {
   RidemaxSiteContent,
   SocialPlatform,
 } from "@/lib/ridemax-types";
+import type { JobApplication } from "@/lib/server/job-applications";
 
 export type AdminView =
   | "overview"
@@ -43,6 +44,7 @@ type AdminDashboardProps = {
   messages: ContactMessage[];
   storageMode: string;
   initialMediaAssets: MediaAsset[];
+  initialJobApplications: JobApplication[];
   view: AdminView;
   previewMode: boolean;
 };
@@ -126,6 +128,14 @@ function TrashIcon() {
       <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M10 11v6" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M14 11v6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -437,6 +447,7 @@ function SaveActionBar({
   publishing,
   saveState,
   lastSavedAt,
+  previewMode,
   onSave,
   onPreview,
   onPublish,
@@ -449,6 +460,7 @@ function SaveActionBar({
   publishing: boolean;
   saveState: SaveState;
   lastSavedAt: string | null;
+  previewMode: boolean;
   onSave: () => void;
   onPreview: () => void;
   onPublish: () => void;
@@ -503,9 +515,34 @@ function SaveActionBar({
           <button type="button" onClick={onOpenRevisions} className={secondaryButtonClass}>
             Revisions
           </button>
-          <button type="button" onClick={onPreview} disabled={previewing || saving || publishing} className={secondaryButtonClass}>
-            {previewing ? "Opening Preview..." : "Preview"}
+          <button
+            type="button"
+            onClick={onPreview}
+            disabled={previewing || saving || publishing}
+            className={secondaryButtonClass}
+            title={
+              previewMode
+                ? "Re-opens the preview tab with your latest draft."
+                : "Opens the public site in preview mode in a new tab."
+            }
+          >
+            {previewing
+              ? previewMode
+                ? "Refreshing Preview..."
+                : "Opening Preview..."
+              : previewMode
+                ? "Refresh Preview"
+                : "Preview"}
           </button>
+          {previewMode ? (
+            <a
+              href="/api/admin/preview/disable?path=/admin"
+              className={secondaryButtonClass}
+              title="Turn off preview mode and return to the public site's published content."
+            >
+              Exit Preview
+            </a>
+          ) : null}
           <button type="button" onClick={onSave} disabled={saving || publishing || !dirty} className={primaryButtonClass}>
             {saving ? "Saving..." : "Save Draft"}
           </button>
@@ -514,7 +551,7 @@ function SaveActionBar({
             onClick={onPublish}
             disabled={publishing || saving || dirty}
             title={dirty ? "Save the draft before publishing." : undefined}
-            className={`inline-flex items-center justify-center rounded-full border border-[#255c2f] bg-[#255c2f] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1e4a26] disabled:cursor-not-allowed disabled:opacity-60`}
+            className={`inline-flex cursor-pointer items-center justify-center rounded-full border border-[#255c2f] bg-[#255c2f] px-5 py-2.5 text-sm font-semibold text-white transition duration-150 ease-out hover:-translate-y-0.5 hover:bg-[#1e4a26] hover:shadow-[0_12px_26px_rgba(37,92,47,0.22)] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#255c2f]/30 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
           >
             {publishing ? "Publishing..." : "Publish"}
           </button>
@@ -585,7 +622,9 @@ function RevisionsDrawer({
                     key={revision.id}
                     className="rounded-xl border border-black/10 bg-[#faf8f7] p-4"
                   >
-                    <div className="text-sm font-semibold text-[#220707]">{when}</div>
+                    <div className="text-sm font-semibold text-[#220707]" suppressHydrationWarning>
+                      {when}
+                    </div>
                     {revision.createdBy ? (
                       <div className="text-xs text-[#6a433d]">by {revision.createdBy}</div>
                     ) : null}
@@ -861,7 +900,7 @@ function CollectionSection({
                   : "border-black/10"
               }`}
             >
-              <div className="flex min-w-0 items-center justify-between gap-3 overflow-x-auto pb-1">
+              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
                   <span
                     className={dragHandleClass}
@@ -1123,16 +1162,27 @@ function PageBuilderSection({
                 key={page.id}
                 type="button"
                 onClick={() => setActivePageId(page.id)}
-                className={`group rounded-[1.25rem] border px-4 py-3 text-left shadow-sm transition-all duration-150 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/30 ${
+                className={`group flex cursor-pointer items-center justify-between gap-3 rounded-[1.25rem] border px-4 py-3 text-left shadow-sm transition-all duration-150 ease-out hover:scale-[1.01] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/30 ${
                   isActive
-                    ? "border-[#8d120e]/40 bg-[#fff4f3] text-[#5d0d0a] shadow-[0_4px_14px_rgba(141,18,14,0.12)]"
+                    ? "border-[#8d120e]/40 bg-[#fff4f3] text-[#5d0d0a] shadow-[0_4px_14px_rgba(141,18,14,0.12)] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(141,18,14,0.16)]"
                     : "cursor-pointer border-black/10 bg-[#faf8f7] text-[#220707] hover:-translate-y-1 hover:border-[#8d120e]/40 hover:bg-white hover:shadow-[0_8px_22px_rgba(31,20,19,0.11)]"
                 }`}
               >
-                <span className={`text-sm font-semibold uppercase tracking-[0.14em] transition-colors duration-100 ${isActive ? "text-[#8d120e]" : "group-hover:text-[#8d120e]"}`}>
-                  {pageSlugOptions.find((option) => option.value === page.slug)?.label ?? page.slug}
+                <span className="min-w-0">
+                  <span className={`block truncate text-sm font-semibold uppercase tracking-[0.14em] transition-colors duration-100 ${isActive ? "text-[#8d120e]" : "group-hover:text-[#8d120e]"}`}>
+                    {pageSlugOptions.find((option) => option.value === page.slug)?.label ?? page.slug}
+                  </span>
+                  <span className="mt-2 block text-xs text-[#7e5a53] transition-colors duration-100 group-hover:text-[#5d0d0a]">
+                    {page.blocks.length} block(s)
+                  </span>
                 </span>
-                <span className="mt-2 block text-xs text-[#7e5a53]">{page.blocks.length} block(s)</span>
+                <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition duration-150 ease-out group-hover:translate-x-0.5 ${
+                  isActive
+                    ? "border-[#8d120e]/20 bg-white text-[#8d120e]"
+                    : "border-black/10 bg-white text-[#9b7771] group-hover:border-[#8d120e]/25 group-hover:text-[#8d120e]"
+                }`}>
+                  <ChevronRightIcon />
+                </span>
               </button>
             );
           })}
@@ -1265,7 +1315,7 @@ function PageBuilderSection({
                           : "border-black/10"
                     }`}
                   >
-                    <div className="flex min-w-0 items-center justify-between gap-3 overflow-x-auto pb-1">
+                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex min-w-0 items-center gap-3">
                         <span
                           className={dragHandleClass}
@@ -1492,7 +1542,10 @@ function MediaLibrarySection({
                     <p className="mt-2 text-xs uppercase tracking-[0.14em] text-[#7e5a53]">
                       {asset.width} x {asset.height} • {Math.max(1, Math.round(asset.size / 1024))} KB
                     </p>
-                    <p className="mt-2 text-xs leading-6 text-[#6a433d]">
+                    <p
+                      className="mt-2 text-xs leading-6 text-[#6a433d]"
+                      suppressHydrationWarning
+                    >
                       Uploaded {new Date(asset.createdAt).toLocaleString()}
                     </p>
                     <a
@@ -1568,6 +1621,7 @@ export function AdminDashboard({
   messages,
   storageMode,
   initialMediaAssets,
+  initialJobApplications,
   view,
   previewMode,
 }: AdminDashboardProps) {
@@ -1575,6 +1629,8 @@ export function AdminDashboard({
   const [savedDraft, setSavedDraft] = useState<RidemaxSiteContent>(initialContent);
   const [inboxMessages, setInboxMessages] = useState<ContactMessage[]>(messages);
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>(initialMediaAssets);
+  const [jobApplications, setJobApplications] = useState<JobApplication[]>(initialJobApplications);
+  const [archivingApplicationId, setArchivingApplicationId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [previewing, setPreviewing] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -1824,6 +1880,28 @@ export function AdminDashboard({
     }
   }
 
+  async function handleArchiveApplication(applicationId: string) {
+    setArchivingApplicationId(applicationId);
+    try {
+      const response = await fetch(`/api/admin/job-applications/${applicationId}/archive`, {
+        method: "POST",
+      });
+      const payload = (await response.json()) as { error?: string; message?: string };
+
+      if (!response.ok) {
+        fieldCallbacks.onNotice("error", payload.error ?? "Unable to archive application.");
+        return;
+      }
+
+      setJobApplications((current) => current.filter((application) => application.id !== applicationId));
+      fieldCallbacks.onNotice("success", payload.message ?? "Application archived.");
+    } catch {
+      fieldCallbacks.onNotice("error", "Unable to archive application.");
+    } finally {
+      setArchivingApplicationId(null);
+    }
+  }
+
   // The persistent sidebar + outer grid live in `app/admin/layout.tsx`. This
   // component owns only the per-view content stack and the in-view toast feed.
   return (
@@ -1837,6 +1915,7 @@ export function AdminDashboard({
         publishing={publishing}
         saveState={saveState}
         lastSavedAt={lastSavedAt}
+        previewMode={previewMode}
         onSave={handleSave}
         onPreview={handlePreview}
         onPublish={handlePublish}
@@ -1915,7 +1994,10 @@ export function AdminDashboard({
                             </h3>
                             <p className="text-sm text-[#5c4743]">{message.email}</p>
                           </div>
-                          <p className="text-xs uppercase tracking-[0.14em] text-[#7e5a53]">
+                          <p
+                            className="text-xs uppercase tracking-[0.14em] text-[#7e5a53]"
+                            suppressHydrationWarning
+                          >
                             {new Date(message.createdAt).toLocaleString()}
                           </p>
                         </div>
@@ -2280,6 +2362,83 @@ export function AdminDashboard({
 
           {view === "careers" ? (
             <>
+              <SectionCard
+                sectionId="careers-applications"
+                title="Applications Inbox"
+                description="Submissions from the public job application form. Archive rows after you hand them to the hiring team."
+              >
+                <div className="space-y-4">
+                  {jobApplications.length === 0 ? (
+                    <div className="rounded-[1.5rem] border border-dashed border-black/12 bg-[#faf8f7] p-5 text-sm text-[#5c4743]">
+                      No applications yet.
+                    </div>
+                  ) : (
+                    jobApplications.map((application) => (
+                      <article
+                        key={application.id}
+                        className="rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-5"
+                      >
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-[#220707]">{application.fullName}</h3>
+                            <p className="text-sm text-[#5c4743]">
+                              {application.email}
+                              {application.phone ? ` · ${application.phone}` : ""}
+                            </p>
+                            {application.jobTitle ? (
+                              <p className="mt-1 text-xs uppercase tracking-[0.14em] text-[#8d120e]">
+                                Applied for {application.jobTitle}
+                              </p>
+                            ) : null}
+                          </div>
+                          <p
+                            className="text-xs uppercase tracking-[0.14em] text-[#7e5a53]"
+                            suppressHydrationWarning
+                          >
+                            {new Date(application.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                        {application.message ? (
+                          <p className="mt-4 whitespace-pre-line text-sm leading-7 text-[#412f2b]">
+                            {application.message}
+                          </p>
+                        ) : null}
+                        {application.resumeUrl ? (
+                          <p className="mt-3 text-sm">
+                            <a
+                              href={application.resumeUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-semibold text-[#8d120e] underline underline-offset-2 hover:text-[#a51611]"
+                            >
+                              Open resume link
+                            </a>
+                          </p>
+                        ) : null}
+                        <div className="mt-4 flex flex-wrap gap-3 border-t border-black/8 pt-4">
+                          <a
+                            href={`mailto:${application.email}?subject=${encodeURIComponent(
+                              `Re: ${application.jobTitle || "your application"}`,
+                            )}`}
+                            className={secondaryButtonClass}
+                          >
+                            Reply by email
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleArchiveApplication(application.id)}
+                            disabled={archivingApplicationId === application.id}
+                            className={secondaryButtonClass}
+                          >
+                            {archivingApplicationId === application.id ? "Archiving…" : "Archive"}
+                          </button>
+                        </div>
+                      </article>
+                    ))
+                  )}
+                </div>
+              </SectionCard>
+
               <CollectionSection
                 sectionId="careers-departments"
                 title="Departments"

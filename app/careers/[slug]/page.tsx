@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HeroBanner } from "@/components/hero-banner";
+import { JobApplicationForm } from "@/components/job-application-form";
 import { getHeroBlock } from "@/lib/page-builder";
 import { findJob, getSiteContent } from "@/lib/server/ridemax-content-repository";
 
@@ -78,18 +79,28 @@ export default async function JobPage({ params }: JobPageProps) {
                 </div>
               </dl>
               <a
-                href={`mailto:${content.contact.email}?subject=Application%20for%20${encodeURIComponent(job.title)}`}
-                className="mt-8 inline-flex bg-[#8d120e] px-5 py-3 text-sm font-semibold text-white"
+                href="#apply-online"
+                className="mt-8 inline-flex cursor-pointer items-center justify-center rounded-full bg-[#8d120e] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#a51611]"
               >
-                Apply by Email
+                Apply Online
+              </a>
+              <a
+                href={`mailto:${content.contact.email}?subject=Application%20for%20${encodeURIComponent(job.title)}`}
+                className="mt-3 inline-flex cursor-pointer px-2 py-2 text-sm font-semibold text-[#220707] underline underline-offset-2"
+              >
+                Or apply by email
               </a>
               <Link
                 href="/careers"
-                className="mt-3 inline-flex px-2 py-2 text-sm font-semibold text-[#220707] underline underline-offset-2"
+                className="mt-3 inline-flex cursor-pointer px-2 py-2 text-sm font-semibold text-[#220707] underline underline-offset-2"
               >
                 Back to careers
               </Link>
             </aside>
+          </div>
+
+          <div id="apply-online" className="mt-10">
+            <JobApplicationForm jobSlug={job.slug} jobTitle={job.title} />
           </div>
         </div>
       </section>

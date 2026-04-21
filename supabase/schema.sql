@@ -852,3 +852,80 @@ create index if not exists idx_jobs_published_sort on public.jobs (published, so
 create index if not exists idx_contact_messages_archived_created_at on public.contact_messages (archived, created_at desc);
 create index if not exists idx_chat_uploads_created_at on public.chat_uploads (created_at desc);
 create index if not exists idx_media_assets_created_at on public.media_assets (created_at desc);
+
+-- Immutable audit log for write actions taken in the admin panel. Written by
+-- lib/server/admin-activity-log.ts after every successful save_draft, publish,
+-- revert, and archive_application. Deliberately no foreign keys: the log
+-- survives even after the thing it references is deleted. Read-only for
+-- marketing — ops queries via Supabase console.
+create table if not exists public.admin_activity_log (
+  id bigserial primary key,
+  actor_email text not null,
+  action text not null,
+  entity_type text,
+  entity_id text,
+  metadata jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_admin_activity_log_created_at
+  on public.admin_activity_log (created_at desc);
+create index if not exists idx_admin_activity_log_actor_created
+  on public.admin_activity_log (actor_email, created_at desc);
+create index if not exists idx_admin_activity_log_action_created
+  on public.admin_activity_log (action, created_at desc);
+
+-- Job applications submitted from the public /careers page. Marketing triages
+-- them in /admin/careers/inbox without IT involvement. Deliberately NOT
+-- referencing jobs(id) so that deleting a closed posting preserves the
+-- historical applications it collected.
+create table if not exists public.job_applications (
+  id uuid primary key default gen_random_uuid(),
+  job_slug text not null,
+  job_title text not null default '',
+  full_name text not null,
+  email text not null,
+  phone text not null default '',
+  message text not null default '',
+  resume_url text not null default '',
+  archived boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_job_applications_archived_created_at
+  on public.job_applications (archived, created_at desc);
+create index if not exists idx_job_applications_job_slug
+  on public.job_applications (job_slug);
+
+-- These tables are written only through trusted Next.js API routes using the
+-- service role key. No anon/authenticated policies are declared, so direct
+-- browser access defaults to denied while the server keeps full access.
+alter table public.admin_activity_log enable row level security;
+alter table public.job_applications enable row level security;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'admin_activity_log_action_check'
+  ) then
+    alter table public.admin_activity_log
+      add constraint admin_activity_log_action_check
+      check (action in (
+        'login',
+        'save_draft',
+        'publish',
+        'revert_revision',
+        'archive_message',
+        'archive_application',
+        'import_wix'
+      ));
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'job_applications_email_check'
+  ) then
+    alter table public.job_applications
+      add constraint job_applications_email_check
+      check (position('@' in email) > 1 and length(email) between 3 and 320);
+  end if;
+end $$;
