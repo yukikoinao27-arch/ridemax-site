@@ -12,6 +12,21 @@ git pull
 git checkout -b feat/admin-page-builder-tabs
 ```
 
+```
+git checkout main
+git pull
+git checkout -b feat/something
+
+# work
+
+git add .
+git commit
+git push
+
+# THEN create PR
+
+```
+
 Commit focused changes:
 
 ```powershell

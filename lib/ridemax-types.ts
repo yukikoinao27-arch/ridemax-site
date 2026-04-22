@@ -337,6 +337,9 @@ export type FeatureCard = {
 export type ContentPageSlug =
   | "home"
   | "products"
+  | "tires"
+  | "rims"
+  | "accessories"
   | "careers"
   | "about"
   | "events-awards"

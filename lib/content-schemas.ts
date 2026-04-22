@@ -267,6 +267,9 @@ const featureCardSchema = z.object({
 const pageSlugSchema = z.enum([
   "home",
   "products",
+  "tires",
+  "rims",
+  "accessories",
   "careers",
   "about",
   "events-awards",
