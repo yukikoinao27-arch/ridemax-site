@@ -10,6 +10,7 @@ type SearchPageProps = {
     q?: string | string[];
     kind?: string | string[];
     category?: string | string[];
+    sort?: string | string[];
   }>;
 };
 
@@ -37,9 +38,33 @@ function normalize(value: string) {
   return value.trim().toLowerCase();
 }
 
+function sortSearchResults(results: Awaited<ReturnType<typeof searchSite>>, sort: string) {
+  const next = [...results];
+
+  switch (sort) {
+    case "newest":
+      return next.sort((left, right) => (right.sortOrder ?? 0) - (left.sortOrder ?? 0));
+    case "name-asc":
+      return next.sort((left, right) => left.title.localeCompare(right.title));
+    case "name-desc":
+      return next.sort((left, right) => right.title.localeCompare(left.title));
+    default:
+      return next.sort((left, right) => {
+        const kindScore = (kind: string) => {
+          if (kind === "Product") return 0;
+          if (kind === "Category") return 1;
+          return 2;
+        };
+
+        return kindScore(left.kind) - kindScore(right.kind);
+      });
+  }
+}
+
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const query = readQuery(params.q);
+  const selectedSort = readQuery(params.sort) || "best";
   const selectedKinds = new Set(readMultiValue(params.kind));
   const selectedCategories = new Set(readMultiValue(params.category).map(normalize));
   const content = await getSiteContent();
@@ -60,14 +85,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     const searchable = [result.title, ...(result.keywords ?? [])].map(normalize).join(" ");
     return [...selectedCategories].some((category) => searchable.includes(category));
   });
-  const sortedResults = [...results].sort((left, right) => {
-    const kindScore = (kind: string) => {
-      if (kind === "Product") return 0;
-      if (kind === "Category") return 1;
-      return 2;
-    };
-    return kindScore(left.kind) - kindScore(right.kind);
-  });
+  const sortedResults = sortSearchResults(results, selectedSort);
 
   return (
     <main>
@@ -76,6 +94,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         title="Search"
         summary="Find pages, products, jobs, events, awards, and story content from Team Ridemax."
         minHeight="min-h-[18rem]"
+        sectionClassName="z-30 overflow-visible"
       >
         <div className="mx-auto max-w-xl">
           <SearchForm
@@ -107,6 +126,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 </p>
                 <form className="mt-5 space-y-5" action="/search">
                   <input type="hidden" name="q" value={query} />
+                  <input type="hidden" name="sort" value={selectedSort} />
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e]">
                       Category
@@ -134,9 +154,39 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 </form>
               </aside>
               <div>
-                <p className="text-sm uppercase tracking-[0.16em] text-[#8d120e]">
-                  {sortedResults.length} result{sortedResults.length === 1 ? "" : "s"} for {query}
-                </p>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <p className="text-sm uppercase tracking-[0.16em] text-[#8d120e]">
+                    {sortedResults.length} result{sortedResults.length === 1 ? "" : "s"} for {query}
+                  </p>
+                  <form action="/search" className="flex items-center gap-3">
+                    <input type="hidden" name="q" value={query} />
+                    {Array.from(selectedCategories).map((category) => (
+                      <input key={category} type="hidden" name="category" value={category} />
+                    ))}
+                    {Array.from(selectedKinds).map((kind) => (
+                      <input key={kind} type="hidden" name="kind" value={kind} />
+                    ))}
+                    <label className="text-sm font-semibold text-[#4d3b37]">
+                      Sort by
+                      <select
+                        name="sort"
+                        defaultValue={selectedSort}
+                        className="ml-3 rounded-full border border-black/10 bg-white px-4 py-3 text-sm font-medium outline-none transition hover:border-[#8d120e]/30 focus:border-[#8d120e]"
+                      >
+                        <option value="best">Best Match</option>
+                        <option value="newest">Newest</option>
+                        <option value="name-asc">Name A-Z</option>
+                        <option value="name-desc">Name Z-A</option>
+                      </select>
+                    </label>
+                    <button
+                      type="submit"
+                      className="rounded-full border border-black/10 bg-white px-4 py-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:border-[#8d120e]/25 hover:bg-[#fff4f3]"
+                    >
+                      Sort
+                    </button>
+                  </form>
+                </div>
                 <div className="mt-6 space-y-4">
                   {sortedResults.map((result) => (
                     <Link

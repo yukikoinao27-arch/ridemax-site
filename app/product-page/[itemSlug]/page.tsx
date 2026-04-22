@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductGallery } from "@/components/product-gallery";
-import { findAdjacentProductItems, findProductItemBySlug } from "@/lib/server/ridemax-content-repository";
+import { findProductItemBySlug } from "@/lib/server/ridemax-content-repository";
 
 // Cache policy inherited from app/product-page/layout.tsx (ISR 1h).
 
@@ -34,42 +34,30 @@ export default async function ProductLandingPage({ params }: ProductLandingPageP
     notFound();
   }
 
-  const adjacent = await findAdjacentProductItems(record.category.slug, itemSlug);
-
   return (
     <main className="bg-white py-16">
       <div className="mx-auto max-w-[76rem] px-6 md:px-10">
-        <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-[#6a4b45]">
-          <p>
-            <Link href="/" className="hover:underline">
-              Home
-            </Link>
-            {" / "}
-            <Link href="/search?q=tires" className="hover:underline">
-              Search Results
-            </Link>
-            {" / "}
-            <span className="text-[#220707]">{record.item.title}</span>
-          </p>
-          <div className="flex gap-3">
-            {adjacent.previous ? (
-              <Link
-                href={`/product-page/${adjacent.previous.slug}`}
-                className="rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#220707]"
-              >
-                Prev
-              </Link>
-            ) : null}
-            {adjacent.next ? (
-              <Link
-                href={`/product-page/${adjacent.next.slug}`}
-                className="rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#220707]"
-              >
-                Next
-              </Link>
-            ) : null}
-          </div>
-        </div>
+        <p className="text-sm text-[#6a4b45]">
+          <Link href="/" className="hover:underline">
+            Home
+          </Link>
+          {" / "}
+          <Link href="/products" className="hover:underline">
+            Products
+          </Link>
+          {" / "}
+          <Link href={`/products/${record.category.slug}`} className="hover:underline">
+            {record.category.name}
+          </Link>
+          {record.item.brand ? (
+            <>
+              {" / "}
+              <span>{record.item.brand}</span>
+            </>
+          ) : null}
+          {" / "}
+          <span className="text-[#220707]">{record.item.title}</span>
+        </p>
 
         <section className="mt-8 grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
           <ProductGallery title={record.item.title} images={record.item.gallery} />
@@ -78,9 +66,6 @@ export default async function ProductLandingPage({ params }: ProductLandingPageP
             <h1 className="text-5xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
               {record.item.title}
             </h1>
-            <p className="mt-2 text-sm uppercase tracking-[0.14em] text-[#8d120e]">
-              SKU: {record.item.sku}
-            </p>
             <p className="mt-6 text-base leading-8 text-[#4d3b37]">{record.item.description}</p>
 
             <div className="mt-8">

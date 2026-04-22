@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductGallery } from "@/components/product-gallery";
 import {
-  findAdjacentProductItems,
   findProductCategory,
   findProductItem,
 } from "@/lib/server/ridemax-content-repository";
@@ -42,46 +41,30 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     notFound();
   }
 
-  const adjacent = await findAdjacentProductItems(slug, itemSlug);
-
   return (
     <main className="bg-white py-16">
       <div className="mx-auto max-w-[76rem] px-6 md:px-10">
-        <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-[#6a4b45]">
-          <p>
-            <Link href="/" className="hover:underline">
-              Home
-            </Link>
-            {" / "}
-            <Link href="/products" className="hover:underline">
-              Products
-            </Link>
-            {" / "}
-            <Link href={`/products/${category.slug}`} className="hover:underline">
-              {category.name}
-            </Link>
-            {" / "}
-            <span className="text-[#220707]">{item.title}</span>
-          </p>
-          <div className="flex gap-3">
-            {adjacent.previous ? (
-              <Link
-                href={`/products/${category.slug}/${adjacent.previous.slug}`}
-                className="rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#220707]"
-              >
-                Prev
-              </Link>
-            ) : null}
-            {adjacent.next ? (
-              <Link
-                href={`/products/${category.slug}/${adjacent.next.slug}`}
-                className="rounded-full border border-black/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#220707]"
-              >
-                Next
-              </Link>
-            ) : null}
-          </div>
-        </div>
+        <p className="text-sm text-[#6a4b45]">
+          <Link href="/" className="hover:underline">
+            Home
+          </Link>
+          {" / "}
+          <Link href="/products" className="hover:underline">
+            Products
+          </Link>
+          {" / "}
+          <Link href={`/products/${category.slug}`} className="hover:underline">
+            {category.name}
+          </Link>
+          {item.brand ? (
+            <>
+              {" / "}
+              <span>{item.brand}</span>
+            </>
+          ) : null}
+          {" / "}
+          <span className="text-[#220707]">{item.title}</span>
+        </p>
 
         <section className="mt-8 grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
           <ProductGallery title={item.title} images={item.gallery} />
@@ -108,14 +91,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
               </ul>
             </div>
 
-            <div className="mt-8 grid gap-5 sm:grid-cols-2">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8d120e]">
-                  SKU
-                </p>
-                <p className="mt-2 text-base text-[#220707]">{item.sku}</p>
-              </div>
-              <label>
+            <div className="mt-8">
+              <label className="block">
                 <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8d120e]">
                   Size
                 </span>

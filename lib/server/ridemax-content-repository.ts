@@ -13,6 +13,7 @@ import type {
   ExternalProductCatalog,
   JobOpening,
   NewsItem,
+  PageBlock,
   PageDocument,
   ProductCategory,
   ProjectFeature,
@@ -36,6 +37,12 @@ const contactMessagesPath = path.join(process.cwd(), "data", "contact-messages.j
 const catalogProductsPath = path.join(process.cwd(), "data", "catalog-products.json");
 const primaryContentSlug = "primary";
 const REVISION_LIMIT = 50;
+const legacyProductHelperCopy =
+  "Category pages stay CMS-managed for layout and storytelling, while product inventory stays read-only in the external catalog adapter.";
+const productLandingSummary =
+  "Browse tires, rims, and accessories from the same shared catalog that powers search, product detail pages, and future admin workflows.";
+const productGridSummary =
+  "Explore the main Ridemax product categories customers can browse.";
 
 /**
  * A single snapshot of the published content bundle. Revisions are written
@@ -240,10 +247,66 @@ async function writeJsonFile(targetPath: string, value: unknown) {
   await fs.writeFile(targetPath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
-function normalizePage(page: PageDocument): PageDocument {
+function removeLegacyProductCopy(value: string | undefined, fallback = "") {
+  if (!value) {
+    return fallback;
+  }
+
+  return value.includes("Category pages stay CMS-managed")
+    ? fallback
+    : value.replace(legacyProductHelperCopy, fallback);
+}
+
+function normalizeProductsPageBlock(block: PageBlock): PageBlock | null {
+  if (block.type !== "hero" && block.type !== "collectionGrid" && block.type !== "richText") {
+    return null;
+  }
+
+  if (block.type === "hero") {
+    return {
+      ...block,
+      summary: removeLegacyProductCopy(block.summary, productLandingSummary),
+    };
+  }
+
+  if (block.type === "collectionGrid") {
+    const title = block.title?.toLowerCase().includes("browse by category")
+      ? "Our Products"
+      : block.title;
+
+    return {
+      ...block,
+      title: title?.trim() ? title : "Our Products",
+      summary: removeLegacyProductCopy(block.summary, productGridSummary),
+      source: "catalogCategories",
+      variant: "categories",
+    };
+  }
+
+  return {
+    ...block,
+    summary: removeLegacyProductCopy(block.summary, ""),
+  };
+}
+
+function normalizeProductsPage(page: PageDocument): PageDocument {
+  const blocks = page.blocks
+    .map(normalizeProductsPageBlock)
+    .filter((block): block is PageBlock => Boolean(block));
+
   return {
     ...page,
-    blocks: [...page.blocks].sort((left, right) => left.order - right.order),
+    summary: removeLegacyProductCopy(page.summary, productLandingSummary),
+    blocks,
+  };
+}
+
+function normalizePage(page: PageDocument): PageDocument {
+  const nextPage = page.slug === "products" ? normalizeProductsPage(page) : page;
+
+  return {
+    ...nextPage,
+    blocks: [...nextPage.blocks].sort((left, right) => left.order - right.order),
   };
 }
 
@@ -961,6 +1024,7 @@ function toSearchRecords(
       summary: item.summary,
       kind: "Product" as const,
       image: item.image,
+      sortOrder: item.order,
       keywords: [
         item.brand,
         item.sku,

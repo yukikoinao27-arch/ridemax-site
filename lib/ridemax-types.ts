@@ -511,6 +511,7 @@ export type SearchRecord = {
     | "Promotion";
   image?: string;
   keywords?: string[];
+  sortOrder?: number;
 };
 
 export type MediaAssetStorageMode = "s3" | "supabase" | "local";

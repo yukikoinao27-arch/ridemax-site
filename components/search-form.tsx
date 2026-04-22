@@ -28,6 +28,16 @@ export function SearchForm({
   const trimmedQuery = deferredQuery.trim();
   const showFeedback = open && trimmedQuery.length >= 2 && (loading || results.length > 0 || searchedQuery === trimmedQuery);
 
+  function openSearchInNewTab() {
+    const nextQuery = query.trim();
+
+    if (!nextQuery) {
+      return;
+    }
+
+    window.open(`/search?q=${encodeURIComponent(nextQuery)}`, "_blank", "noopener,noreferrer");
+  }
+
   useEffect(() => {
     const normalizedQuery = deferredQuery.trim();
     if (normalizedQuery.length < 2) {
@@ -68,10 +78,10 @@ export function SearchForm({
   }, [compact, deferredQuery]);
 
   return (
-    <div className={`relative ${compact ? "w-[14rem]" : "w-full max-w-xl"} ${className}`.trim()}>
+    <div className={`relative z-[80] ${compact ? "w-[14rem]" : "w-full max-w-xl"} ${className}`.trim()}>
       <form
         action="/search"
-        className={`relative flex items-center overflow-hidden rounded-full border backdrop-blur-sm ${
+        className={`relative z-[2] flex items-center overflow-hidden rounded-full border backdrop-blur-sm ${
           theme === "light"
             ? "border-black/14 bg-white text-[#2b2b2b]"
             : "border-white/18 bg-white/18 text-white"
@@ -101,6 +111,12 @@ export function SearchForm({
           onFocus={() => setOpen(true)}
           onBlur={() => window.setTimeout(() => setOpen(false), 120)}
           onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+              event.preventDefault();
+              openSearchInNewTab();
+            }
+          }}
           className={`w-full bg-transparent outline-none ${
             theme === "light" ? "text-[#2b2b2b] placeholder:text-[#2b2b2b]/70" : "text-white placeholder:text-white/75"
           } ${compact ? "py-2 pl-9 pr-3 text-xs" : "py-3 pl-10 pr-4 text-sm"}`}
@@ -109,7 +125,7 @@ export function SearchForm({
 
       {showFeedback ? (
         <div
-          className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-50 overflow-hidden rounded-[1.5rem] border border-white/8 bg-[#574441]/96 p-2 shadow-[0_24px_55px_rgba(0,0,0,0.28)] backdrop-blur-md"
+          className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-[1000] overflow-hidden rounded-[1.5rem] border border-white/8 bg-[#574441]/96 p-2 shadow-[0_24px_55px_rgba(0,0,0,0.28)] backdrop-blur-md"
           aria-live="polite"
         >
           {loading ? (

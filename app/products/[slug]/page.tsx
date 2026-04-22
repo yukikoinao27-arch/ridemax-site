@@ -238,7 +238,7 @@ export default async function ProductCategoryPage({
                     {activeBrandRecord.label} {category.name}
                   </h2>
                   <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5c4743]">
-                    Products are pulled from the catalog while the brand card and link are managed in the CMS.
+                    Browse the available {activeBrandRecord.label} options in this category.
                   </p>
                 </div>
                 <form action={`/products/${category.slug}`} className="flex items-center gap-3">
@@ -270,7 +270,7 @@ export default async function ProductCategoryPage({
                   {sortedBrandProducts.map((product) => (
                     <Link
                       key={product.id}
-                      href={`/products/${category.slug}/${product.slug}`}
+                      href={`/product-page/${product.slug}`}
                       className="group grid overflow-hidden rounded-[1.25rem] border border-black/10 bg-white shadow-[0_10px_30px_rgba(31,20,19,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(31,20,19,0.10)] md:grid-cols-[16rem_1fr]"
                     >
                       <div className="relative min-h-[12rem] bg-[#f7f7f7]">
