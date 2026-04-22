@@ -85,6 +85,9 @@ export const cardPresetOptions: SelectOption[] = [
 export const pageSlugOptions: SelectOption[] = [
   { label: "Home", value: "home" },
   { label: "Products", value: "products" },
+  { label: "Tires", value: "tires" },
+  { label: "Rims", value: "rims" },
+  { label: "Accessories", value: "accessories" },
   { label: "Careers", value: "careers" },
   { label: "About", value: "about" },
   { label: "Events and Awards", value: "events-awards" },
@@ -96,7 +99,7 @@ export const pageSlugOptions: SelectOption[] = [
 
 export const pageBlockTypeOptions: SelectOption[] = [
   { label: "Hero Banner", value: "hero" },
-  { label: "Logo Strip", value: "brandMarquee" },
+  { label: "Brand Carousel", value: "brandMarquee" },
   { label: "Category Buttons", value: "categoryTiles" },
   { label: "Card Grid", value: "collectionGrid" },
   { label: "Feature Cards", value: "featureGrid" },
@@ -104,7 +107,7 @@ export const pageBlockTypeOptions: SelectOption[] = [
   { label: "Feature Story", value: "showcase" },
   { label: "Job Listings", value: "jobsList" },
   { label: "Contact Form", value: "contact" },
-  { label: "Category Story Rows", value: "categorySections" },
+  { label: "Product Type Rows", value: "categorySections" },
   { label: "Featured Story Rows", value: "projectList" },
   { label: "Event Calendar", value: "calendar" },
   { label: "Text Section", value: "richText" },
@@ -324,13 +327,6 @@ export function getPageBlockAppearanceFields(
       options: sectionHeadingScaleOptions,
       helpText: "Use presets instead of custom font sizes so mobile layouts remain stable.",
     },
-    {
-      key: "appearance.textTone",
-      label: "Text Color",
-      type: "select",
-      options: sectionTextToneOptions,
-      helpText: "Limited brand-safe text color tokens for section headers and summaries.",
-    },
   ];
 
   if (blockType === "collectionGrid" || blockType === "featureGrid") {
@@ -497,7 +493,16 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
     case "categorySections":
       return [
         ...common,
-        { key: "categorySlug", label: "Category Slug", type: "text" },
+        {
+          key: "categorySlug",
+          label: "Product Category",
+          type: "select",
+          options: [
+            { label: "Tires", value: "tires" },
+            { label: "Rims", value: "rims" },
+            { label: "Accessories", value: "accessories" },
+          ],
+        },
       ];
     case "projectList":
     case "calendar":

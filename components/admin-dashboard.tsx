@@ -25,7 +25,6 @@ import type {
   MediaAsset,
   PageBlock,
   PageDocument,
-  ProductCategory,
   RidemaxSiteContent,
   SocialPlatform,
 } from "@/lib/ridemax-types";
@@ -365,6 +364,10 @@ function defaultValueForFieldKey(key: string) {
       return "bottom";
     case "appearance.decoration.size":
       return "md";
+    case "appearance.headingScale":
+      return "standard";
+    case "appearance.cardPreset":
+      return "standard";
     default:
       return undefined;
   }
@@ -445,7 +448,10 @@ function collectionItemImage(item: Record<string, unknown>) {
 function collectionBlockOptionsForPage(slug: PageDocument["slug"]) {
   const allowedBySlug: Record<PageDocument["slug"], PageBlock["type"][]> = {
     home: ["hero", "brandMarquee", "categoryTiles", "collectionGrid", "imageMarquee", "showcase", "contact", "richText"],
-    products: ["hero", "categoryTiles", "collectionGrid", "categorySections", "richText"],
+    products: ["hero", "collectionGrid", "richText"],
+    tires: ["hero", "brandMarquee", "collectionGrid", "categorySections", "richText"],
+    rims: ["hero", "brandMarquee", "collectionGrid", "categorySections", "richText"],
+    accessories: ["hero", "brandMarquee", "collectionGrid", "categorySections", "richText"],
     careers: ["hero", "imageMarquee", "showcase", "jobsList", "richText"],
     about: ["hero", "showcase", "featureGrid", "contact", "richText"],
     "events-awards": ["hero", "collectionGrid", "projectList", "richText"],
@@ -468,8 +474,11 @@ function collectionSourceOptionsForPage(slug: PageDocument["slug"]) {
     catalogCategories: "Catalog Categories",
   };
   const allowedBySlug: Record<PageDocument["slug"], CollectionGridSource[]> = {
-    home: ["brands", "news", "events", "promotions", "catalogCategories"],
-    products: ["brands", "catalogCategories"],
+    home: ["brands", "news", "events", "promotions"],
+    products: ["catalogCategories"],
+    tires: ["brands"],
+    rims: ["brands"],
+    accessories: ["brands"],
     careers: [],
     about: [],
     "events-awards": ["news", "events", "awards"],
@@ -480,6 +489,30 @@ function collectionSourceOptionsForPage(slug: PageDocument["slug"]) {
   };
 
   return allowedBySlug[slug].map((value) => ({ label: labels[value], value }));
+}
+
+function scopedBrands(
+  brands: RidemaxSiteContent["brands"],
+  categorySlug: string,
+) {
+  return brands.filter((brand) => brand.categorySlug === categorySlug);
+}
+
+function mergeScopedBrands(
+  brands: RidemaxSiteContent["brands"],
+  categorySlug: string,
+  scopedItems: Record<string, unknown>[],
+) {
+  const nextScopedBrands = scopedItems.map((item, index) => ({
+    ...(item as RidemaxSiteContent["brands"][number]),
+    categorySlug,
+    order: parseNumber(item.order, index + 1),
+  }));
+
+  return [
+    ...brands.filter((brand) => brand.categorySlug !== categorySlug),
+    ...nextScopedBrands,
+  ];
 }
 
 function ToastStack({ toasts }: { toasts: ToastMessage[] }) {
@@ -765,7 +798,7 @@ function renderField(
           value={stringValue}
           maxLength={maxLength}
           onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
-          className={fieldControlClass}
+          className={`${fieldControlClass} min-h-[8rem] resize-y`}
         />
         <FieldMeta field={field} value={stringValue} maxLength={maxLength} />
       </>
@@ -1187,7 +1220,9 @@ function PageBuilderSection({
   const [highlightedBlockId, setHighlightedBlockId] = useState<string | null>(null);
   const [expandedBlockIds, setExpandedBlockIds] = useState<Record<string, boolean>>({});
   const activePageEditorRef = useRef<HTMLElement | null>(null);
+  const pagePickerRef = useRef<HTMLDivElement | null>(null);
   const blockRefs = useRef<Record<string, HTMLElement | null>>({});
+  const [pagePickerNotice, setPagePickerNotice] = useState("");
   // Drag state scoped to a single page (slug) so dragging a block in one page
   // never lets you drop it into another. Blocks always belong to exactly
   // one page, and the reorder logic below relies on that invariant.
@@ -1223,6 +1258,24 @@ function PageBuilderSection({
     }, 60);
   }
 
+  function handleReturnToPagePicker() {
+    pagePickerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setPagePickerNotice("Page picker is ready.");
+    fieldCallbacks.onNotice("info", "Returned to the page picker.");
+  }
+
+  useEffect(() => {
+    if (!pagePickerNotice) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setPagePickerNotice("");
+    }, 2200);
+
+    return () => window.clearTimeout(timeout);
+  }, [pagePickerNotice]);
+
   useEffect(() => {
     if (!highlightedBlockId) {
       return;
@@ -1247,7 +1300,7 @@ function PageBuilderSection({
       description="Edit one public page at a time, then reorder, add, remove, and style reusable sections without touching collection content."
     >
       <div className="space-y-6">
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <div ref={pagePickerRef} id="page-builder-page-picker" className="grid scroll-mt-28 gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {sortedPages.map((page) => {
             const isActive = activePage?.id === page.id;
 
@@ -1281,9 +1334,22 @@ function PageBuilderSection({
             );
           })}
         </div>
+        <div aria-live="polite" className="min-h-5 text-sm font-medium text-[#5d0d0a]">
+          {pagePickerNotice}
+        </div>
 
         {activePage ? (
           <article ref={activePageEditorRef} className="rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-5 scroll-mt-28">
+            <div className="sticky top-4 z-20 mb-4 flex justify-end pointer-events-none">
+              <button
+                type="button"
+                onClick={handleReturnToPagePicker}
+                className={`${secondaryButtonClass} pointer-events-auto gap-2 bg-white/95 backdrop-blur`}
+              >
+                <ArrowUpIcon />
+                Page picker
+              </button>
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <label>
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6a433d]">
@@ -1319,7 +1385,7 @@ function PageBuilderSection({
                       ),
                     )
                   }
-                  className={fieldControlClass}
+                  className={`${fieldControlClass} min-h-[7rem] resize-y`}
                 />
                 <div className="mt-1 text-right text-[0.72rem] text-[#7e5a53]">
                   {(activePage.summary ?? "").length}/200
@@ -1552,7 +1618,7 @@ function PageBuilderSection({
                               Section Appearance
                             </p>
                             <p className="mt-1 text-sm leading-6 text-[#6a433d]">
-                              Control background contrast and optional decorative section shapes.
+                              Choose from page-safe background, heading, shape, and card presets.
                             </p>
                           </div>
                           <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -1823,8 +1889,7 @@ export function AdminDashboard({
 
   const canSave = view !== "overview" && view !== "media";
   const hasUnsavedChanges = draft !== savedDraft;
-  const showPageCatalogControls =
-    view === "pages" && (activeBuilderPageSlug === "home" || activeBuilderPageSlug === "products");
+  const showTireBrandControls = view === "pages" && activeBuilderPageSlug === "tires";
 
   async function handleSave() {
     setSaving(true);
@@ -2361,137 +2426,45 @@ export function AdminDashboard({
                 onActivePageSlugChange={setActiveBuilderPageSlug}
               />
 
-              {showPageCatalogControls ? (
-                <>
-                  <CollectionSection
-                    sectionId="pages-catalog"
-                    title="Catalog Categories"
-                    description="CMS-owned category landing pages and storytelling sections. Product rows themselves stay outside the CMS."
-                    items={draft.productCategories as unknown as Record<string, unknown>[]}
-                    template={{
-                      slug: "",
-                      name: "",
-                      description: "",
-                      heroTitle: "",
-                      heroSummary: "",
-                      heroImage: { src: "", alt: "" },
-                      featuredImage: "",
-                      browseTitle: "",
-                      browseSummary: "",
-                      sectionTitle: "",
-                      sectionSummary: "",
-                      sections: [],
-                    }}
-                    fields={[
-                      { key: "slug", label: "Slug", type: "text" },
-                      { key: "name", label: "Name", type: "text" },
-                      { key: "description", label: "Description", type: "textarea" },
-                      { key: "heroTitle", label: "Hero Title", type: "text" },
-                      { key: "heroSummary", label: "Hero Summary", type: "textarea" },
-                      { key: "heroImage.src", label: "Hero Image", type: "image" },
-                      { key: "heroImage.alt", label: "Hero Image Alt", type: "text" },
-                      { key: "featuredImage", label: "Featured Image", type: "image" },
-                      { key: "browseTitle", label: "Browse Title", type: "text" },
-                      { key: "browseSummary", label: "Browse Summary", type: "textarea" },
-                      { key: "sectionTitle", label: "Sections Title", type: "text" },
-                      { key: "sectionSummary", label: "Sections Summary", type: "textarea" },
-                    ]}
-                    onChange={(items) =>
-                      setDraft((current) => ({
-                        ...current,
-                        productCategories: items as unknown as ProductCategory[],
-                      }))
-                    }
-                    fieldCallbacks={fieldCallbacks}
-                    itemLabel="Category"
-                  />
-
-                  {draft.productCategories.map((category) => (
-                    <CollectionSection
-                      key={`sections-${category.slug}`}
-                      title={`${category.name} Sections`}
-                      description="Alternating feature rows for this category page."
-                      items={category.sections as unknown as Record<string, unknown>[]}
-                      template={{
-                        id: "",
-                        slug: "",
-                        title: "",
-                        subtitle: "",
-                        image: "",
-                        imageAlt: "",
-                        paragraphs: [],
-                        published: true,
-                        order: category.sections.length + 1,
-                      }}
-                      fields={[
-                        { key: "id", label: "ID", type: "text" },
-                        { key: "slug", label: "Slug", type: "text" },
-                        { key: "title", label: "Title", type: "text" },
-                        { key: "subtitle", label: "Subtitle", type: "text" },
-                        { key: "image", label: "Image", type: "image" },
-                        { key: "imageAlt", label: "Image Alt", type: "text" },
-                        { key: "paragraphs", label: "Paragraphs (one per line)", type: "textarea", parse: fromLineList },
-                        { key: "published", label: "Published", type: "checkbox" },
-                      ]}
-                      onChange={(items) =>
-                        setDraft((current) => ({
-                          ...current,
-                          productCategories: current.productCategories.map((candidate) =>
-                            candidate.slug === category.slug
-                              ? { ...candidate, sections: items as ProductCategory["sections"] }
-                              : candidate,
-                          ),
-                        }))
-                      }
-                      fieldCallbacks={fieldCallbacks}
-                      itemLabel="Section"
-                    />
-                  ))}
-
-                  <CollectionSection
-                    sectionId="pages-brands"
-                    title="Brands"
-                    description="Brand cards, deep links, and merchandising tags used across the homepage and category pages."
-                    items={draft.brands as unknown as Record<string, unknown>[]}
-                    template={{
-                      id: "",
-                      slug: "",
-                      label: "",
-                      title: "",
-                      summary: "",
-                      image: "",
-                      href: "",
-                      categorySlug: "",
-                      tags: [],
-                      published: true,
-                      order: draft.brands.length + 1,
-                    }}
-                    fields={[
-                      { key: "id", label: "ID", type: "text" },
-                      { key: "slug", label: "Slug", type: "text" },
-                      { key: "label", label: "Label", type: "text" },
-                      { key: "title", label: "Title", type: "text" },
-                      { key: "summary", label: "Summary", type: "textarea" },
-                      { key: "image", label: "Image", type: "image" },
-                      { key: "href", label: "Link", type: "text" },
-                      {
-                        key: "categorySlug",
-                        label: "Category",
-                        type: "select",
-                        options: [
-                          { label: "Tires", value: "tires" },
-                          { label: "Rims", value: "rims" },
-                          { label: "Accessories", value: "accessories" },
-                        ],
-                      },
-                      { key: "tags", label: "Tags (one per line)", type: "textarea", parse: fromLineList },
-                      { key: "published", label: "Published", type: "checkbox" },
-                    ]}
-                    onChange={(items) => setDraft((current) => ({ ...current, brands: items as RidemaxSiteContent["brands"] }))}
-                    fieldCallbacks={fieldCallbacks}
-                    itemLabel="Brand"
-                  />
-                </>
+              {showTireBrandControls ? (
+                <CollectionSection
+                  sectionId="pages-tire-brands"
+                  title="Tire Brands"
+                  description="Cards and links for the Tires page brand grid. Product rows still come from the catalog, so this panel only controls the brand grouping and merchandising copy."
+                  items={scopedBrands(draft.brands, "tires") as unknown as Record<string, unknown>[]}
+                  template={{
+                    id: "",
+                    slug: "",
+                    label: "",
+                    title: "",
+                    summary: "",
+                    image: "",
+                    href: "/products/tires?brand=",
+                    categorySlug: "tires",
+                    tags: [],
+                    published: true,
+                    order: scopedBrands(draft.brands, "tires").length + 1,
+                  }}
+                  fields={[
+                    { key: "id", label: "ID", type: "text" },
+                    { key: "slug", label: "Slug", type: "text" },
+                    { key: "label", label: "Label", type: "text" },
+                    { key: "title", label: "Title", type: "text" },
+                    { key: "summary", label: "Summary", type: "textarea" },
+                    { key: "image", label: "Brand Image", type: "image" },
+                    { key: "href", label: "Brand Link", type: "text" },
+                    { key: "tags", label: "Tags (one per line)", type: "textarea", parse: fromLineList },
+                    { key: "published", label: "Published", type: "checkbox" },
+                  ]}
+                  onChange={(items) =>
+                    setDraft((current) => ({
+                      ...current,
+                      brands: mergeScopedBrands(current.brands, "tires", items),
+                    }))
+                  }
+                  fieldCallbacks={fieldCallbacks}
+                  itemLabel="Tire Brand"
+                />
               ) : null}
             </>
           ) : null}

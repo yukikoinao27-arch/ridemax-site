@@ -25,6 +25,7 @@ import {
   externalProductCatalogSchema,
   siteContentSchema,
 } from "@/lib/content-schemas";
+import { createPageDocumentTemplate, pageSlugOptions } from "@/lib/page-builder";
 import { getServerSupabaseClient, getServerSupabaseStatus } from "@/lib/server/supabase-server";
 
 const siteContentPath = path.join(process.cwd(), "data", "site-content.json");
@@ -217,6 +218,10 @@ function pageHref(slug: ContentPageSlug) {
       return "/";
     case "events-awards":
       return "/events-awards";
+    case "tires":
+    case "rims":
+    case "accessories":
+      return `/products/${slug}`;
     default:
       return `/${slug}`;
   }
@@ -243,9 +248,18 @@ function normalizePage(page: PageDocument): PageDocument {
 }
 
 function normalizeSiteContent(content: RidemaxSiteContent) {
+  const pagesBySlug = new Set(content.pages.map((page) => page.slug));
+  const normalizedPages = [
+    ...content.pages,
+    ...pageSlugOptions
+      .map((option) => option.value as ContentPageSlug)
+      .filter((slug) => !pagesBySlug.has(slug))
+      .map(createPageDocumentTemplate),
+  ].map(normalizePage);
+
   return {
     ...content,
-    pages: content.pages.map(normalizePage),
+    pages: normalizedPages,
     brands: sortByOrder(content.brands),
     promotions: sortByOrder(content.promotions),
     departments: sortByOrder(content.departments),
