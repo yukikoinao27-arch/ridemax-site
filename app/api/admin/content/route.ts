@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { siteContentSchema } from "@/lib/content-schemas";
 import { getAdminIdentity, isAdminAuthenticated } from "@/lib/server/admin-auth";
 import { logAdminActivity } from "@/lib/server/admin-activity-log";
+import { adminRateLimitResponse, consumeAdminWriteRateLimit } from "@/lib/server/admin-rate-limit";
 import { getDraftSiteContent, saveSiteContent } from "@/lib/server/ridemax-content-repository";
 
 export async function GET() {
@@ -15,6 +16,11 @@ export async function GET() {
 export async function PUT(request: Request) {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rateLimit = consumeAdminWriteRateLimit(request, "content");
+  if (!rateLimit.ok) {
+    return adminRateLimitResponse(rateLimit.resetAt);
   }
 
   const body = await request.json();

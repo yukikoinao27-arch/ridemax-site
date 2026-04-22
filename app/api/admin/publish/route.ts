@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { getAdminIdentity, isAdminAuthenticated } from "@/lib/server/admin-auth";
 import { logAdminActivity } from "@/lib/server/admin-activity-log";
+import { adminRateLimitResponse, consumeAdminWriteRateLimit } from "@/lib/server/admin-rate-limit";
 import { publishSiteContent } from "@/lib/server/ridemax-content-repository";
 
 /**
@@ -15,6 +16,11 @@ import { publishSiteContent } from "@/lib/server/ridemax-content-repository";
 export async function POST(request: Request) {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rateLimit = consumeAdminWriteRateLimit(request, "publish");
+  if (!rateLimit.ok) {
+    return adminRateLimitResponse(rateLimit.resetAt);
   }
 
   const body = (await request.json().catch(() => ({}))) as {

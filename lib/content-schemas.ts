@@ -25,10 +25,14 @@ const sectionDecorationSchema = z.object({
   color: z.enum(["brand-red", "wine", "surface-1", "surface-2", "surface-3"]).optional(),
 });
 const cardPresetVariantSchema = z.enum(["standard", "imageOverlay", "brandLogo"]);
+const sectionHeadingScaleSchema = z.enum(["compact", "standard", "display"]);
+const sectionTextToneSchema = z.enum(["default", "muted", "brand"]);
 const blockAppearanceSchema = z.object({
   background: sectionBackgroundVariantSchema.optional(),
   decoration: sectionDecorationSchema.optional(),
   cardPreset: cardPresetVariantSchema.optional(),
+  headingScale: sectionHeadingScaleSchema.optional(),
+  textTone: sectionTextToneSchema.optional(),
 });
 const socialPlatformSchema = z.enum([
   "facebook",

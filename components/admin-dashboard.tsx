@@ -21,6 +21,7 @@ import type {
   ContactMessage,
   CollectionGridSource,
   Department,
+  ContentPageSlug,
   MediaAsset,
   PageBlock,
   PageDocument,
@@ -45,8 +46,15 @@ type AdminDashboardProps = {
   storageMode: string;
   initialMediaAssets: MediaAsset[];
   initialJobApplications: JobApplication[];
+  securitySummary: AdminSecuritySummary;
   view: AdminView;
   previewMode: boolean;
+};
+
+export type AdminSecuritySummary = {
+  adminPasswordConfigured: boolean;
+  turnstileConfigured: boolean;
+  supabaseConfigured: boolean;
 };
 
 type FieldType =
@@ -66,6 +74,7 @@ type FieldConfig = {
   parse?: (value: unknown) => unknown;
   format?: (value: unknown) => string;
   helpText?: string;
+  maxLength?: number;
 };
 
 type ToastMessage = {
@@ -309,6 +318,41 @@ function normalizeFieldValue(field: FieldConfig, value: unknown) {
   return value;
 }
 
+function standardTextLimitForField(field: FieldConfig) {
+  if (field.maxLength || !["text", "textarea"].includes(field.type)) {
+    return field.maxLength;
+  }
+
+  const signature = `${field.key} ${field.label}`.toLowerCase();
+
+  if (/(href|url|src|image|endpoint|map)/.test(signature)) return 2048;
+  if (/email/.test(signature)) return 320;
+  if (/phone/.test(signature)) return 40;
+  if (/(slug|sku)/.test(signature)) return 80;
+  if (/(title|name|label|eyebrow|venue|location)/.test(signature)) return 80;
+  if (/(summary|excerpt|description|intro|footer|teaser)/.test(signature)) return 200;
+  if (/(paragraph|message|notes)/.test(signature)) return 800;
+
+  return field.type === "textarea" ? 400 : 160;
+}
+
+function FieldMeta({ field, value, maxLength }: { field: FieldConfig; value: string; maxLength?: number }) {
+  if (!field.helpText && (!maxLength || maxLength > 800)) {
+    return null;
+  }
+
+  return (
+    <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-[0.72rem] leading-5 text-[#7e5a53]">
+      {field.helpText ? <span>{field.helpText}</span> : <span />}
+      {maxLength && maxLength <= 800 ? (
+        <span className={value.length > maxLength * 0.9 ? "font-semibold text-[#8d120e]" : ""}>
+          {value.length}/{maxLength}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 function defaultValueForFieldKey(key: string) {
   switch (key) {
     case "appearance.background":
@@ -412,6 +456,30 @@ function collectionBlockOptionsForPage(slug: PageDocument["slug"]) {
   };
   const allowed = new Set(allowedBySlug[slug] ?? ["hero", "collectionGrid", "richText"]);
   return pageBlockTypeOptions.filter((option) => allowed.has(option.value as PageBlock["type"]));
+}
+
+function collectionSourceOptionsForPage(slug: PageDocument["slug"]) {
+  const labels: Record<CollectionGridSource, string> = {
+    brands: "Brands",
+    news: "News",
+    events: "Events",
+    awards: "Awards",
+    promotions: "Promotions",
+    catalogCategories: "Catalog Categories",
+  };
+  const allowedBySlug: Record<PageDocument["slug"], CollectionGridSource[]> = {
+    home: ["brands", "news", "events", "promotions", "catalogCategories"],
+    products: ["brands", "catalogCategories"],
+    careers: [],
+    about: [],
+    "events-awards": ["news", "events", "awards"],
+    news: ["news"],
+    events: ["events"],
+    awards: ["awards"],
+    promotions: ["promotions"],
+  };
+
+  return allowedBySlug[slug].map((value) => ({ label: labels[value], value }));
 }
 
 function ToastStack({ toasts }: { toasts: ToastMessage[] }) {
@@ -663,6 +731,8 @@ function renderField(
 ) {
   const rawValue = readValue(item, field.key);
   const value = displayFieldValue(item, field);
+  const stringValue = String(value);
+  const maxLength = standardTextLimitForField(field);
 
   if (field.type === "image") {
     return (
@@ -690,11 +760,15 @@ function renderField(
 
   if (field.type === "textarea") {
     return (
-      <textarea
-        value={String(value)}
-        onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
-        className={fieldControlClass}
-      />
+      <>
+        <textarea
+          value={stringValue}
+          maxLength={maxLength}
+          onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
+          className={fieldControlClass}
+        />
+        <FieldMeta field={field} value={stringValue} maxLength={maxLength} />
+      </>
     );
   }
 
@@ -713,27 +787,34 @@ function renderField(
 
   if (field.type === "select") {
     return (
-      <select
-        value={String(value)}
-        onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
-        className={fieldControlClass}
-      >
-        {field.options?.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <>
+        <select
+          value={stringValue}
+          onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
+          className={fieldControlClass}
+        >
+          {field.options?.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <FieldMeta field={field} value={stringValue} maxLength={maxLength} />
+      </>
     );
   }
 
   return (
-    <input
-      type={field.type === "datetime" ? "datetime-local" : "text"}
-      value={String(value)}
-      onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
-      className={fieldControlClass}
-    />
+    <>
+      <input
+        type={field.type === "datetime" ? "datetime-local" : "text"}
+        value={stringValue}
+        maxLength={maxLength}
+        onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
+        className={fieldControlClass}
+      />
+      <FieldMeta field={field} value={stringValue} maxLength={maxLength} />
+    </>
   );
 }
 
@@ -1090,17 +1171,22 @@ function PageBuilderSection({
   pages,
   onChange,
   fieldCallbacks,
+  activePageSlug,
+  onActivePageSlugChange,
 }: {
   pages: PageDocument[];
   onChange: (pages: PageDocument[]) => void;
   fieldCallbacks: FieldCallbacks;
+  activePageSlug: ContentPageSlug;
+  onActivePageSlugChange: (slug: ContentPageSlug) => void;
 }) {
   const [pendingBlockTypes, setPendingBlockTypes] = useState<Record<string, string>>(
     Object.fromEntries(pages.map((page) => [page.id, "richText"])),
   );
-  const [activePageId, setActivePageId] = useState(() => pages[0]?.id ?? "");
+  const [activePageId, setActivePageId] = useState(() => pages.find((page) => page.slug === activePageSlug)?.id ?? pages[0]?.id ?? "");
   const [highlightedBlockId, setHighlightedBlockId] = useState<string | null>(null);
   const [expandedBlockIds, setExpandedBlockIds] = useState<Record<string, boolean>>({});
+  const activePageEditorRef = useRef<HTMLElement | null>(null);
   const blockRefs = useRef<Record<string, HTMLElement | null>>({});
   // Drag state scoped to a single page (slug) so dragging a block in one page
   // never lets you drop it into another. Blocks always belong to exactly
@@ -1128,6 +1214,14 @@ function PageBuilderSection({
   const selectedBlockType = availableBlockOptions.some((option) => option.value === pendingType)
     ? pendingType
     : (availableBlockOptions[0]?.value ?? "richText");
+
+  function handlePageSelect(page: PageDocument) {
+    setActivePageId(page.id);
+    onActivePageSlugChange(page.slug);
+    window.setTimeout(() => {
+      activePageEditorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  }
 
   useEffect(() => {
     if (!highlightedBlockId) {
@@ -1161,7 +1255,7 @@ function PageBuilderSection({
               <button
                 key={page.id}
                 type="button"
-                onClick={() => setActivePageId(page.id)}
+                onClick={() => handlePageSelect(page)}
                 className={`group flex cursor-pointer items-center justify-between gap-3 rounded-[1.25rem] border px-4 py-3 text-left shadow-sm transition-all duration-150 ease-out hover:scale-[1.01] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/30 ${
                   isActive
                     ? "border-[#8d120e]/40 bg-[#fff4f3] text-[#5d0d0a] shadow-[0_4px_14px_rgba(141,18,14,0.12)] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(141,18,14,0.16)]"
@@ -1176,10 +1270,10 @@ function PageBuilderSection({
                     {page.blocks.length} block(s)
                   </span>
                 </span>
-                <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition duration-150 ease-out group-hover:translate-x-0.5 ${
+                <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition duration-150 ease-out ${
                   isActive
-                    ? "border-[#8d120e]/20 bg-white text-[#8d120e]"
-                    : "border-black/10 bg-white text-[#9b7771] group-hover:border-[#8d120e]/25 group-hover:text-[#8d120e]"
+                    ? "rotate-90 border-[#8d120e]/20 bg-white text-[#8d120e] shadow-[0_8px_18px_rgba(141,18,14,0.10)]"
+                    : "border-black/10 bg-white text-[#9b7771] group-hover:translate-x-0.5 group-hover:border-[#8d120e]/25 group-hover:text-[#8d120e]"
                 }`}>
                   <ChevronRightIcon />
                 </span>
@@ -1189,7 +1283,7 @@ function PageBuilderSection({
         </div>
 
         {activePage ? (
-          <article className="rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-5">
+          <article ref={activePageEditorRef} className="rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-5 scroll-mt-28">
             <div className="grid gap-4 md:grid-cols-2">
               <label>
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6a433d]">
@@ -1197,15 +1291,19 @@ function PageBuilderSection({
                 </span>
                 <input
                   value={activePage.title}
+                  maxLength={80}
                   onChange={(event) =>
                     onChange(
                       pages.map((candidate) =>
                         candidate.id === activePage.id ? { ...candidate, title: event.target.value } : candidate,
                       ),
                     )
-                  }
+                }
                 className={fieldControlClass}
                 />
+                <div className="mt-1 text-right text-[0.72rem] text-[#7e5a53]">
+                  {activePage.title.length}/80
+                </div>
               </label>
               <label className="md:col-span-2">
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6a433d]">
@@ -1213,6 +1311,7 @@ function PageBuilderSection({
                 </span>
                 <textarea
                   value={activePage.summary ?? ""}
+                  maxLength={200}
                   onChange={(event) =>
                     onChange(
                       pages.map((candidate) =>
@@ -1222,6 +1321,9 @@ function PageBuilderSection({
                   }
                   className={fieldControlClass}
                 />
+                <div className="mt-1 text-right text-[0.72rem] text-[#7e5a53]">
+                  {(activePage.summary ?? "").length}/200
+                </div>
               </label>
             </div>
 
@@ -1279,7 +1381,13 @@ function PageBuilderSection({
 
             <div className="mt-6 space-y-4">
               {activePage.blocks.map((block, index) => {
-                const fields = getPageBlockFields(block).map(toPageBuilderFieldConfig);
+                const fields = getPageBlockFields(block)
+                  .map(toPageBuilderFieldConfig)
+                  .map((field) =>
+                    field.key === "source"
+                      ? { ...field, options: collectionSourceOptionsForPage(activePage.slug) }
+                      : field,
+                  );
                 const appearanceFields = getPageBlockAppearanceFields(block.type).map(toPageBuilderFieldConfig);
                 const isDraggingThis =
                   blockDrag?.pageId === activePage.id && blockDrag.index === index;
@@ -1622,6 +1730,7 @@ export function AdminDashboard({
   storageMode,
   initialMediaAssets,
   initialJobApplications,
+  securitySummary,
   view,
   previewMode,
 }: AdminDashboardProps) {
@@ -1641,6 +1750,7 @@ export function AdminDashboard({
   const [revisions, setRevisions] = useState<RevisionEntry[]>([]);
   const [revertingRevisionId, setRevertingRevisionId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [activeBuilderPageSlug, setActiveBuilderPageSlug] = useState<ContentPageSlug>("home");
 
   const departmentOptions = useMemo(
     () => draft.departments.map((department: Department) => ({ label: department.name, value: department.slug })),
@@ -1688,9 +1798,33 @@ export function AdminDashboard({
     { label: "Events", value: String(draft.events.length) },
     { label: "Media Assets", value: String(mediaAssets.length) },
   ];
+  const securityItems = [
+    {
+      label: "Admin Password",
+      value: securitySummary.adminPasswordConfigured ? "Active" : "Needs setup",
+      ready: securitySummary.adminPasswordConfigured,
+    },
+    {
+      label: "Audit Log",
+      value: securitySummary.supabaseConfigured ? "Supabase-backed" : "Local fallback",
+      ready: securitySummary.supabaseConfigured,
+    },
+    {
+      label: "Rate Limits",
+      value: "Login, forms, writes",
+      ready: true,
+    },
+    {
+      label: "Bot Check",
+      value: securitySummary.turnstileConfigured ? "Turnstile active" : "Not configured",
+      ready: securitySummary.turnstileConfigured,
+    },
+  ];
 
   const canSave = view !== "overview" && view !== "media";
   const hasUnsavedChanges = draft !== savedDraft;
+  const showPageCatalogControls =
+    view === "pages" && (activeBuilderPageSlug === "home" || activeBuilderPageSlug === "products");
 
   async function handleSave() {
     setSaving(true);
@@ -1975,6 +2109,34 @@ export function AdminDashboard({
               */}
 
               <SectionCard
+                sectionId="security-footprint"
+                title="Security Footprint"
+                description="Operational guardrails for the admin surface and public submission forms."
+              >
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {securityItems.map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-4"
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#7e5a53]">
+                        {item.label}
+                      </p>
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-[#220707]">{item.value}</p>
+                        <span
+                          className={`h-2.5 w-2.5 rounded-full ${
+                            item.ready ? "bg-[#1d7f45]" : "bg-[#c87b1f]"
+                          }`}
+                          aria-hidden="true"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+
+              <SectionCard
                 sectionId="inbox"
                 title="Inbox"
                 description="Messages submitted from the contact form land here."
@@ -2191,127 +2353,146 @@ export function AdminDashboard({
 
           {view === "pages" ? (
             <>
-              <PageBuilderSection pages={draft.pages} onChange={(pages) => setDraft((current) => ({ ...current, pages }))} fieldCallbacks={fieldCallbacks} />
-
-              <CollectionSection
-                sectionId="pages-catalog"
-                title="Catalog Categories"
-                description="CMS-owned category landing pages and storytelling sections. Product rows themselves stay outside the CMS."
-                items={draft.productCategories as unknown as Record<string, unknown>[]}
-                template={{
-                  slug: "",
-                  name: "",
-                  description: "",
-                  heroTitle: "",
-                  heroSummary: "",
-                  heroImage: { src: "", alt: "" },
-                  featuredImage: "",
-                  browseTitle: "",
-                  browseSummary: "",
-                  sectionTitle: "",
-                  sectionSummary: "",
-                  sections: [],
-                }}
-                fields={[
-                  { key: "slug", label: "Slug", type: "text" },
-                  { key: "name", label: "Name", type: "text" },
-                  { key: "description", label: "Description", type: "textarea" },
-                  { key: "heroTitle", label: "Hero Title", type: "text" },
-                  { key: "heroSummary", label: "Hero Summary", type: "textarea" },
-                  { key: "heroImage.src", label: "Hero Image", type: "image" },
-                  { key: "heroImage.alt", label: "Hero Image Alt", type: "text" },
-                  { key: "featuredImage", label: "Featured Image", type: "image" },
-                  { key: "browseTitle", label: "Browse Title", type: "text" },
-                  { key: "browseSummary", label: "Browse Summary", type: "textarea" },
-                  { key: "sectionTitle", label: "Sections Title", type: "text" },
-                  { key: "sectionSummary", label: "Sections Summary", type: "textarea" },
-                ]}
-                onChange={(items) =>
-                  setDraft((current) => ({
-                    ...current,
-                    productCategories: items as unknown as ProductCategory[],
-                  }))
-                }
+              <PageBuilderSection
+                pages={draft.pages}
+                onChange={(pages) => setDraft((current) => ({ ...current, pages }))}
                 fieldCallbacks={fieldCallbacks}
-                itemLabel="Category"
+                activePageSlug={activeBuilderPageSlug}
+                onActivePageSlugChange={setActiveBuilderPageSlug}
               />
 
-              {draft.productCategories.map((category) => (
-                <CollectionSection
-                  key={`sections-${category.slug}`}
-                  title={`${category.name} Sections`}
-                  description="Alternating feature rows for this category page."
-                  items={category.sections as unknown as Record<string, unknown>[]}
-                  template={{
-                    id: "",
-                    slug: "",
-                    title: "",
-                    subtitle: "",
-                    image: "",
-                    imageAlt: "",
-                    paragraphs: [],
-                    published: true,
-                    order: category.sections.length + 1,
-                  }}
-                  fields={[
-                    { key: "id", label: "ID", type: "text" },
-                    { key: "slug", label: "Slug", type: "text" },
-                    { key: "title", label: "Title", type: "text" },
-                    { key: "subtitle", label: "Subtitle", type: "text" },
-                    { key: "image", label: "Image", type: "image" },
-                    { key: "imageAlt", label: "Image Alt", type: "text" },
-                    { key: "paragraphs", label: "Paragraphs (one per line)", type: "textarea", parse: fromLineList },
-                    { key: "published", label: "Published", type: "checkbox" },
-                  ]}
-                  onChange={(items) =>
-                    setDraft((current) => ({
-                      ...current,
-                      productCategories: current.productCategories.map((candidate) =>
-                        candidate.slug === category.slug
-                          ? { ...candidate, sections: items as ProductCategory["sections"] }
-                          : candidate,
-                      ),
-                    }))
-                  }
-                  fieldCallbacks={fieldCallbacks}
-                  itemLabel="Section"
-                />
-              ))}
+              {showPageCatalogControls ? (
+                <>
+                  <CollectionSection
+                    sectionId="pages-catalog"
+                    title="Catalog Categories"
+                    description="CMS-owned category landing pages and storytelling sections. Product rows themselves stay outside the CMS."
+                    items={draft.productCategories as unknown as Record<string, unknown>[]}
+                    template={{
+                      slug: "",
+                      name: "",
+                      description: "",
+                      heroTitle: "",
+                      heroSummary: "",
+                      heroImage: { src: "", alt: "" },
+                      featuredImage: "",
+                      browseTitle: "",
+                      browseSummary: "",
+                      sectionTitle: "",
+                      sectionSummary: "",
+                      sections: [],
+                    }}
+                    fields={[
+                      { key: "slug", label: "Slug", type: "text" },
+                      { key: "name", label: "Name", type: "text" },
+                      { key: "description", label: "Description", type: "textarea" },
+                      { key: "heroTitle", label: "Hero Title", type: "text" },
+                      { key: "heroSummary", label: "Hero Summary", type: "textarea" },
+                      { key: "heroImage.src", label: "Hero Image", type: "image" },
+                      { key: "heroImage.alt", label: "Hero Image Alt", type: "text" },
+                      { key: "featuredImage", label: "Featured Image", type: "image" },
+                      { key: "browseTitle", label: "Browse Title", type: "text" },
+                      { key: "browseSummary", label: "Browse Summary", type: "textarea" },
+                      { key: "sectionTitle", label: "Sections Title", type: "text" },
+                      { key: "sectionSummary", label: "Sections Summary", type: "textarea" },
+                    ]}
+                    onChange={(items) =>
+                      setDraft((current) => ({
+                        ...current,
+                        productCategories: items as unknown as ProductCategory[],
+                      }))
+                    }
+                    fieldCallbacks={fieldCallbacks}
+                    itemLabel="Category"
+                  />
 
-              <CollectionSection
-                sectionId="pages-brands"
-                title="Brands"
-                description="Brand cards, deep links, and merchandising tags used across the homepage and category pages."
-                items={draft.brands as unknown as Record<string, unknown>[]}
-                template={{
-                  id: "",
-                  slug: "",
-                  label: "",
-                  title: "",
-                  summary: "",
-                  image: "",
-                  href: "",
-                  categorySlug: "",
-                  tags: [],
-                  published: true,
-                  order: draft.brands.length + 1,
-                }}
-                fields={[
-                  { key: "id", label: "ID", type: "text" },
-                  { key: "slug", label: "Slug", type: "text" },
-                  { key: "label", label: "Label", type: "text" },
-                  { key: "title", label: "Title", type: "text" },
-                  { key: "summary", label: "Summary", type: "textarea" },
-                  { key: "image", label: "Image", type: "image" },
-                  { key: "href", label: "Link", type: "text" },
-                  { key: "categorySlug", label: "Category Slug", type: "text" },
-                  { key: "tags", label: "Tags (one per line)", type: "textarea", parse: fromLineList },
-                  { key: "published", label: "Published", type: "checkbox" },
-                ]}
-                onChange={(items) => setDraft((current) => ({ ...current, brands: items as RidemaxSiteContent["brands"] }))}
-                fieldCallbacks={fieldCallbacks}
-                itemLabel="Brand"
-              />
+                  {draft.productCategories.map((category) => (
+                    <CollectionSection
+                      key={`sections-${category.slug}`}
+                      title={`${category.name} Sections`}
+                      description="Alternating feature rows for this category page."
+                      items={category.sections as unknown as Record<string, unknown>[]}
+                      template={{
+                        id: "",
+                        slug: "",
+                        title: "",
+                        subtitle: "",
+                        image: "",
+                        imageAlt: "",
+                        paragraphs: [],
+                        published: true,
+                        order: category.sections.length + 1,
+                      }}
+                      fields={[
+                        { key: "id", label: "ID", type: "text" },
+                        { key: "slug", label: "Slug", type: "text" },
+                        { key: "title", label: "Title", type: "text" },
+                        { key: "subtitle", label: "Subtitle", type: "text" },
+                        { key: "image", label: "Image", type: "image" },
+                        { key: "imageAlt", label: "Image Alt", type: "text" },
+                        { key: "paragraphs", label: "Paragraphs (one per line)", type: "textarea", parse: fromLineList },
+                        { key: "published", label: "Published", type: "checkbox" },
+                      ]}
+                      onChange={(items) =>
+                        setDraft((current) => ({
+                          ...current,
+                          productCategories: current.productCategories.map((candidate) =>
+                            candidate.slug === category.slug
+                              ? { ...candidate, sections: items as ProductCategory["sections"] }
+                              : candidate,
+                          ),
+                        }))
+                      }
+                      fieldCallbacks={fieldCallbacks}
+                      itemLabel="Section"
+                    />
+                  ))}
+
+                  <CollectionSection
+                    sectionId="pages-brands"
+                    title="Brands"
+                    description="Brand cards, deep links, and merchandising tags used across the homepage and category pages."
+                    items={draft.brands as unknown as Record<string, unknown>[]}
+                    template={{
+                      id: "",
+                      slug: "",
+                      label: "",
+                      title: "",
+                      summary: "",
+                      image: "",
+                      href: "",
+                      categorySlug: "",
+                      tags: [],
+                      published: true,
+                      order: draft.brands.length + 1,
+                    }}
+                    fields={[
+                      { key: "id", label: "ID", type: "text" },
+                      { key: "slug", label: "Slug", type: "text" },
+                      { key: "label", label: "Label", type: "text" },
+                      { key: "title", label: "Title", type: "text" },
+                      { key: "summary", label: "Summary", type: "textarea" },
+                      { key: "image", label: "Image", type: "image" },
+                      { key: "href", label: "Link", type: "text" },
+                      {
+                        key: "categorySlug",
+                        label: "Category",
+                        type: "select",
+                        options: [
+                          { label: "Tires", value: "tires" },
+                          { label: "Rims", value: "rims" },
+                          { label: "Accessories", value: "accessories" },
+                        ],
+                      },
+                      { key: "tags", label: "Tags (one per line)", type: "textarea", parse: fromLineList },
+                      { key: "published", label: "Published", type: "checkbox" },
+                    ]}
+                    onChange={(items) => setDraft((current) => ({ ...current, brands: items as RidemaxSiteContent["brands"] }))}
+                    fieldCallbacks={fieldCallbacks}
+                    itemLabel="Brand"
+                  />
+                </>
+              ) : null}
             </>
           ) : null}
 

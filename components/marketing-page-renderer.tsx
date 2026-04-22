@@ -45,6 +45,30 @@ const sectionDecorationColors = {
   "surface-3": "#faf8f7",
 } satisfies Record<NonNullable<NonNullable<BlockAppearance["decoration"]>["color"]>, string>;
 
+const sectionHeadingScaleClasses = {
+  compact: "text-5xl",
+  standard: "text-6xl",
+  display: "text-7xl",
+} satisfies Record<NonNullable<BlockAppearance["headingScale"]>, string>;
+
+const sectionTextToneClasses = {
+  default: {
+    eyebrow: "text-[#8d120e]",
+    title: "text-[#220707]",
+    summary: "text-[#4d3b37]",
+  },
+  muted: {
+    eyebrow: "text-[#7e5a53]",
+    title: "text-[#2b2321]",
+    summary: "text-[#6a5a55]",
+  },
+  brand: {
+    eyebrow: "text-[#8d120e]",
+    title: "text-[#8d120e]",
+    summary: "text-[#5d0d0a]",
+  },
+} satisfies Record<NonNullable<BlockAppearance["textTone"]>, { eyebrow: string; title: string; summary: string }>;
+
 function sectionBackgroundClass(appearance?: BlockAppearance, fallback: NonNullable<BlockAppearance["background"]> = "surface-1") {
   return sectionBackgroundClasses[appearance?.background ?? fallback];
 }
@@ -83,28 +107,33 @@ function SectionHeader({
   eyebrow,
   title,
   summary,
+  appearance,
 }: {
   eyebrow?: string;
   title?: string;
   summary?: string;
+  appearance?: BlockAppearance;
 }) {
   if (!eyebrow && !title && !summary) {
     return null;
   }
 
+  const headingScale = appearance?.headingScale ?? "standard";
+  const textTone = sectionTextToneClasses[appearance?.textTone ?? "default"];
+
   return (
     <div className="max-w-3xl">
       {eyebrow ? (
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8d120e]">
+        <p className={`text-sm font-semibold uppercase tracking-[0.18em] ${textTone.eyebrow}`}>
           {eyebrow}
         </p>
       ) : null}
       {title ? (
-        <h2 className="mt-3 text-6xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
+        <h2 className={`mt-3 font-[family:var(--font-title)] uppercase leading-none ${sectionHeadingScaleClasses[headingScale]} ${textTone.title}`}>
           {title}
         </h2>
       ) : null}
-      {summary ? <p className="mt-4 text-base leading-8 text-[#4d3b37]">{summary}</p> : null}
+      {summary ? <p className={`mt-4 text-base leading-8 ${textTone.summary}`}>{summary}</p> : null}
     </div>
   );
 }
@@ -533,7 +562,7 @@ function renderBlock(
       <section key={block.id} className={sectionClass(block, "py-14")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[76rem] px-6 md:px-10">
-          <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} />
+          <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
           <div className="mt-8">
             <BrandMarquee brands={brands} direction={block.direction} />
           </div>
@@ -547,7 +576,7 @@ function renderBlock(
       <section key={block.id} className={sectionClass(block, "py-16")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[76rem] px-6 md:px-10">
-          <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} />
+          <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
           <div className="mt-10 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             {block.tiles.map((tile) => (
               <Link
@@ -570,7 +599,7 @@ function renderBlock(
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} />
+            <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
             {block.cta ? (
               <Link
                 href={block.cta.href}
@@ -591,7 +620,7 @@ function renderBlock(
       <section key={block.id} className={sectionClass(block, "py-16")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
-          <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} />
+          <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
           {renderFeatureItems(block.items)}
         </div>
       </section>
@@ -609,7 +638,7 @@ function renderBlock(
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[118rem] px-6 md:px-10">
           <div className="text-center">
-            <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} />
+            <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
           </div>
           <ImageMarquee
             images={block.images}
@@ -636,7 +665,7 @@ function renderBlock(
         <section key={block.id} className={sectionClass(block, "pb-16 pt-14")}>
           <SectionDecoration appearance={block.appearance} />
           <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
-            <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} />
+            <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
             {block.accent ? (
               <p className="mt-3 text-4xl font-semibold leading-none text-[#c10e0a]">{block.accent}</p>
             ) : null}
@@ -693,7 +722,7 @@ function renderBlock(
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto grid max-w-[72rem] gap-10 px-6 md:px-10 lg:grid-cols-[1fr_0.9fr]">
           <div className="items-start text-left">
-            <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} />
+            <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
             {block.accent ? (
               <p className="mt-3 text-4xl font-semibold leading-none text-[#c10e0a]">{block.accent}</p>
             ) : null}
@@ -722,7 +751,7 @@ function renderBlock(
       <section key={block.id} className={sectionClass(block, "py-12")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
-          <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} />
+          <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
           <CareersJobBrowser
             departments={departments}
             jobs={jobs}
@@ -854,6 +883,7 @@ function renderBlock(
             eyebrow={block.eyebrow}
             title={block.title ?? category.sectionTitle}
             summary={block.summary ?? category.sectionSummary}
+            appearance={block.appearance}
           />
           <AlternatingFeatureRows sections={category.sections} />
         </div>
@@ -868,7 +898,7 @@ function renderBlock(
       <section key={block.id} className={sectionClass(block, "py-16")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
-          <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} />
+          <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
           <div className="mt-10 space-y-14">
             {projects.map((project, index) => {
               const reverse = index % 2 === 1;
@@ -906,7 +936,7 @@ function renderBlock(
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
           <div className="flex items-center justify-between">
-            <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} />
+            <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
             <p className="text-sm uppercase tracking-[0.14em] text-[#6a433d]">{monthLabel(events)}</p>
           </div>
           <div className="mt-8 grid grid-cols-7 gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#6a433d]">
@@ -936,7 +966,7 @@ function renderBlock(
     <section key={block.id} className={sectionClass(block, "py-16")}>
       <SectionDecoration appearance={block.appearance} />
       <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
-        <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} />
+        <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
       </div>
     </section>
   );

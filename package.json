@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "cms:seed": "node scripts/seed-site-content.mjs",
+    "cms:export": "node scripts/export-site-content.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1031.0",

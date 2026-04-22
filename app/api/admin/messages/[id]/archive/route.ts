@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminIdentity, isAdminAuthenticated } from "@/lib/server/admin-auth";
 import { logAdminActivity } from "@/lib/server/admin-activity-log";
+import { adminRateLimitResponse, consumeAdminWriteRateLimit } from "@/lib/server/admin-rate-limit";
 import { archiveContactMessage } from "@/lib/server/ridemax-content-repository";
 
 type RouteContext = {
@@ -9,9 +10,14 @@ type RouteContext = {
   }>;
 };
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rateLimit = consumeAdminWriteRateLimit(request, "archive");
+  if (!rateLimit.ok) {
+    return adminRateLimitResponse(rateLimit.resetAt);
   }
 
   const { id } = await context.params;

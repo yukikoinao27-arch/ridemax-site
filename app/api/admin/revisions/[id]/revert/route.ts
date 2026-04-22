@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminIdentity, isAdminAuthenticated } from "@/lib/server/admin-auth";
 import { logAdminActivity } from "@/lib/server/admin-activity-log";
+import { adminRateLimitResponse, consumeAdminWriteRateLimit } from "@/lib/server/admin-rate-limit";
 import { revertSiteContentToRevision } from "@/lib/server/ridemax-content-repository";
 
 /**
@@ -8,9 +9,14 @@ import { revertSiteContentToRevision } from "@/lib/server/ridemax-content-reposi
  * in preview and pushes Publish to make it live. Revert never bypasses the
  * publish step so the revision log stays coherent.
  */
-export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rateLimit = consumeAdminWriteRateLimit(request, "revert");
+  if (!rateLimit.ok) {
+    return adminRateLimitResponse(rateLimit.resetAt);
   }
 
   const { id } = await context.params;

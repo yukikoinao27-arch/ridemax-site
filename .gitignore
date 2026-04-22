@@ -39,6 +39,9 @@ yarn-error.log*
 # local AI worktrees
 .claude/worktrees/
 
+# local CMS export snapshots
+/exports/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

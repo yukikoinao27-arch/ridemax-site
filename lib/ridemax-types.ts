@@ -36,6 +36,10 @@ export type SectionDecorationColor =
   | "surface-2"
   | "surface-3";
 
+export type SectionHeadingScale = "compact" | "standard" | "display";
+
+export type SectionTextTone = "default" | "muted" | "brand";
+
 export type SectionDecoration = {
   style?: SectionDecorationStyle;
   position?: SectionDecorationPosition;
@@ -56,6 +60,8 @@ export type BlockAppearance = {
   background?: SectionBackgroundVariant;
   decoration?: SectionDecoration;
   cardPreset?: CardPresetVariant;
+  headingScale?: SectionHeadingScale;
+  textTone?: SectionTextTone;
 };
 
 export type SocialPlatform =

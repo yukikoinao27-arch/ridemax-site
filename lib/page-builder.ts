@@ -16,7 +16,7 @@ export type SelectOption = {
 export type PageBlockFieldConfig = {
   key: string;
   label: string;
-  type: "text" | "textarea" | "checkbox" | "select";
+  type: "text" | "textarea" | "checkbox" | "select" | "image" | "image-list";
   options?: SelectOption[];
   helpText?: string;
 };
@@ -57,6 +57,18 @@ export const sectionDecorationSizeOptions: SelectOption[] = [
   { label: "Small", value: "sm" },
   { label: "Medium", value: "md" },
   { label: "Large", value: "lg" },
+];
+
+export const sectionHeadingScaleOptions: SelectOption[] = [
+  { label: "Compact", value: "compact" },
+  { label: "Standard", value: "standard" },
+  { label: "Display", value: "display" },
+];
+
+export const sectionTextToneOptions: SelectOption[] = [
+  { label: "Default", value: "default" },
+  { label: "Muted", value: "muted" },
+  { label: "Brand red", value: "brand" },
 ];
 
 /**
@@ -123,6 +135,8 @@ export function createPageDocumentTemplate(slug: ContentPageSlug): PageDocument 
 export function createPageBlockTemplate(type: PageBlockType): PageBlock {
   const defaultAppearance: BlockAppearance = {
     background: "surface-1",
+    headingScale: "standard",
+    textTone: "default",
     decoration: {
       style: "none",
       position: "bottom",
@@ -303,6 +317,20 @@ export function getPageBlockAppearanceFields(
       type: "select",
       options: sectionDecorationSizeOptions,
     },
+    {
+      key: "appearance.headingScale",
+      label: "Heading Size",
+      type: "select",
+      options: sectionHeadingScaleOptions,
+      helpText: "Use presets instead of custom font sizes so mobile layouts remain stable.",
+    },
+    {
+      key: "appearance.textTone",
+      label: "Text Color",
+      type: "select",
+      options: sectionTextToneOptions,
+      helpText: "Limited brand-safe text color tokens for section headers and summaries.",
+    },
   ];
 
   if (blockType === "collectionGrid" || blockType === "featureGrid") {
@@ -357,7 +385,19 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
     case "brandMarquee":
       return [
         ...common,
-        { key: "categorySlug", label: "Category Filter", type: "text" },
+        {
+          key: "categorySlug",
+          label: "Brand Category",
+          type: "select",
+          helpText:
+            "The moving logo strip uses published brand images from the Brands panel for this category.",
+          options: [
+            { label: "All brands", value: "" },
+            { label: "Tires", value: "tires" },
+            { label: "Rims", value: "rims" },
+            { label: "Accessories", value: "accessories" },
+          ],
+        },
         {
           key: "direction",
           label: "Direction",
@@ -411,9 +451,11 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
       return [
         ...common,
         {
-          key: "imagesText",
-          label: "Images (one URL per line)",
-          type: "textarea",
+          key: "images",
+          label: "Moving Images",
+          type: "image-list",
+          helpText:
+            "Upload or select the images that move across this section. Their order here is the order used on the public page.",
         },
         {
           key: "direction",

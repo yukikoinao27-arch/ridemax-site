@@ -22,18 +22,27 @@ export function SearchForm({
   const [query, setQuery] = useState(defaultValue ?? "");
   const [results, setResults] = useState<SearchRecord[]>([]);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searchedQuery, setSearchedQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
-  const showResults = open && deferredQuery.trim().length >= 2 && results.length > 0;
+  const trimmedQuery = deferredQuery.trim();
+  const showFeedback = open && trimmedQuery.length >= 2 && (loading || results.length > 0 || searchedQuery === trimmedQuery);
 
   useEffect(() => {
-    if (deferredQuery.trim().length < 2) {
+    const normalizedQuery = deferredQuery.trim();
+    if (normalizedQuery.length < 2) {
+      setLoading(false);
+      setResults([]);
+      setSearchedQuery("");
       return;
     }
 
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
+      setLoading(true);
+      setSearchedQuery("");
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(deferredQuery)}`, {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(normalizedQuery)}`, {
           signal: controller.signal,
         });
 
@@ -44,8 +53,11 @@ export function SearchForm({
 
         const payload = (await response.json()) as { results?: SearchRecord[] };
         setResults((payload.results ?? []).slice(0, compact ? 4 : 6));
+        setSearchedQuery(normalizedQuery);
       } catch {
         setResults([]);
+      } finally {
+        setLoading(false);
       }
     }, 120);
 
@@ -95,23 +107,39 @@ export function SearchForm({
         />
       </form>
 
-      {showResults ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-50 overflow-hidden rounded-[1.5rem] border border-white/8 bg-[#574441]/96 p-2 shadow-[0_24px_55px_rgba(0,0,0,0.28)] backdrop-blur-md">
-          {results.map((result) => (
-            <Link
-              key={`${result.kind}-${result.href}-${result.title}`}
-              href={result.href}
-              className="block rounded-[1.1rem] px-4 py-3 text-white transition hover:bg-white/10"
-            >
-              <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#f0c5bd]">
-                {result.kind}
+      {showFeedback ? (
+        <div
+          className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-50 overflow-hidden rounded-[1.5rem] border border-white/8 bg-[#574441]/96 p-2 shadow-[0_24px_55px_rgba(0,0,0,0.28)] backdrop-blur-md"
+          aria-live="polite"
+        >
+          {loading ? (
+            <div className="px-4 py-3 text-sm font-semibold text-white">Searching...</div>
+          ) : results.length === 0 ? (
+            <div className="px-4 py-3 text-sm leading-6 text-white/80">
+              No quick matches yet. Press Enter to open full search.
+            </div>
+          ) : (
+            <>
+              <div className="px-4 pb-1 pt-2 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#f0c5bd]">
+                {results.length} quick match{results.length === 1 ? "" : "es"}
               </div>
-              <div className="mt-1 text-sm font-semibold">{result.title}</div>
-              {!compact ? (
-                <div className="mt-1 text-xs leading-5 text-white/74">{result.summary}</div>
-              ) : null}
-            </Link>
-          ))}
+              {results.map((result) => (
+                <Link
+                  key={`${result.kind}-${result.href}-${result.title}`}
+                  href={result.href}
+                  className="block rounded-[1.1rem] px-4 py-3 text-white transition hover:bg-white/10"
+                >
+                  <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#f0c5bd]">
+                    {result.kind}
+                  </div>
+                  <div className="mt-1 text-sm font-semibold">{result.title}</div>
+                  {!compact ? (
+                    <div className="mt-1 text-xs leading-5 text-white/74">{result.summary}</div>
+                  ) : null}
+                </Link>
+              ))}
+            </>
+          )}
         </div>
       ) : null}
     </div>
