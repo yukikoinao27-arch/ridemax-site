@@ -36,6 +36,8 @@ import type {
   SocialPlatform,
 } from "@/lib/ridemax-types";
 import type { JobApplication } from "@/lib/server/job-applications";
+import type { AdminActivityEntry } from "@/lib/server/admin-activity-log";
+import type { SiteAnalyticsSummary } from "@/lib/server/site-analytics";
 
 export type AdminView =
   | "overview"
@@ -53,6 +55,8 @@ type AdminDashboardProps = {
   storageMode: string;
   initialMediaAssets: MediaAsset[];
   initialJobApplications: JobApplication[];
+  initialAnalytics: SiteAnalyticsSummary;
+  initialActivity: AdminActivityEntry[];
   view: AdminView;
   previewMode: boolean;
 };
@@ -473,7 +477,7 @@ function collectionItemImage(item: Record<string, unknown>) {
 
 function collectionBlockOptionsForPage(slug: PageDocument["slug"]) {
   const allowedBySlug: Record<PageDocument["slug"], PageBlock["type"][]> = {
-    home: ["hero", "brandMarquee", "categoryTiles", "collectionGrid", "imageMarquee", "showcase", "contact", "richText"],
+    home: ["hero", "categoryTiles", "collectionGrid", "imageMarquee", "showcase", "contact", "richText"],
     products: ["hero", "collectionGrid", "richText"],
     tires: ["hero", "brandMarquee", "collectionGrid", "categorySections", "richText"],
     rims: ["hero", "brandMarquee", "collectionGrid", "categorySections", "richText"],
@@ -576,6 +580,10 @@ function displayTitleForPageBlock(block: PageBlock) {
   }
 
   if (block.type === "brandMarquee") {
+    return "Moving brand images";
+  }
+
+  if (block.id === "home-brand-marquee" && block.type === "imageMarquee") {
     return "Moving brand images";
   }
 
@@ -1477,6 +1485,20 @@ function updatePageBlockField(block: PageBlock, fieldKey: string, nextValue: unk
     } as PageBlock);
   }
 
+  if (block.type === "hero" && fieldKey === "image.src" && String(nextValue ?? "").trim()) {
+    if (!block.image.src.trim() && (nextBlock.appearance?.preset ?? "custom") === "custom") {
+      nextBlock.appearance = {
+        ...(nextBlock.appearance ?? {}),
+        preset: "image-hero-safe",
+      };
+      (nextBlock as Extract<PageBlock, { type: "hero" }>).dark = true;
+    }
+  }
+
+  if (block.type === "hero" && fieldKey === "appearance.preset" && nextValue === "image-hero-safe") {
+    (nextBlock as Extract<PageBlock, { type: "hero" }>).dark = true;
+  }
+
   return sanitizePageBlockAppearance(nextBlock);
 }
 
@@ -2065,6 +2087,25 @@ const viewMeta: Record<AdminView, { eyebrow: string; title: string; description:
   },
 };
 
+function formatAdminAction(action: AdminActivityEntry["action"]) {
+  switch (action) {
+    case "save_draft":
+      return "Saved draft";
+    case "publish":
+      return "Published";
+    case "revert_revision":
+      return "Restored revision";
+    case "archive_message":
+      return "Archived message";
+    case "archive_application":
+      return "Archived application";
+    case "import_wix":
+      return "Imported Wix content";
+    default:
+      return "Logged in";
+  }
+}
+
 export function AdminDashboard({
   initialContent,
   initialCatalog,
@@ -2072,6 +2113,8 @@ export function AdminDashboard({
   storageMode,
   initialMediaAssets,
   initialJobApplications,
+  initialAnalytics,
+  initialActivity,
   view,
   previewMode,
 }: AdminDashboardProps) {
@@ -2142,6 +2185,8 @@ export function AdminDashboard({
     { label: "Events", value: String(draft.events.length) },
     { label: "Images", value: String(mediaAssets.length) },
   ];
+  const analytics = initialAnalytics;
+  const activity = initialActivity;
 
   const canSave = view !== "overview" && view !== "media";
   const hasUnsavedChanges = draft !== savedDraft || draftCatalog !== savedDraftCatalog;
@@ -2497,6 +2542,146 @@ export function AdminDashboard({
                           >
                             Archive
                           </button>
+                        </div>
+                      </article>
+                    ))
+                  )}
+                </div>
+              </SectionCard>
+
+              <SectionCard
+                sectionId="analytics"
+                title="Audience Signals"
+                description="Lightweight public analytics captured with sendBeacon so the site stays fast while marketing gets early signal."
+              >
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-5">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#7e5a53]">
+                      Page views ({analytics.periodDays} days)
+                    </p>
+                    <p className="mt-3 text-3xl font-semibold text-[#220707]">{analytics.totals.pageViews}</p>
+                  </div>
+                  <div className="rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-5">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#7e5a53]">
+                      Click events ({analytics.periodDays} days)
+                    </p>
+                    <p className="mt-3 text-3xl font-semibold text-[#220707]">{analytics.totals.clickEvents}</p>
+                  </div>
+                  <div className="rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-5">
+                    <p className="text-xs uppercase tracking-[0.14em] text-[#7e5a53]">
+                      Search submits ({analytics.periodDays} days)
+                    </p>
+                    <p className="mt-3 text-3xl font-semibold text-[#220707]">{analytics.totals.searchSubmits}</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-5 xl:grid-cols-[1.2fr_1fr]">
+                  <div className="rounded-[1.5rem] border border-black/10 bg-white p-5">
+                    <h3 className="text-xl font-semibold text-[#220707]">Tracked Right Now</h3>
+                    <div className="mt-4 grid gap-3">
+                      {analytics.trackedSignals.map((signal) => (
+                        <div key={signal.label} className="rounded-[1.1rem] bg-[#faf8f7] p-4">
+                          <p className="text-sm font-semibold text-[#220707]">{signal.label}</p>
+                          <p className="mt-2 text-sm leading-6 text-[#5c4743]">{signal.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[1.5rem] border border-black/10 bg-white p-5">
+                    <h3 className="text-xl font-semibold text-[#220707]">Top Pages</h3>
+                    <div className="mt-4 space-y-3">
+                      {analytics.topPages.length === 0 ? (
+                        <p className="text-sm text-[#5c4743]">No public page views yet.</p>
+                      ) : (
+                        analytics.topPages.map((page) => (
+                          <div key={page.path} className="flex items-center justify-between gap-3 rounded-[1rem] bg-[#faf8f7] px-4 py-3">
+                            <span className="truncate text-sm font-semibold text-[#220707]">{page.path}</span>
+                            <span className="shrink-0 text-xs uppercase tracking-[0.14em] text-[#7e5a53]">
+                              {page.views} view{page.views === 1 ? "" : "s"}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 grid gap-5 xl:grid-cols-[1.1fr_1fr]">
+                  <div className="rounded-[1.5rem] border border-black/10 bg-white p-5">
+                    <h3 className="text-xl font-semibold text-[#220707]">Top Click Targets</h3>
+                    <div className="mt-4 space-y-3">
+                      {analytics.topClicks.length === 0 ? (
+                        <p className="text-sm text-[#5c4743]">No tracked clicks yet.</p>
+                      ) : (
+                        analytics.topClicks.map((click) => (
+                          <div key={`${click.kind}-${click.label}`} className="rounded-[1rem] bg-[#faf8f7] px-4 py-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="truncate text-sm font-semibold text-[#220707]">{click.label}</span>
+                              <span className="shrink-0 text-xs uppercase tracking-[0.14em] text-[#7e5a53]">
+                                {click.count}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs uppercase tracking-[0.14em] text-[#8d120e]">
+                              {click.kind.replaceAll("_", " ")}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[1.5rem] border border-black/10 bg-white p-5">
+                    <h3 className="text-xl font-semibold text-[#220707]">Recent Audience Events</h3>
+                    <div className="mt-4 space-y-3">
+                      {analytics.recentEvents.length === 0 ? (
+                        <p className="text-sm text-[#5c4743]">Analytics will appear here after the first public visits and clicks.</p>
+                      ) : (
+                        analytics.recentEvents.map((event) => (
+                          <div key={event.id} className="rounded-[1rem] bg-[#faf8f7] px-4 py-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="truncate text-sm font-semibold text-[#220707]">{event.label}</span>
+                              <span className="shrink-0 text-xs uppercase tracking-[0.14em] text-[#7e5a53]">
+                                {event.kind.replaceAll("_", " ")}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-[#5c4743]">{event.path}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </SectionCard>
+
+              <SectionCard
+                sectionId="activity-log"
+                title="Recent Admin Activity"
+                description="Who changed what, when. This is the audit trail marketing and IT can check before reverting or publishing."
+              >
+                <div className="space-y-3">
+                  {activity.length === 0 ? (
+                    <div className="rounded-[1.5rem] border border-dashed border-black/12 bg-[#faf8f7] p-5 text-sm text-[#5c4743]">
+                      No admin activity has been recorded yet.
+                    </div>
+                  ) : (
+                    activity.map((entry) => (
+                      <article key={entry.id} className="rounded-[1.25rem] border border-black/10 bg-[#faf8f7] px-5 py-4">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-[#220707]">{formatAdminAction(entry.action)}</p>
+                            <p className="mt-1 text-sm text-[#5c4743]">
+                              {entry.actorEmail}
+                              {entry.entityType ? ` • ${entry.entityType}` : ""}
+                              {entry.entityId ? ` • ${entry.entityId}` : ""}
+                            </p>
+                            {entry.metadata && "note" in entry.metadata && typeof entry.metadata.note === "string" ? (
+                              <p className="mt-2 text-sm leading-6 text-[#5c4743]">{entry.metadata.note}</p>
+                            ) : null}
+                          </div>
+                          <p className="text-xs uppercase tracking-[0.14em] text-[#7e5a53]" suppressHydrationWarning>
+                            {new Date(entry.createdAt).toLocaleString()}
+                          </p>
                         </div>
                       </article>
                     ))
@@ -2918,8 +3103,18 @@ export function AdminDashboard({
                 { key: "videoUrl", label: "YouTube/Vimeo URL", type: "text" },
                 { key: "thumbnail", label: "Thumbnail", type: "image" },
                 { key: "publishDate", label: "Publish Date", type: "datetime" },
-                { key: "ctaLabel", label: "CTA Label", type: "text" },
-                { key: "ctaHref", label: "CTA Link", type: "text" },
+                {
+                  key: "ctaLabel",
+                  label: "CTA Label",
+                  type: "text",
+                  helpText: "Optional button text shown on promotion cards and detail pages.",
+                },
+                {
+                  key: "ctaHref",
+                  label: "CTA Link",
+                  type: "text",
+                  helpText: "Where that button opens, such as /promotions or a campaign URL.",
+                },
                 { key: "tags", label: "Tags (one per line)", type: "textarea", parse: fromLineList },
                 { key: "featured", label: "Featured", type: "checkbox" },
                 { key: "published", label: "Published", type: "checkbox" },

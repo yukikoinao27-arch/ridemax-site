@@ -211,6 +211,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     <Link
                       key={`${result.kind}-${result.href}-${result.title}`}
                       href={result.href}
+                      data-analytics-event="cta_click"
+                      data-analytics-label={result.title}
+                      data-analytics-href={result.href}
+                      data-analytics-surface="search-results"
                       className="grid overflow-hidden rounded-[1.5rem] border border-black/10 bg-white shadow-[0_12px_26px_rgba(28,20,19,0.06)] transition hover:-translate-y-1 hover:shadow-[0_18px_35px_rgba(28,20,19,0.1)] sm:grid-cols-[12rem_1fr]"
                     >
                       <div className="relative min-h-40 bg-[#f2ece9]">

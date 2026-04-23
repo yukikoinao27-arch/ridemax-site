@@ -110,6 +110,9 @@ export function SearchForm({
     <div className={`relative z-[80] ${compact ? "w-[14rem]" : "w-full max-w-xl"} ${className}`.trim()}>
       <form
         action="/search"
+        data-analytics-event="search_submit"
+        data-analytics-label="Site search"
+        data-analytics-surface={compact ? "header-search" : "page-search"}
         className={`relative z-[2] flex items-center overflow-hidden rounded-full border backdrop-blur-sm ${
           theme === "light"
             ? "border-black/14 bg-white text-[#2b2b2b]"
@@ -173,6 +176,10 @@ export function SearchForm({
                   key={`${result.kind}-${result.href}-${result.title}`}
                   href={result.href}
                   onPointerDown={(event) => handleQuickMatchPointerDown(event, result.href)}
+                  data-analytics-event="cta_click"
+                  data-analytics-label={result.title}
+                  data-analytics-href={result.href}
+                  data-analytics-surface="search-quick-match"
                   className="block cursor-pointer rounded-[1.1rem] px-4 py-3 text-white transition hover:bg-white/10 aria-[busy=true]:bg-white/12"
                   aria-busy={navigatingHref === result.href && isNavigating}
                 >

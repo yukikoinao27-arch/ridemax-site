@@ -35,7 +35,11 @@ const routeLinks: AdminNavLink[] = [
 ];
 
 const sectionAnchorsByHref: Record<string, AdminNavAnchor[]> = {
-  "/admin": [{ href: "#inbox", label: "Inbox" }],
+  "/admin": [
+    { href: "#inbox", label: "Inbox" },
+    { href: "#analytics", label: "Analytics" },
+    { href: "#activity-log", label: "Activity Log" },
+  ],
   "/admin/settings": [
     { href: "#settings-site", label: "Site Settings" },
     { href: "#settings-navigation", label: "Navigation" },
@@ -43,7 +47,6 @@ const sectionAnchorsByHref: Record<string, AdminNavAnchor[]> = {
   ],
   "/admin/pages": [
     { href: "#pages-builder", label: "Page Builder" },
-    { href: "#pages-home-brand-strip", label: "Home Brand Strip" },
     { href: "#pages-catalog", label: "Catalog" },
     { href: "#pages-brands", label: "Brands" },
     { href: "#pages-catalog-items", label: "Products" },

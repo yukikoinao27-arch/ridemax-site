@@ -907,6 +907,27 @@ create index if not exists idx_admin_activity_log_actor_created
 create index if not exists idx_admin_activity_log_action_created
   on public.admin_activity_log (action, created_at desc);
 
+-- Lightweight public-site analytics. Starts small on purpose: page views plus
+-- a handful of high-value click/submit events that marketing can act on
+-- without shipping a heavyweight third-party script.
+create table if not exists public.site_analytics_events (
+  id bigserial primary key,
+  event_kind text not null,
+  path text not null,
+  label text,
+  href text,
+  surface text,
+  metadata jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_site_analytics_events_created_at
+  on public.site_analytics_events (created_at desc);
+create index if not exists idx_site_analytics_events_kind_created
+  on public.site_analytics_events (event_kind, created_at desc);
+create index if not exists idx_site_analytics_events_path_created
+  on public.site_analytics_events (path, created_at desc);
+
 -- Job applications submitted from the public /careers page. Marketing triages
 -- them in /admin/careers/inbox without IT involvement. Deliberately NOT
 -- referencing jobs(id) so that deleting a closed posting preserves the
@@ -933,6 +954,7 @@ create index if not exists idx_job_applications_job_slug
 -- service role key. No anon/authenticated policies are declared, so direct
 -- browser access defaults to denied while the server keeps full access.
 alter table public.admin_activity_log enable row level security;
+alter table public.site_analytics_events enable row level security;
 alter table public.job_applications enable row level security;
 
 do $$
@@ -959,5 +981,20 @@ begin
     alter table public.job_applications
       add constraint job_applications_email_check
       check (position('@' in email) > 1 and length(email) between 3 and 320);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'site_analytics_events_event_kind_check'
+  ) then
+    alter table public.site_analytics_events
+      add constraint site_analytics_events_event_kind_check
+      check (event_kind in (
+        'page_view',
+        'cta_click',
+        'brand_click',
+        'product_click',
+        'job_click',
+        'search_submit'
+      ));
   end if;
 end $$;

@@ -2,6 +2,7 @@
 import { Montserrat, Oswald } from "next/font/google";
 import type { ReactNode } from "react";
 import { PublicChatWidget } from "@/components/public-chat-widget";
+import { PublicAnalyticsTracker } from "@/components/public-analytics-tracker";
 import { PublicSiteShell } from "@/components/public-site-shell";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -59,6 +60,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         >
           {children}
         </PublicSiteShell>
+        <PublicAnalyticsTracker />
         <PublicChatWidget
           logoSrc={content.site.logoSrc}
           logoLightSrc={content.site.logoLightSrc}

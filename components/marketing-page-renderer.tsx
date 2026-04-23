@@ -379,6 +379,10 @@ function renderCard(item: CardItem, preset: CardPresetVariant) {
           {item.href && item.ctaLabel ? (
             <Link
               href={item.href}
+              data-analytics-event="cta_click"
+              data-analytics-label={item.ctaLabel ?? item.title}
+              data-analytics-href={item.href}
+              data-analytics-surface="collection-card-overlay"
               className="mt-3 inline-flex text-sm font-semibold underline underline-offset-2"
             >
               {item.ctaLabel}
@@ -410,6 +414,10 @@ function renderCard(item: CardItem, preset: CardPresetVariant) {
         {item.href ? (
           <Link
             href={item.href}
+            data-analytics-event={preset === "brandLogo" ? "brand_click" : "cta_click"}
+            data-analytics-label={item.ctaLabel ?? item.title}
+            data-analytics-href={item.href}
+            data-analytics-surface="collection-card-logo"
             className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e]"
           >
             {item.ctaLabel ?? "View"}
@@ -447,6 +455,10 @@ function renderCard(item: CardItem, preset: CardPresetVariant) {
         {item.href && item.ctaLabel ? (
           <Link
             href={item.href}
+            data-analytics-event="cta_click"
+            data-analytics-label={item.ctaLabel ?? item.title}
+            data-analytics-href={item.href}
+            data-analytics-surface="collection-card-standard"
             className="card-lift-reveal mt-5 inline-flex items-center rounded-full bg-[#E31E24] px-5 py-2.5 text-sm font-semibold text-white"
           >
             {item.ctaLabel}
@@ -572,6 +584,10 @@ function renderCategoryCards(categories: ProductCategory[], appearance?: BlockAp
             */}
             <Link
               href={`/products/${category.slug}`}
+              data-analytics-event="cta_click"
+              data-analytics-label={`View ${category.name}`}
+              data-analytics-href={`/products/${category.slug}`}
+              data-analytics-surface="category-card"
               className={categoryCtaClasses[ctaPreset]}
             >
               View More
@@ -676,6 +692,10 @@ function renderBlock(
         {block.cta ? (
           <Link
             href={block.cta.href}
+            data-analytics-event="cta_click"
+            data-analytics-label={block.cta.label}
+            data-analytics-href={block.cta.href}
+            data-analytics-surface="hero-banner"
             className="inline-flex rounded-full border border-white/30 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
           >
             {block.cta.label}

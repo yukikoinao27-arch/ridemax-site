@@ -7,6 +7,7 @@ import type {
   PageDocument,
   RidemaxSiteContent,
   SectionAppearancePreset,
+  SectionTextColorScheme,
 } from "@/lib/ridemax-types";
 
 export type SelectOption = {
@@ -57,6 +58,7 @@ export const sectionDecorationColorOptions: SelectOption[] = [
 
 export const sectionAppearancePresetOptions: SelectOption[] = [
   { label: "Custom", value: "custom" },
+  { label: "Image Hero Safe", value: "image-hero-safe" },
   { label: "Deep Brand Curve", value: "deep-brand-curve" },
   { label: "Deep Brand Wave", value: "deep-brand-wave" },
   { label: "Light Curve Top", value: "light-curve-top" },
@@ -193,6 +195,19 @@ const appearancePresetMap: Record<
   Exclude<SectionAppearancePreset, "custom">,
   BlockAppearance
 > = {
+  "image-hero-safe": {
+    background: "ink",
+    headingScale: "display",
+    headingStyle: "large",
+    textTone: "default",
+    textColorScheme: "light",
+    decoration: {
+      style: "none",
+      position: "bottom",
+      size: "md",
+      color: "surface-1",
+    },
+  },
   "deep-brand-curve": {
     background: "deep-brand-red",
     headingScale: "display",
@@ -549,7 +564,11 @@ export function getHeroBlock(page: PageDocument | null) {
   return heroBlock?.type === "hero" ? heroBlock : null;
 }
 
-export function getPageBlockLabel(block: Pick<PageBlock, "type">) {
+export function getPageBlockLabel(block: Pick<PageBlock, "type"> & Partial<Pick<PageBlock, "id">>) {
+  if (block.type === "imageMarquee" && block.id === "home-brand-marquee") {
+    return "Moving Brand Images";
+  }
+
   return blockLabel(block.type);
 }
 
@@ -563,10 +582,28 @@ const lightSectionBackgrounds = new Set<NonNullable<BlockAppearance["background"
 
 function allowedTextColorSchemesForBackground(
   background: NonNullable<BlockAppearance["background"]>,
-) {
+): SectionTextColorScheme[] {
   return lightSectionBackgrounds.has(background)
     ? ["default", "dark", "muted", "brand"]
     : ["light"];
+}
+
+function presetOptionsForBlockType(blockType?: PageBlockType) {
+  if (blockType === "hero") {
+    return sectionAppearancePresetOptions.filter(
+      (option) => !["deep-brand-curve", "deep-brand-wave", "light-cross-wave-top", "light-cross-wave-bottom"].includes(option.value),
+    );
+  }
+
+  if (blockType === "careersIntro") {
+    return sectionAppearancePresetOptions.filter(
+      (option) => !["image-hero-safe", "light-cross-wave-top", "light-cross-wave-bottom", "light-curve-top", "warm-wave-top", "ink-spotlight"].includes(option.value),
+    );
+  }
+
+  return sectionAppearancePresetOptions.filter(
+    (option) => !["image-hero-safe", "deep-brand-curve", "deep-brand-wave"].includes(option.value),
+  );
 }
 
 function defaultTextColorSchemeForBackground(
@@ -607,22 +644,45 @@ function isCompactHero(target: AppearanceEditorTarget) {
   );
 }
 
+function isImageHero(target: AppearanceEditorTarget) {
+  if (typeof target === "string" || target?.type !== "hero") {
+    return false;
+  }
+
+  return Boolean(target.image.src.trim());
+}
+
 /**
  * Normalizes unsafe appearance combinations at the page-builder seam.
  * The renderer can stay simple because invalid text/shape choices are folded
  * back into safe presets as editors make changes.
  */
 export function sanitizePageBlockAppearance(block: PageBlock): PageBlock {
+  const shouldDefaultImageHeroOverlay =
+    block.type === "hero" && block.image.src.trim() && !block.appearance?.preset;
   const appearance = applyAppearancePreset(block.appearance);
+  if (shouldDefaultImageHeroOverlay) {
+    Object.assign(appearance, createAppearancePreset("image-hero-safe"), {
+      preset: "image-hero-safe" as const,
+    });
+  }
   const background = appearance.background ?? "surface-1";
   const decoration = { ...(appearance.decoration ?? {}) };
-  const allowedTextSchemes = allowedTextColorSchemesForBackground(background);
+  const allowedTextSchemes: SectionTextColorScheme[] =
+    block.type === "hero" && block.image.src.trim()
+      ? ["light"]
+      : allowedTextColorSchemesForBackground(background);
 
   if (
     !appearance.textColorScheme ||
     !allowedTextSchemes.includes(appearance.textColorScheme)
   ) {
-    appearance.textColorScheme = defaultTextColorSchemeForBackground(background);
+    const preferredTextScheme: SectionTextColorScheme = block.type === "hero" && block.image.src.trim()
+      ? "light"
+      : defaultTextColorSchemeForBackground(background);
+    appearance.textColorScheme = allowedTextSchemes.includes(preferredTextScheme)
+      ? preferredTextScheme
+      : allowedTextSchemes[0] ?? "default";
   }
 
   if (decoration.color === background) {
@@ -635,6 +695,7 @@ export function sanitizePageBlockAppearance(block: PageBlock): PageBlock {
 
   return {
     ...block,
+    ...(shouldDefaultImageHeroOverlay ? { dark: true } : {}),
     ...(block.type === "hero" && !block.image.src.trim() ? { dark: false } : {}),
     appearance: {
       ...appearance,
@@ -655,9 +716,12 @@ export function getPageBlockAppearanceFields(
   const blockType = appearanceTargetType(target);
   const appearance = appearanceTargetAppearance(target);
   const background = appearance?.background ?? "surface-1";
+  const imageHero = isImageHero(target);
   const disabledTextSchemes = sectionTextColorSchemeOptions
     .map((option) => option.value)
-    .filter((value) => !allowedTextColorSchemesForBackground(background).includes(value));
+    .filter((value) =>
+      !(imageHero ? ["light"] : allowedTextColorSchemesForBackground(background)).includes(value),
+    );
   const disabledShapeColors = appearance?.decoration?.style === "none" ? [] : [background];
   const disabledShapeSizes = isCompactHero(target) ? ["lg"] : [];
   const base: PageBlockFieldConfig[] = [
@@ -665,7 +729,7 @@ export function getPageBlockAppearanceFields(
       key: "appearance.preset",
       label: "Section Preset",
       type: "select",
-      options: sectionAppearancePresetOptions,
+      options: presetOptionsForBlockType(blockType),
       helpText:
         "Choose a preconfigured combination. Changing a section appearance control switches the block back to Custom.",
     },
@@ -681,7 +745,9 @@ export function getPageBlockAppearanceFields(
       label: "Text Color Scheme",
       type: "select",
       options: disableOptions(sectionTextColorSchemeOptions, disabledTextSchemes),
-      helpText: "Only readable color choices are available for the selected background.",
+      helpText: imageHero
+        ? "Image heroes stay on light text so the title and summary remain readable over photography."
+        : "Only readable color choices are available for the selected background.",
     },
     {
       key: "appearance.headingScale",
@@ -787,9 +853,9 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
         },
         {
           key: "dark",
-          label: "Dark Overlay",
+          label: "Image Overlay",
           type: "checkbox",
-          helpText: "Adds a dark layer over the image to improve text readability.",
+          helpText: "Darkens the image to improve text readability.",
         },
         { key: "minHeight", label: "Hero Height", type: "select", options: heroMinHeightOptions },
         {
