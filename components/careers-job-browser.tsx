@@ -77,6 +77,10 @@ export function CareersJobBrowser({ departments, jobs, initialDepartment = "" }:
             </div>
             <Link
               href={`/careers/${job.slug}`}
+              data-analytics-event="job_click"
+              data-analytics-label={job.title}
+              data-analytics-href={`/careers/${job.slug}`}
+              data-analytics-surface="jobs-list"
               className="card-lift-reveal inline-flex h-11 items-center justify-center border border-black/15 px-6 text-sm font-semibold text-[#220707] transition hover:bg-[#f5efee]"
             >
               View Job
@@ -87,4 +91,3 @@ export function CareersJobBrowser({ departments, jobs, initialDepartment = "" }:
     </div>
   );
 }
-

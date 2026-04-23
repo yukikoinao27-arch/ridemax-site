@@ -34,6 +34,10 @@ export function BrandMarquee({
             <Link
               key={`${brand.id}-${index}`}
               href={brand.href}
+              data-analytics-event="brand_click"
+              data-analytics-label={brand.label}
+              data-analytics-href={brand.href}
+              data-analytics-surface="brand-marquee"
               className={`group relative block h-[19rem] w-[16rem] shrink-0 overflow-hidden rounded-[2rem] border border-black/10 bg-[#190e0d] shadow-[0_18px_40px_rgba(24,18,17,0.14)] transition ${highlighted ? "ring-2 ring-[#6e4ce1]" : ""}`}
             >
               <Image

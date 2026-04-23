@@ -32,6 +32,8 @@ import {
   pageSlugOptions,
   sanitizePageBlockAppearance,
 } from "@/lib/page-builder";
+import { listAdminActivity } from "@/lib/server/admin-activity-log";
+import { getSiteAnalyticsSummary } from "@/lib/server/site-analytics";
 import { getServerSupabaseClient, getServerSupabaseStatus } from "@/lib/server/supabase-server";
 
 const siteContentPath = path.join(process.cwd(), "data", "site-content.json");
@@ -376,8 +378,44 @@ function normalizeProductsPage(page: PageDocument): PageDocument {
   };
 }
 
-function normalizeHomePage(page: PageDocument): PageDocument {
-  return page;
+/**
+ * Preserve older home content that modeled the moving strip as a brand-driven
+ * block, but expose it to admins as a concrete image gallery. This keeps the
+ * customer page from rendering "ghost" brand images that are not visible in
+ * the Page Builder block itself.
+ */
+function normalizeHomePage(page: PageDocument, brands: BrandFeature[]): PageDocument {
+  const brandsBySlug = new Map(brands.map((brand) => [brand.slug, brand]));
+
+  return {
+    ...page,
+    blocks: page.blocks.map((block) => {
+      if (block.id !== "home-brand-marquee" || block.type !== "brandMarquee") {
+        return block;
+      }
+
+      const selectedSlugs = block.brandSlugs?.filter(Boolean) ?? [];
+      const selectedBrands = selectedSlugs.length > 0
+        ? selectedSlugs
+            .map((slug) => brandsBySlug.get(slug))
+            .filter((brand): brand is BrandFeature => Boolean(brand))
+        : sortByOrder(brands.filter((brand) => !block.categorySlug || brand.categorySlug === block.categorySlug));
+      const images = selectedBrands.map((brand) => brand.image).filter(Boolean);
+
+      return {
+        id: block.id,
+        order: block.order,
+        title: block.title,
+        summary: block.summary,
+        eyebrow: block.eyebrow,
+        appearance: block.appearance,
+        type: "imageMarquee",
+        images,
+        direction: block.direction,
+        altPrefix: block.title?.trim() || "Ridemax moving brand image",
+      } satisfies PageBlock;
+    }),
+  };
 }
 
 function normalizeCareersPage(page: PageDocument): PageDocument {
@@ -486,12 +524,12 @@ function normalizeLegacyBlockAppearance(block: PageBlock): PageBlock {
   return block;
 }
 
-function normalizePage(page: PageDocument): PageDocument {
+function normalizePage(page: PageDocument, brands: BrandFeature[]): PageDocument {
   const nextPage =
     page.slug === "products"
       ? normalizeProductsPage(page)
       : page.slug === "home"
-        ? normalizeHomePage(page)
+        ? normalizeHomePage(page, brands)
         : page.slug === "careers"
           ? normalizeCareersPage(page)
         : page.slug === "about"
@@ -542,7 +580,7 @@ function normalizeSiteContent(content: RidemaxSiteContent) {
       .map((option) => option.value as ContentPageSlug)
       .filter((slug) => !pagesBySlug.has(slug))
       .map(createPageDocumentTemplate),
-  ].map(normalizePage);
+  ].map((page) => normalizePage(page, content.brands));
 
   return {
     ...content,
@@ -1751,6 +1789,10 @@ export async function getAdminMetrics() {
   const content = await getSiteContent();
   const messages = await listContactMessages();
   const storageMode = await getStorageMode();
+  const [analytics, activity] = await Promise.all([
+    getSiteAnalyticsSummary(7),
+    listAdminActivity(10),
+  ]);
 
   return {
     storageMode,
@@ -1764,6 +1806,8 @@ export async function getAdminMetrics() {
       awards: content.awards.length,
       messages: messages.length,
     },
+    analytics,
+    activity,
   };
 }
 

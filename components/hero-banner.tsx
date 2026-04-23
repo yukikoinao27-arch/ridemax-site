@@ -71,21 +71,31 @@ export function HeroBanner({
   decoration,
   children,
 }: HeroBannerProps) {
-  const resolvedTextScheme = textColorScheme === "default" ? (dark ? "light" : "dark") : textColorScheme;
+  const hasImage = Boolean(image.trim());
+  const resolvedTextScheme =
+    textColorScheme === "default" ? (hasImage || dark ? "light" : "dark") : textColorScheme;
   const textClasses = heroTextColorSchemeClasses[resolvedTextScheme];
   const alignClass = align === "left" ? "items-start text-left" : "items-center text-center";
-  const depthClass = dark ? "ridemax-white-depth" : "";
+  const depthClass = resolvedTextScheme === "light" ? "ridemax-white-depth" : "";
+  const imageOverlayClass = dark
+    ? "absolute inset-0 bg-[linear-gradient(180deg,rgba(10,10,10,0.52),rgba(10,10,10,0.74))]"
+    : "absolute inset-0 bg-[linear-gradient(180deg,rgba(12,12,12,0.18),rgba(12,12,12,0.32))]";
+  const textFocusScrimClass =
+    align === "left"
+      ? "bg-[radial-gradient(circle_at_26%_36%,rgba(12,12,12,0.58),transparent_58%)]"
+      : "bg-[radial-gradient(circle_at_50%_34%,rgba(12,12,12,0.62),transparent_56%)]";
 
   return (
     <section id={sectionId} className={`relative overflow-hidden ${minHeight} ${sectionClassName}`.trim()}>
       <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${image})` }} />
-      <div className={dark ? "absolute inset-0 bg-[linear-gradient(180deg,rgba(14,14,14,0.56),rgba(14,14,14,0.62))]" : "absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.4),rgba(255,255,255,0.25))]"} />
+      {hasImage ? <div className={imageOverlayClass} /> : null}
+      {hasImage ? <div className={`absolute inset-0 ${textFocusScrimClass}`} /> : null}
       {decoration}
       <div className="relative mx-auto flex max-w-[118rem] px-6 py-24 md:px-10">
         <div className={`flex w-full flex-col ${alignClass}`}>
           {eyebrow ? <p className={`text-sm uppercase tracking-[0.24em] ${textClasses.summary}`}>{eyebrow}</p> : null}
           <h1 className={`mt-3 font-[family:var(--font-title)] leading-none ${heroHeadingScaleClasses[headingScale]} ${heroHeadingStyleClasses[headingStyle]} ${textClasses.title} ${depthClass}`}>{title}</h1>
-          {summary ? <p className={`mt-5 max-w-3xl text-base leading-8 sm:text-lg ${textClasses.summary}`}>{summary}</p> : null}
+          {summary ? <p className={`mt-5 max-w-3xl text-base leading-8 sm:text-lg ${textClasses.summary} ${depthClass}`}>{summary}</p> : null}
           {children ? <div className="mt-8 w-full">{children}</div> : null}
         </div>
       </div>

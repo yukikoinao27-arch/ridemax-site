@@ -41,6 +41,7 @@ const sectionBodyTextPresetSchema = z.enum(["standard", "short", "editorial"]);
 const sectionCtaPresetSchema = z.enum(["solid", "outline", "text"]);
 const sectionAppearancePresetSchema = z.enum([
   "custom",
+  "image-hero-safe",
   "deep-brand-curve",
   "deep-brand-wave",
   "light-curve-top",

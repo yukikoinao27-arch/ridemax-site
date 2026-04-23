@@ -130,6 +130,8 @@ export async function AdminScreen({ view, error }: AdminScreenProps) {
       storageMode={metrics.storageMode}
       initialMediaAssets={mediaAssets}
       initialJobApplications={jobApplications}
+      initialAnalytics={metrics.analytics}
+      initialActivity={metrics.activity}
       view={view}
       previewMode={preview.isEnabled}
     />

@@ -54,6 +54,10 @@ function sortProducts(products: ProductItem[], sort: string) {
   }
 }
 
+function categoryBrandLandingLabel(categoryName: string) {
+  return categoryName === "Tires" ? "Tire Brands" : `${categoryName} Brands`;
+}
+
 export async function generateMetadata({
   params,
 }: ProductCategoryPageProps): Promise<Metadata> {
@@ -101,7 +105,7 @@ export default async function ProductCategoryPage({
     ? `/products/${category.slug}#brand-${activeBrandRecord.slug}`
     : "/products";
   const backLinkLabel = activeBrandRecord
-    ? `Back to ${activeBrandRecord.label}`
+    ? `Back to ${categoryBrandLandingLabel(category.name)}`
     : "Back to Products";
 
   return (
@@ -137,6 +141,10 @@ export default async function ProductCategoryPage({
                   key={brand.id}
                   id={`brand-${brand.slug}`}
                   href={`/products/${category.slug}?brand=${brand.slug}`}
+                  data-analytics-event="brand_click"
+                  data-analytics-label={brand.label}
+                  data-analytics-href={`/products/${category.slug}?brand=${brand.slug}`}
+                  data-analytics-surface="category-brand-grid"
                   className={`group overflow-hidden rounded-[1.25rem] border bg-white shadow-[0_6px_12px_rgba(20,16,16,0.11)] transition hover:-translate-y-1 ${activeBrand === brand.slug ? "border-[#8d120e] ring-2 ring-[#8d120e]/20" : "border-[#d3d3d3]"}`}
                 >
                   <div className="relative h-40 overflow-hidden bg-[#f4f4f4]">
@@ -216,6 +224,10 @@ export default async function ProductCategoryPage({
                     <Link
                       key={product.id}
                       href={`/product-page/${product.slug}`}
+                      data-analytics-event="product_click"
+                      data-analytics-label={product.title}
+                      data-analytics-href={`/product-page/${product.slug}`}
+                      data-analytics-surface="brand-product-results"
                       className="group grid overflow-hidden rounded-[1.25rem] border border-black/10 bg-white shadow-[0_10px_30px_rgba(31,20,19,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(31,20,19,0.10)] md:grid-cols-[16rem_1fr]"
                     >
                       <div className="relative min-h-[12rem] bg-[#f7f7f7]">

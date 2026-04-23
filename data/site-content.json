@@ -142,24 +142,25 @@
           "title": "",
           "summary": "",
           "eyebrow": "",
-          "type": "brandMarquee",
+          "type": "imageMarquee",
+          "images": [
+            "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_562f4a6f488c4658a734691885f575c6~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_562f4a6f488c4658a734691885f575c6~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_4181d0f8f7c64880ade1b22458e23a67~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4181d0f8f7c64880ade1b22458e23a67~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_17c5cf6c2ad14bba8a9f8471a6f77def~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_4dfd4e4b61fd465ea8f99ab5d163920b~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_28036e2173a04d96b88f9fd8083ab1f3~mv2.png",
+            "https://static.wixstatic.com/media/2d031a_5c9efccb07364f299ee64fe91cb54c6b~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_5c9efccb07364f299ee64fe91cb54c6b~mv2.png"
+          ],
           "direction": "right-to-left",
-          "brandSlugs": [
-            "monsta",
-            "rigid",
-            "patriot-tires",
-            "venom-power",
-            "apollo-tyres",
-            "arivo-tires",
-            "bfgoodrich",
-            "michelin",
-            "atlander-tires",
-            "fuel-off-road",
-            "cooper-tires",
-            "work-wheels",
-            "linglong-tires",
-            "profender"
-          ]
+          "altPrefix": "Ridemax moving brand image"
         },
         {
           "id": "home-category-tiles",

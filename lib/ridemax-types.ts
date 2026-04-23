@@ -58,6 +58,7 @@ export type SectionDecorationColor =
  */
 export type SectionAppearancePreset =
   | "custom"
+  | "image-hero-safe"
   | "deep-brand-curve"
   | "deep-brand-wave"
   | "light-curve-top"
