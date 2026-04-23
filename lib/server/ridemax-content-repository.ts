@@ -26,7 +26,12 @@ import {
   externalProductCatalogSchema,
   siteContentSchema,
 } from "@/lib/content-schemas";
-import { createPageBlockTemplate, createPageDocumentTemplate, pageSlugOptions } from "@/lib/page-builder";
+import {
+  createPageBlockTemplate,
+  createPageDocumentTemplate,
+  pageSlugOptions,
+  sanitizePageBlockAppearance,
+} from "@/lib/page-builder";
 import { getServerSupabaseClient, getServerSupabaseStatus } from "@/lib/server/supabase-server";
 
 const siteContentPath = path.join(process.cwd(), "data", "site-content.json");
@@ -372,53 +377,7 @@ function normalizeProductsPage(page: PageDocument): PageDocument {
 }
 
 function normalizeHomePage(page: PageDocument): PageDocument {
-  const hasBrandMarquee = page.blocks.some((block) => block.id === "home-brand-marquee");
-  const blocks = hasBrandMarquee
-    ? [...page.blocks]
-    : [
-        ...page.blocks,
-        {
-          ...createPageBlockTemplate("brandMarquee"),
-          id: "home-brand-marquee",
-          order: 2,
-          title: "",
-          summary: "",
-          eyebrow: "",
-          categorySlug: "",
-        },
-      ];
-
-  const ordered = blocks
-    .map((block) => {
-      if (block.id === "home-brand-marquee") {
-        return {
-          ...block,
-          title: "",
-          summary: "",
-          eyebrow: "",
-          order: 2,
-        } satisfies PageBlock;
-      }
-
-      if (block.type === "categoryTiles") {
-        return { ...block, order: 3 } satisfies PageBlock;
-      }
-
-      return block;
-    })
-    .sort((left, right) => {
-      const priority = (block: PageBlock) => {
-        if (block.type === "hero") return 1;
-        if (block.id === "home-brand-marquee") return 2;
-        if (block.type === "categoryTiles") return 3;
-        return block.order + 10;
-      };
-
-      return priority(left) - priority(right);
-    })
-    .map((block, index) => ({ ...block, order: index + 1 }) as PageBlock);
-
-  return { ...page, blocks: ordered };
+  return page;
 }
 
 function normalizeCareersPage(page: PageDocument): PageDocument {
@@ -509,7 +468,7 @@ function normalizeLegacyBlockAppearance(block: PageBlock): PageBlock {
     return {
       ...block,
       appearance: {
-        background: "brand-red",
+        background: "deep-brand-red",
         headingScale: "standard",
         headingStyle: "standard",
         textTone: "default",
@@ -545,6 +504,7 @@ function normalizePage(page: PageDocument): PageDocument {
     ...nextPage,
     blocks: [...nextPage.blocks]
       .map(normalizeLegacyBlockAppearance)
+      .map(sanitizePageBlockAppearance)
       .sort((left, right) => left.order - right.order),
   };
 }

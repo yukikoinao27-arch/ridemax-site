@@ -43,6 +43,7 @@ type AdminBrandGalleryFieldProps = {
   options: AdminBrandGalleryOption[];
   onChange: (value: string[]) => void;
   helpText?: string;
+  onNotice?: NoticeHandler;
 };
 
 async function uploadImage(file: File) {
@@ -128,6 +129,7 @@ export function AdminImageUploadField({
 }: AdminImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [dirtySinceOpen, setDirtySinceOpen] = useState(false);
 
   async function handleFiles(files: FileList) {
     const file = files.item(0);
@@ -147,6 +149,7 @@ export function AdminImageUploadField({
       }
 
       onNotice?.("success", payload.message ?? "Image uploaded successfully.");
+      setDirtySinceOpen(false);
       setEditing(false);
     } catch (error) {
       onNotice?.(
@@ -190,7 +193,14 @@ export function AdminImageUploadField({
         </div>
         <button
           type="button"
-          onClick={() => setEditing((current) => !current)}
+          onClick={() => {
+            if (editing && dirtySinceOpen) {
+              onNotice?.("success", "Image changes saved.");
+            }
+
+            setDirtySinceOpen(false);
+            setEditing((current) => !current);
+          }}
           className="inline-flex h-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
         >
           {editing ? "Done" : value ? "Edit Image" : "Add Image"}
@@ -229,7 +239,10 @@ export function AdminImageUploadField({
             {value ? (
               <button
                 type="button"
-                onClick={() => onChange("")}
+                onClick={() => {
+                  onChange("");
+                  setDirtySinceOpen(true);
+                }}
                 className="inline-flex h-11 cursor-pointer items-center justify-center rounded-full border border-black/10 px-5 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
               >
                 Remove
@@ -252,6 +265,7 @@ export function AdminImageGalleryField({
 }: AdminImageGalleryFieldProps) {
   const [uploading, setUploading] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [dirtySinceOpen, setDirtySinceOpen] = useState(false);
 
   async function handleFiles(files: FileList) {
     setUploading(true);
@@ -271,6 +285,7 @@ export function AdminImageGalleryField({
 
       onChange([...value, ...uploadedUrls]);
       onNotice?.("success", `${uploadedUrls.length} image${uploadedUrls.length === 1 ? "" : "s"} uploaded successfully.`);
+      setDirtySinceOpen(false);
       setEditing(false);
     } catch (error) {
       onNotice?.(
@@ -314,7 +329,14 @@ export function AdminImageGalleryField({
         </div>
         <button
           type="button"
-          onClick={() => setEditing((current) => !current)}
+          onClick={() => {
+            if (editing && dirtySinceOpen) {
+              onNotice?.("success", "Gallery updated.");
+            }
+
+            setDirtySinceOpen(false);
+            setEditing((current) => !current);
+          }}
           className="inline-flex h-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
         >
           {editing ? "Done" : "Edit Gallery"}
@@ -340,7 +362,10 @@ export function AdminImageGalleryField({
                     <p className="truncate text-xs text-[#6a433d]">{imageUrl}</p>
                     <button
                       type="button"
-                      onClick={() => onChange(value.filter((_, imageIndex) => imageIndex !== index))}
+                      onClick={() => {
+                        onChange(value.filter((_, imageIndex) => imageIndex !== index));
+                        setDirtySinceOpen(true);
+                      }}
                       className="mt-1 cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e] transition hover:opacity-75"
                     >
                       Remove
@@ -373,8 +398,10 @@ export function AdminBrandGalleryField({
   options,
   onChange,
   helpText,
+  onNotice,
 }: AdminBrandGalleryFieldProps) {
   const [editing, setEditing] = useState(false);
+  const [dirtySinceOpen, setDirtySinceOpen] = useState(false);
   const selectedOptions = value
     .map((slug) => options.find((option) => option.value === slug))
     .filter((option): option is AdminBrandGalleryOption => Boolean(option));
@@ -425,7 +452,14 @@ export function AdminBrandGalleryField({
         </div>
         <button
           type="button"
-          onClick={() => setEditing((current) => !current)}
+          onClick={() => {
+            if (editing && dirtySinceOpen) {
+              onNotice?.("success", "Moving brands updated.");
+            }
+
+            setDirtySinceOpen(false);
+            setEditing((current) => !current);
+          }}
           className="inline-flex h-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
         >
           {editing ? "Done" : "Edit Gallery"}
@@ -464,7 +498,10 @@ export function AdminBrandGalleryField({
                     ) : null}
                     <button
                       type="button"
-                      onClick={() => onChange(value.filter((slug) => slug !== brand.value))}
+                      onClick={() => {
+                        onChange(value.filter((slug) => slug !== brand.value));
+                        setDirtySinceOpen(true);
+                      }}
                       className="mt-1 cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e] transition hover:opacity-75"
                     >
                       Remove
@@ -499,6 +536,7 @@ export function AdminBrandGalleryField({
                 }
 
                 onChange([...value, resolvedPendingValue]);
+                setDirtySinceOpen(true);
                 setPendingValue("");
               }}
               className="inline-flex h-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#8d120e] px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#a51611] disabled:cursor-not-allowed disabled:opacity-70"

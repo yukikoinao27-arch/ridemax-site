@@ -317,7 +317,8 @@
           "direction": "right-to-left",
           "altPrefix": "Ridemax careers gallery",
           "appearance": {
-            "background": "brand-red",
+            "preset": "deep-brand-curve",
+            "background": "deep-brand-red",
             "headingScale": "display",
             "headingStyle": "standard",
             "textTone": "default",
@@ -372,7 +373,21 @@
             "label": "Want to know more about the company? Click here",
             "href": "/about"
           },
-          "showFeatured": true
+          "showFeatured": true,
+          "appearance": {
+            "preset": "light-curve-top",
+            "background": "surface-1",
+            "headingScale": "display",
+            "headingStyle": "standard",
+            "textTone": "default",
+            "textColorScheme": "default",
+            "decoration": {
+              "style": "curve",
+              "position": "top",
+              "size": "lg",
+              "color": "deep-brand-red"
+            }
+          }
         }
       ]
     },

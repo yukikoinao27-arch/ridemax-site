@@ -357,6 +357,8 @@ function FieldMeta({ field, value, maxLength }: { field: FieldConfig; value: str
 
 function defaultValueForFieldKey(key: string) {
   switch (key) {
+    case "appearance.preset":
+      return "custom";
     case "appearance.background":
       return "surface-1";
     case "appearance.decoration.style":
@@ -540,29 +542,6 @@ function mergeScopedBrands(
     ...brands.filter((brand) => brand.categorySlug !== categorySlug),
     ...nextScopedBrands,
   ];
-}
-
-function normalizeBrandCollectionItems(items: Record<string, unknown>[]) {
-  return items.map((item, index) => {
-    const slug = String(item.slug ?? "").trim();
-    const categorySlug = String(item.categorySlug ?? "").trim();
-    const href = String(item.href ?? "").trim();
-
-    return {
-      ...(item as RidemaxSiteContent["brands"][number]),
-      id: String(item.id ?? ""),
-      slug,
-      label: String(item.label ?? ""),
-      title: String(item.title ?? ""),
-      summary: String(item.summary ?? ""),
-      image: String(item.image ?? ""),
-      href: href || (categorySlug && slug ? `/products/${categorySlug}?brand=${slug}` : ""),
-      categorySlug,
-      tags: Array.isArray(item.tags) ? item.tags.map(String) : [],
-      published: Boolean(item.published ?? true),
-      order: parseNumber(item.order, index + 1),
-    };
-  });
 }
 
 const editableCatalogPageSlugs = ["tires", "rims", "accessories"] as const;
@@ -1079,6 +1058,7 @@ function renderField(
         options={field.brandOptions ?? []}
         onChange={onChange as (value: string[]) => void}
         helpText={field.helpText}
+        onNotice={callbacks.onNotice}
       />
     );
   }
@@ -1473,6 +1453,23 @@ function toPageBuilderFieldConfig(field: ReturnType<typeof getPageBlockFields>[n
 
 function updatePageBlockField(block: PageBlock, fieldKey: string, nextValue: unknown) {
   const nextBlock = writeValue(block, fieldKey, nextValue) as PageBlock;
+  const sectionPresetFieldKeys = new Set([
+    "appearance.background",
+    "appearance.textColorScheme",
+    "appearance.headingScale",
+    "appearance.headingStyle",
+    "appearance.decoration.style",
+    "appearance.decoration.color",
+    "appearance.decoration.position",
+    "appearance.decoration.size",
+  ]);
+
+  if (fieldKey !== "appearance.preset" && sectionPresetFieldKeys.has(fieldKey)) {
+    nextBlock.appearance = {
+      ...(nextBlock.appearance ?? {}),
+      preset: "custom",
+    };
+  }
 
   if (block.type === "collectionGrid" && fieldKey === "source") {
     return sanitizePageBlockAppearance({
@@ -1489,6 +1486,16 @@ function CollectionGridNote({ block }: { block: Extract<PageBlock, { type: "coll
     <div className="rounded-[1.25rem] border border-[#8d120e]/15 bg-[#fff7f6] px-4 py-3 text-sm leading-6 text-[#6a433d] md:col-span-2">
       This section pulls cards from {block.source === "catalogCategories" ? "Catalog Categories" : block.source}.
       Edit the card image in that collection below, then use this block only to place and filter the section.
+    </div>
+  );
+}
+
+function BrandMarqueeNote() {
+  return (
+    <div className="rounded-[1.25rem] border border-[#8d120e]/15 bg-[#fff7f6] px-4 py-3 text-sm leading-6 text-[#6a433d] md:col-span-2">
+      This block reuses published brand cards. Edit each brand image, summary, category, and tags in
+      the Brands sections below, then use this block only to choose which cards appear and in what
+      order.
     </div>
   );
 }
@@ -1850,6 +1857,7 @@ function PageBuilderSection({
                       <div className="mt-4 space-y-4">
                         <div className="grid gap-3 md:grid-cols-2">
                           {block.type === "collectionGrid" ? <CollectionGridNote block={block} /> : null}
+                          {block.type === "brandMarquee" ? <BrandMarqueeNote /> : null}
                           {fields.map((field) => (
                             <label key={`${block.id}-${field.key}`} className={isWideField(field) ? "md:col-span-2" : ""}>
                               <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6a433d]">
@@ -2680,57 +2688,6 @@ export function AdminDashboard({
                 onActivePageSlugChange={setActiveBuilderPageSlug}
                 onBlockEdited={setLastEditedBlockId}
               />
-
-              {activeBuilderPageSlug === "home" ? (
-                <CollectionSection
-                  sectionId="pages-home-brand-strip"
-                  title="Home Moving Brand Images"
-                  description="These brand cards feed the moving strip between the hero and Browse by Category. Edit the images here instead of hunting through raw JSON."
-                  items={draft.brands as unknown as Record<string, unknown>[]}
-                  template={{
-                    id: `brand-home-${Date.now()}`,
-                    slug: "",
-                    label: "",
-                    title: "",
-                    summary: "",
-                    image: "",
-                    href: "",
-                    categorySlug: "tires",
-                    tags: [],
-                    published: true,
-                    order: draft.brands.length + 1,
-                  }}
-                  fields={[
-                    { key: "id", label: "ID", type: "text" },
-                    { key: "slug", label: "Slug", type: "text" },
-                    { key: "label", label: "Small Label", type: "text" },
-                    { key: "title", label: "Card Title", type: "text" },
-                    { key: "summary", label: "Summary", type: "textarea" },
-                    { key: "image", label: "Brand Image", type: "image" },
-                    {
-                      key: "categorySlug",
-                      label: "Product Category",
-                      type: "select",
-                      options: [
-                        { label: "Tires", value: "tires" },
-                        { label: "Rims", value: "rims" },
-                        { label: "Accessories", value: "accessories" },
-                      ],
-                    },
-                    { key: "tags", label: "Tags (one per line)", type: "textarea", parse: fromLineList },
-                    { key: "published", label: "Published", type: "checkbox" },
-                  ]}
-                  onChange={(items) =>
-                    setDraft((current) => ({
-                      ...current,
-                      brands: normalizeBrandCollectionItems(items),
-                    }))
-                  }
-                  fieldCallbacks={fieldCallbacks}
-                  addLabel="Add Brand Image"
-                  itemLabel="Brand Image"
-                />
-              ) : null}
 
               {activeCatalogCategorySlug && activeCatalogCategory ? (
                 <>
