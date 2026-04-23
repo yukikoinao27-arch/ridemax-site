@@ -316,6 +316,14 @@ const heroBlockSchema = z.object({
   tone: z.enum(["default", "accent"]).optional(),
 });
 
+const careersIntroBlockSchema = z.object({
+  ...blockBaseSchema,
+  type: z.literal("careersIntro"),
+  images: z.array(z.string()),
+  direction: motionDirectionSchema,
+  altPrefix: z.string().optional(),
+});
+
 const brandMarqueeBlockSchema = z.object({
   ...blockBaseSchema,
   type: z.literal("brandMarquee"),
@@ -428,6 +436,7 @@ const richTextBlockSchema = z.object({
 
 const pageBlockSchema = z.discriminatedUnion("type", [
   heroBlockSchema,
+  careersIntroBlockSchema,
   brandMarqueeBlockSchema,
   categoryTilesBlockSchema,
   collectionGridBlockSchema,

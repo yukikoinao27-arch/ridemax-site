@@ -371,6 +371,7 @@ export type ContentPageSlug =
 
 export type PageBlockType =
   | "hero"
+  | "careersIntro"
   | "brandMarquee"
   | "categoryTiles"
   | "collectionGrid"
@@ -403,6 +404,18 @@ export type HeroBlock = PageBlockBase & {
   minHeight?: string;
   cta?: LinkItem;
   tone?: "default" | "accent";
+};
+
+/**
+ * A compound red-band intro used on Careers. It owns the centered heading,
+ * moving gallery strip, and bottom curve so editors do not have to recreate
+ * that layout by manually combining a hero plus a marquee block.
+ */
+export type CareersIntroBlock = PageBlockBase & {
+  type: "careersIntro";
+  images: string[];
+  direction: MotionDirection;
+  altPrefix?: string;
 };
 
 export type BrandMarqueeBlock = PageBlockBase & {
@@ -506,6 +519,7 @@ export type RichTextBlock = PageBlockBase & {
 
 export type PageBlock =
   | HeroBlock
+  | CareersIntroBlock
   | BrandMarqueeBlock
   | CategoryTilesBlock
   | CollectionGridBlock

@@ -301,26 +301,11 @@
       "summary": "Every big journey starts with one step, take yours here.",
       "blocks": [
         {
-          "id": "careers-hero",
+          "id": "careers-intro",
           "order": 1,
           "title": "Drive Your Career Forward",
           "summary": "Every big journey starts with one step, take yours here.",
-          "type": "hero",
-          "image": {
-            "src": "https://static.wixstatic.com/media/2d031a_159b76cd43da43d4ba76487bee702d7b~mv2.jpg/v1/fit/w_960,h_720,q_90,enc_avif,quality_auto/2d031a_159b76cd43da43d4ba76487bee702d7b~mv2.jpg",
-            "alt": "Ridemax careers hero"
-          },
-          "align": "center",
-          "dark": true,
-          "minHeight": "min-h-[28rem]",
-          "tone": "accent"
-        },
-        {
-          "id": "careers-gallery",
-          "order": 2,
-          "title": "",
-          "summary": "",
-          "type": "imageMarquee",
+          "type": "careersIntro",
           "images": [
             "https://static.wixstatic.com/media/2d031a_159b76cd43da43d4ba76487bee702d7b~mv2.jpg/v1/fit/w_960,h_720,q_90,enc_avif,quality_auto/2d031a_159b76cd43da43d4ba76487bee702d7b~mv2.jpg",
             "https://static.wixstatic.com/media/2d031a_260a0bd536c141a2a15b6af510a6e412~mv2.jpg/v1/fit/w_960,h_720,q_90,enc_avif,quality_auto/2d031a_260a0bd536c141a2a15b6af510a6e412~mv2.jpg",
@@ -333,21 +318,21 @@
           "altPrefix": "Ridemax careers gallery",
           "appearance": {
             "background": "brand-red",
-            "headingScale": "standard",
+            "headingScale": "display",
             "headingStyle": "standard",
             "textTone": "default",
             "textColorScheme": "light",
             "decoration": {
-              "style": "none",
+              "style": "curve",
               "position": "bottom",
-              "size": "md",
+              "size": "lg",
               "color": "surface-1"
             }
           }
         },
         {
           "id": "careers-why-join",
-          "order": 3,
+          "order": 2,
           "title": "Fuel your passion with purpose",
           "summary": "Build a marketing career inside an automotive brand that needs content, events, and product storytelling to keep shipping.",
           "eyebrow": "Why Join Us",
@@ -376,7 +361,7 @@
         },
         {
           "id": "careers-jobs",
-          "order": 4,
+          "order": 3,
           "title": "Join our Team",
           "summary": "Browse open roles across our departments and find the position that matches your drive.",
           "eyebrow": "Now Hiring",

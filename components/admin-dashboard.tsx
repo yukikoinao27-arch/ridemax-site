@@ -476,7 +476,7 @@ function collectionBlockOptionsForPage(slug: PageDocument["slug"]) {
     tires: ["hero", "brandMarquee", "collectionGrid", "categorySections", "richText"],
     rims: ["hero", "brandMarquee", "collectionGrid", "categorySections", "richText"],
     accessories: ["hero", "brandMarquee", "collectionGrid", "categorySections", "richText"],
-    careers: ["hero", "imageMarquee", "showcase", "jobsList", "richText"],
+    careers: ["hero", "careersIntro", "imageMarquee", "showcase", "jobsList", "richText"],
     about: ["hero", "showcase", "featureGrid", "contact", "richText"],
     "events-awards": ["hero", "collectionGrid", "projectList", "richText"],
     news: ["hero", "collectionGrid", "richText"],

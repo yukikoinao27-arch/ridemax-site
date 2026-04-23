@@ -421,6 +421,51 @@ function normalizeHomePage(page: PageDocument): PageDocument {
   return { ...page, blocks: ordered };
 }
 
+function normalizeCareersPage(page: PageDocument): PageDocument {
+  const hasCareersIntro = page.blocks.some((block) => block.type === "careersIntro");
+
+  if (hasCareersIntro) {
+    return page;
+  }
+
+  const heroBlock = page.blocks.find(
+    (block): block is Extract<PageBlock, { type: "hero" }> =>
+      block.type === "hero" && (block.id === "careers-hero" || block.order === 1),
+  );
+  const galleryBlock = page.blocks.find(
+    (block): block is Extract<PageBlock, { type: "imageMarquee" }> =>
+      block.type === "imageMarquee" && (block.id === "careers-gallery" || block.order === 2),
+  );
+
+  if (!heroBlock || !galleryBlock) {
+    return page;
+  }
+
+  const introBlock = {
+    ...(createPageBlockTemplate("careersIntro") as Extract<PageBlock, { type: "careersIntro" }>),
+    id: "careers-intro",
+    order: Math.min(heroBlock.order, galleryBlock.order),
+    title: heroBlock.title ?? page.title,
+    summary: heroBlock.summary ?? page.summary ?? "",
+    eyebrow: heroBlock.eyebrow ?? "",
+    images: galleryBlock.images,
+    direction: galleryBlock.direction,
+    altPrefix: galleryBlock.altPrefix,
+  } satisfies PageBlock;
+
+  return {
+    ...page,
+    blocks: [
+      introBlock,
+      ...page.blocks.filter(
+        (block) => block.id !== heroBlock.id && block.id !== galleryBlock.id,
+      ),
+    ]
+      .sort((left, right) => left.order - right.order)
+      .map((block, index) => ({ ...block, order: index + 1 }) as PageBlock),
+  };
+}
+
 function normalizeAboutPage(page: PageDocument): PageDocument {
   return {
     ...page,
@@ -488,6 +533,8 @@ function normalizePage(page: PageDocument): PageDocument {
       ? normalizeProductsPage(page)
       : page.slug === "home"
         ? normalizeHomePage(page)
+        : page.slug === "careers"
+          ? normalizeCareersPage(page)
         : page.slug === "about"
           ? normalizeAboutPage(page)
           : page.slug === "search"
