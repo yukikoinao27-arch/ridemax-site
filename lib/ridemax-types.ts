@@ -31,7 +31,13 @@ export type SectionBackgroundVariant =
   | "deep-brand-red"
   | "ink";
 
-export type SectionDecorationStyle = "none" | "wave" | "curve" | "diagonal" | "blob";
+export type SectionDecorationStyle =
+  | "none"
+  | "wave"
+  | "curve"
+  | "cross-wave"
+  | "diagonal"
+  | "blob";
 
 export type SectionDecorationPosition = "top" | "bottom";
 
@@ -55,6 +61,8 @@ export type SectionAppearancePreset =
   | "deep-brand-curve"
   | "deep-brand-wave"
   | "light-curve-top"
+  | "light-cross-wave-top"
+  | "light-cross-wave-bottom"
   | "warm-wave-top"
   | "ink-spotlight";
 

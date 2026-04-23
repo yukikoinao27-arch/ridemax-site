@@ -43,7 +43,6 @@ type AdminBrandGalleryFieldProps = {
   options: AdminBrandGalleryOption[];
   onChange: (value: string[]) => void;
   helpText?: string;
-  onNotice?: NoticeHandler;
 };
 
 async function uploadImage(file: File) {
@@ -120,6 +119,15 @@ function UploadButton({
   );
 }
 
+function editToggleButtonClass(dirtySinceOpen: boolean) {
+  return [
+    "inline-flex h-9 shrink-0 cursor-pointer items-center justify-center rounded-full border px-3 text-sm font-semibold transition hover:-translate-y-0.5",
+    dirtySinceOpen
+      ? "border-[#8d120e] bg-[#fff4f3] text-[#8d120e] shadow-[0_0_0_3px_rgba(141,18,14,0.08)] hover:bg-[#fff1ef]"
+      : "border-black/10 bg-white text-[#220707] hover:bg-white",
+  ].join(" ");
+}
+
 export function AdminImageUploadField({
   value,
   onChange,
@@ -194,14 +202,10 @@ export function AdminImageUploadField({
         <button
           type="button"
           onClick={() => {
-            if (editing && dirtySinceOpen) {
-              onNotice?.("success", "Image changes saved.");
-            }
-
             setDirtySinceOpen(false);
             setEditing((current) => !current);
           }}
-          className="inline-flex h-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
+          className={editToggleButtonClass(editing && dirtySinceOpen)}
         >
           {editing ? "Done" : value ? "Edit Image" : "Add Image"}
         </button>
@@ -330,14 +334,10 @@ export function AdminImageGalleryField({
         <button
           type="button"
           onClick={() => {
-            if (editing && dirtySinceOpen) {
-              onNotice?.("success", "Gallery updated.");
-            }
-
             setDirtySinceOpen(false);
             setEditing((current) => !current);
           }}
-          className="inline-flex h-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
+          className={editToggleButtonClass(editing && dirtySinceOpen)}
         >
           {editing ? "Done" : "Edit Gallery"}
         </button>
@@ -398,7 +398,6 @@ export function AdminBrandGalleryField({
   options,
   onChange,
   helpText,
-  onNotice,
 }: AdminBrandGalleryFieldProps) {
   const [editing, setEditing] = useState(false);
   const [dirtySinceOpen, setDirtySinceOpen] = useState(false);
@@ -453,14 +452,10 @@ export function AdminBrandGalleryField({
         <button
           type="button"
           onClick={() => {
-            if (editing && dirtySinceOpen) {
-              onNotice?.("success", "Moving brands updated.");
-            }
-
             setDirtySinceOpen(false);
             setEditing((current) => !current);
           }}
-          className="inline-flex h-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
+          className={editToggleButtonClass(editing && dirtySinceOpen)}
         >
           {editing ? "Done" : "Edit Gallery"}
         </button>

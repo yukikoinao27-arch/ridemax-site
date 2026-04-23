@@ -95,6 +95,11 @@ img {
   background: var(--section-decoration-color);
 }
 
+.section-decoration--vector {
+  display: block;
+  background: transparent;
+}
+
 .section-decoration--top {
   top: 0;
   transform: translate(-50%, -50%);
@@ -123,6 +128,10 @@ img {
 
 .section-decoration--curve {
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+
+.section-decoration--cross-wave {
+  overflow: visible;
 }
 
 .section-decoration--top.section-decoration--curve {

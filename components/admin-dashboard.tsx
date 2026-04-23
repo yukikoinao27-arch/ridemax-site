@@ -101,9 +101,9 @@ const secondaryButtonClass =
 // border, subtle hover lift. Disabled buttons lose the hover lift and fade out
 // so "can't move up any further" is obvious without surfacing new error UX.
 const iconButtonClass =
-  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-[#220707] shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-[#8d120e]/25 hover:bg-[#f7f2f1] hover:shadow-[0_10px_22px_rgba(31,20,19,0.10)] active:translate-y-0 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/25 disabled:pointer-events-none disabled:opacity-40";
+  "inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white text-[#220707] shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-[#8d120e]/25 hover:bg-[#f7f2f1] hover:shadow-[0_10px_22px_rgba(31,20,19,0.10)] active:translate-y-0 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/25 disabled:pointer-events-none disabled:opacity-40";
 const destructiveIconButtonClass =
-  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#8d120e]/30 bg-white text-[#8d120e] shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:bg-[#fff4f3] hover:shadow-[0_10px_22px_rgba(141,18,14,0.12)] active:translate-y-0 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/25 disabled:pointer-events-none disabled:opacity-40";
+  "inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#8d120e]/30 bg-white text-[#8d120e] shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:bg-[#fff4f3] hover:shadow-[0_10px_22px_rgba(141,18,14,0.12)] active:translate-y-0 active:scale-[0.94] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/25 disabled:pointer-events-none disabled:opacity-40";
 const dragHandleClass =
   "inline-flex h-9 w-9 cursor-grab items-center justify-center rounded-full border border-black/10 bg-white text-[#6a433d] shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-[#8d120e]/25 hover:bg-[#f7f2f1] hover:shadow-[0_10px_22px_rgba(31,20,19,0.10)] active:translate-y-0 active:scale-[0.94] active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/25";
 const fieldControlClass =
@@ -1058,7 +1058,6 @@ function renderField(
         options={field.brandOptions ?? []}
         onChange={onChange as (value: string[]) => void}
         helpText={field.helpText}
-        onNotice={callbacks.onNotice}
       />
     );
   }
