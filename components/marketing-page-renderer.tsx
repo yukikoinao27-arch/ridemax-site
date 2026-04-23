@@ -122,10 +122,10 @@ function sectionBackgroundClass(appearance?: BlockAppearance, fallback: NonNulla
 function sectionClass(
   block: PageBlock,
   spacing: string,
-  extra = "",
+  extraClass = "",
   fallbackBackground: NonNullable<BlockAppearance["background"]> = "surface-1",
 ) {
-  return `relative overflow-hidden ${sectionBackgroundClass(block.appearance, fallbackBackground)} ${spacing} ${extra}`.trim();
+  return `relative overflow-hidden ${sectionBackgroundClass(block.appearance, fallbackBackground)} ${spacing} ${extraClass}`.trim();
 }
 
 function SectionDecoration({ appearance }: { appearance?: BlockAppearance }) {
@@ -710,7 +710,9 @@ function renderBlock(
   }
 
   if (block.type === "imageMarquee") {
-    const legacyBackground = block.background || "bg-[#E31E24] text-white";
+    // block.background is a raw Tailwind string used by old content records that
+    // predate the appearance system. New blocks always have block.appearance.
+    const legacyBackground = block.background || "bg-[#f4f4f4]";
 
     return (
       <section

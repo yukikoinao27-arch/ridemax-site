@@ -17,8 +17,8 @@ import { RidemaxLogo } from "@/components/ridemax-logo";
  *  - Inline emoji quick-picker (no heavyweight library) so the send form has
  *    feature parity with the Wix reference without pulling in a bundle.
  *
- * Brand tokens are centralized at the top of the render tree so a future
- * theme override can happen in one place rather than every button.
+ * Color theme: navy (#0B2E63 primary, #123E7A hover). When rebranding,
+ * update the inline bg/shadow Tailwind classes throughout this file.
  */
 type ChatWidgetProps = {
   /** Admin-configured logo for light surfaces (the white chip behind the mark). */
