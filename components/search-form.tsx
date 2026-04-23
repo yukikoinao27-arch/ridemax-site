@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import type { PointerEvent } from "react";
-import { startTransition, useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import type { SearchRecord } from "@/lib/ridemax-types";
 
 type SearchFormProps = {
@@ -30,7 +28,6 @@ export function SearchForm({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchedQuery, setSearchedQuery] = useState("");
-  const router = useRouter();
   const deferredQuery = useDeferredValue(query);
   const trimmedQuery = deferredQuery.trim();
   const showFeedback = open && trimmedQuery.length >= 2 && (loading || results.length > 0 || searchedQuery === trimmedQuery);
@@ -43,24 +40,6 @@ export function SearchForm({
     }
 
     window.open(`/search?q=${encodeURIComponent(nextQuery)}`, "_blank", "noopener,noreferrer");
-  }
-
-  function handleQuickMatchPointerDown(event: PointerEvent<HTMLAnchorElement>, href: string) {
-    if (
-      event.button !== 0 ||
-      event.ctrlKey ||
-      event.metaKey ||
-      event.shiftKey ||
-      event.altKey
-    ) {
-      return;
-    }
-
-    event.preventDefault();
-    setOpen(false);
-    startTransition(() => {
-      router.push(href);
-    });
   }
 
   useEffect(() => {
@@ -169,7 +148,6 @@ export function SearchForm({
                 <Link
                   key={`${result.kind}-${result.href}-${result.title}`}
                   href={result.href}
-                  onPointerDown={(event) => handleQuickMatchPointerDown(event, result.href)}
                   onClick={() => setOpen(false)}
                   className="block rounded-[1.1rem] px-4 py-3 text-white transition hover:bg-white/10"
                 >

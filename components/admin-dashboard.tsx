@@ -898,6 +898,64 @@ function RevisionsDrawer({
   );
 }
 
+// Textarea with local state so fields that use parse (e.g. fromLineList) don't
+// strip trailing newlines on every keystroke. Parse runs on blur only.
+function TextareaField({
+  displayValue,
+  field,
+  maxLength,
+  onChange,
+}: {
+  displayValue: string;
+  field: FieldConfig;
+  maxLength?: number;
+  onChange: (value: unknown) => void;
+}) {
+  const [localValue, setLocalValue] = useState(displayValue);
+  const lastExternalRef = useRef(displayValue);
+
+  useEffect(() => {
+    if (lastExternalRef.current !== displayValue) {
+      lastExternalRef.current = displayValue;
+      setLocalValue(displayValue);
+    }
+  }, [displayValue]);
+
+  if (field.parse) {
+    return (
+      <>
+        <textarea
+          value={localValue}
+          maxLength={maxLength}
+          onChange={(event) => setLocalValue(event.target.value)}
+          onBlur={() => {
+            const committed = normalizeFieldValue(field, localValue);
+            const committedDisplay = Array.isArray(committed) ? toLineList(committed) : String(committed ?? "");
+            lastExternalRef.current = committedDisplay;
+            onChange(committed);
+          }}
+          onKeyDown={(event) => event.stopPropagation()}
+          className={`${fieldControlClass} min-h-[8rem] resize-y`}
+        />
+        <FieldMeta field={field} value={localValue} maxLength={maxLength} />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <textarea
+        value={displayValue}
+        maxLength={maxLength}
+        onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
+        onKeyDown={(event) => event.stopPropagation()}
+        className={`${fieldControlClass} min-h-[8rem] resize-y`}
+      />
+      <FieldMeta field={field} value={displayValue} maxLength={maxLength} />
+    </>
+  );
+}
+
 function renderField(
   item: Record<string, unknown>,
   field: FieldConfig,
@@ -935,16 +993,12 @@ function renderField(
 
   if (field.type === "textarea") {
     return (
-      <>
-        <textarea
-          value={stringValue}
-          maxLength={maxLength}
-          onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
-          onKeyDown={(event) => event.stopPropagation()}
-          className={`${fieldControlClass} min-h-[8rem] resize-y`}
-        />
-        <FieldMeta field={field} value={stringValue} maxLength={maxLength} />
-      </>
+      <TextareaField
+        displayValue={stringValue}
+        field={field}
+        maxLength={maxLength}
+        onChange={onChange}
+      />
     );
   }
 
@@ -1447,7 +1501,7 @@ function PageBuilderSection({
       description="Edit one public page at a time, then reorder, add, remove, and style reusable sections without touching collection content."
     >
       <div className="space-y-6">
-        <div ref={pagePickerRef} id="page-builder-page-picker" className="grid scroll-mt-28 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <div ref={pagePickerRef} id="page-builder-page-picker" className="sticky top-4 z-30 -mx-3 grid scroll-mt-28 gap-2 rounded-2xl bg-white/95 px-3 pb-3 pt-2 shadow-[0_8px_24px_rgba(31,20,19,0.08)] backdrop-blur sm:grid-cols-2 xl:grid-cols-3">
           {sortedPages.map((page) => {
             const isActive = activePage?.id === page.id;
 
@@ -1795,9 +1849,6 @@ function PageBuilderSection({
                                     ),
                                   fieldCallbacks,
                                 )}
-                                {field.helpText ? (
-                                  <p className="mt-2 text-xs leading-5 text-[#7e5a53]">{field.helpText}</p>
-                                ) : null}
                               </label>
                             ))}
                           </div>

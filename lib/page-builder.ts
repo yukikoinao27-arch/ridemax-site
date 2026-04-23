@@ -589,8 +589,8 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
             { label: "Accent", value: "accent" },
           ],
         },
-        { key: "cta.label", label: "CTA Label", type: "text" },
-        { key: "cta.href", label: "CTA Link", type: "text" },
+        { key: "cta.label", label: "CTA Label", type: "text", helpText: "Button text shown over the hero image. Leave blank to hide the button." },
+        { key: "cta.href", label: "CTA Link", type: "text", helpText: "URL the button navigates to, e.g. /products or https://example.com." },
       ];
     case "brandMarquee":
       return [
