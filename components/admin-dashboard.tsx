@@ -103,7 +103,7 @@ const destructiveIconButtonClass =
 const dragHandleClass =
   "inline-flex h-9 w-9 cursor-grab items-center justify-center rounded-full border border-black/10 bg-white text-[#6a433d] shadow-sm transition duration-150 ease-out hover:-translate-y-0.5 hover:border-[#8d120e]/25 hover:bg-[#f7f2f1] hover:shadow-[0_10px_22px_rgba(31,20,19,0.10)] active:translate-y-0 active:scale-[0.94] active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8d120e]/25";
 const fieldControlClass =
-  "mt-2 w-full rounded-[1.25rem] border border-black/12 bg-white px-3 py-3 outline-none transition duration-150 ease-out hover:border-[#8d120e]/30 hover:shadow-[0_8px_20px_rgba(31,20,19,0.07)] focus:border-[#8d120e] focus:shadow-[0_0_0_3px_rgba(141,18,14,0.08)] focus-visible:ring-2 focus-visible:ring-[#8d120e]/20";
+  "mt-1 w-full rounded-[1rem] border border-black/12 bg-white px-3 py-2.5 outline-none transition duration-150 ease-out hover:border-[#8d120e]/30 hover:shadow-[0_8px_20px_rgba(31,20,19,0.07)] focus:border-[#8d120e] focus:shadow-[0_0_0_3px_rgba(141,18,14,0.08)] focus-visible:ring-2 focus-visible:ring-[#8d120e]/20";
 const rowActionRailClass = "flex min-w-max shrink-0 flex-nowrap items-center justify-end gap-2";
 
 // Lightweight inline SVG icons. Kept local to avoid pulling in an icon library
@@ -326,7 +326,7 @@ function standardTextLimitForField(field: FieldConfig) {
   if (/(href|url|src|image|endpoint|map)/.test(signature)) return 2048;
   if (/email/.test(signature)) return 320;
   if (/phone/.test(signature)) return 40;
-  if (/(slug|sku)/.test(signature)) return 80;
+  if (/slug/.test(signature)) return 80;
   if (/(title|name|label|eyebrow|venue|location)/.test(signature)) return 80;
   if (/(summary|excerpt|description|intro|footer|teaser)/.test(signature)) return 200;
   if (/(paragraph|message|notes)/.test(signature)) return 800;
@@ -624,6 +624,7 @@ function mergeScopedProductItems(
   const nextScopedItems = scopedItems.map((item, index) => ({
     ...(item as ProductItem),
     categorySlug,
+    sku: typeof item.sku === "string" ? item.sku : "",
     highlights: Array.isArray(item.highlights) ? item.highlights.map(String) : [],
     gallery: Array.isArray(item.gallery) ? item.gallery.map(String) : [],
     sizes: Array.isArray(item.sizes) ? item.sizes.map(String) : [],
@@ -941,7 +942,7 @@ function renderField(
           maxLength={maxLength}
           onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
           onKeyDown={(event) => event.stopPropagation()}
-          className={`${fieldControlClass} min-h-[8rem] resize-y`}
+          className={`${fieldControlClass} min-h-[6rem] resize-y`}
         />
         <FieldMeta field={field} value={stringValue} maxLength={maxLength} />
       </>
@@ -1353,12 +1354,14 @@ function PageBuilderSection({
   fieldCallbacks,
   activePageSlug,
   onActivePageSlugChange,
+  onBlockEdited,
 }: {
   pages: PageDocument[];
   onChange: (pages: PageDocument[]) => void;
   fieldCallbacks: FieldCallbacks;
   activePageSlug: ContentPageSlug;
   onActivePageSlugChange: (slug: ContentPageSlug) => void;
+  onBlockEdited: (blockId: string) => void;
 }) {
   const [pendingBlockTypes, setPendingBlockTypes] = useState<Record<string, string>>(
     Object.fromEntries(pages.map((page) => [page.id, "richText"])),
@@ -1391,6 +1394,7 @@ function PageBuilderSection({
       pageSlugOptions.findIndex((option) => option.value === right.slug),
   );
   const activePage = sortedPages.find((page) => page.id === activePageId) ?? sortedPages[0] ?? null;
+  const activePageLabel = activePage ? pageSlugOptions.find((option) => option.value === activePage.slug)?.label ?? activePage.slug : "Page";
   const availableBlockOptions = activePage ? collectionBlockOptionsForPage(activePage.slug) : pageBlockTypeOptions;
   const pendingType = activePage ? pendingBlockTypes[activePage.id] : "richText";
   const selectedBlockType = availableBlockOptions.some((option) => option.value === pendingType)
@@ -1447,6 +1451,26 @@ function PageBuilderSection({
       description="Edit one public page at a time, then reorder, add, remove, and style reusable sections without touching collection content."
     >
       <div className="space-y-6">
+        <div className="sticky top-4 z-20 rounded-[1.25rem] border border-black/10 bg-white/95 p-3 shadow-[0_12px_30px_rgba(31,20,19,0.10)] backdrop-blur">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8d120e]">
+                Page Picker
+              </p>
+              <p className="mt-1 text-sm text-[#6a433d]">
+                Editing {activePageLabel}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleReturnToPagePicker}
+              className={`${secondaryButtonClass} gap-2`}
+            >
+              <ArrowUpIcon />
+              Show pages
+            </button>
+          </div>
+        </div>
         <div ref={pagePickerRef} id="page-builder-page-picker" className="grid scroll-mt-28 gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {sortedPages.map((page) => {
             const isActive = activePage?.id === page.id;
@@ -1486,17 +1510,7 @@ function PageBuilderSection({
         </div>
 
         {activePage ? (
-          <article ref={activePageEditorRef} className="rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-5 scroll-mt-28">
-            <div className="sticky top-4 z-20 mb-4 flex justify-end pointer-events-none">
-              <button
-                type="button"
-                onClick={handleReturnToPagePicker}
-                className={`${secondaryButtonClass} pointer-events-auto gap-2 bg-white/95 backdrop-blur`}
-              >
-                <ArrowUpIcon />
-                Page picker
-              </button>
-            </div>
+          <article ref={activePageEditorRef} className="rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-4 scroll-mt-28">
             <div className="grid gap-4 md:grid-cols-2">
               <label>
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6a433d]">
@@ -1533,7 +1547,7 @@ function PageBuilderSection({
                       ),
                     )
                   }
-                  className={`${fieldControlClass} min-h-[7rem] resize-y`}
+                  className={`${fieldControlClass} min-h-[5rem] resize-y`}
                 />
                 <div className="mt-1 text-right text-[0.72rem] text-[#7e5a53]">
                   {(activePage.summary ?? "").length}/200
@@ -1582,6 +1596,7 @@ function PageBuilderSection({
                           : candidate,
                       ),
                     );
+                    onBlockEdited(nextBlock.id);
                     setExpandedBlockIds((current) => ({ ...current, [nextBlock.id]: true }));
                     setHighlightedBlockId(nextBlock.id);
                     fieldCallbacks.onNotice("success", "Block added successfully.");
@@ -1725,8 +1740,8 @@ function PageBuilderSection({
                     </div>
 
                     {isExpanded ? (
-                      <div className="mt-5 space-y-5">
-                        <div className="grid gap-4 md:grid-cols-2">
+                      <div className="mt-4 space-y-4">
+                        <div className="grid gap-3 md:grid-cols-2">
                           {block.type === "collectionGrid" ? <CollectionGridNote block={block} /> : null}
                           {fields.map((field) => (
                             <label key={`${block.id}-${field.key}`} className={isWideField(field) ? "md:col-span-2" : ""}>
@@ -1736,7 +1751,8 @@ function PageBuilderSection({
                               {renderField(
                                 block as unknown as Record<string, unknown>,
                                 field,
-                                (nextValue) =>
+                                (nextValue) => {
+                                  onBlockEdited(block.id);
                                   onChange(
                                     pages.map((candidate) =>
                                       candidate.id === activePage.id
@@ -1750,17 +1766,15 @@ function PageBuilderSection({
                                           }
                                         : candidate,
                                     ),
-                                  ),
+                                  );
+                                },
                                 fieldCallbacks,
                               )}
-                              {field.helpText ? (
-                                <p className="mt-2 text-xs leading-5 text-[#7e5a53]">{field.helpText}</p>
-                              ) : null}
                             </label>
                           ))}
                         </div>
 
-                        <div className="rounded-[1.25rem] border border-black/8 bg-[#faf8f7] p-4">
+                        <div className="rounded-[1.25rem] border border-black/8 bg-[#faf8f7] p-3">
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8d120e]">
                               Section Appearance
@@ -1769,7 +1783,7 @@ function PageBuilderSection({
                               Choose from page-safe background, heading, shape, and card presets.
                             </p>
                           </div>
-                          <div className="mt-4 grid gap-4 md:grid-cols-2">
+                          <div className="mt-3 grid gap-3 md:grid-cols-2">
                             {appearanceFields.map((field) => (
                               <label key={`${block.id}-${field.key}`} className={isWideField(field) ? "md:col-span-2" : ""}>
                                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6a433d]">
@@ -1778,7 +1792,8 @@ function PageBuilderSection({
                                 {renderField(
                                   block as unknown as Record<string, unknown>,
                                   field,
-                                  (nextValue) =>
+                                  (nextValue) => {
+                                    onBlockEdited(block.id);
                                     onChange(
                                       pages.map((candidate) =>
                                         candidate.id === activePage.id
@@ -1792,12 +1807,10 @@ function PageBuilderSection({
                                             }
                                           : candidate,
                                       ),
-                                    ),
+                                    );
+                                  },
                                   fieldCallbacks,
                                 )}
-                                {field.helpText ? (
-                                  <p className="mt-2 text-xs leading-5 text-[#7e5a53]">{field.helpText}</p>
-                                ) : null}
                               </label>
                             ))}
                           </div>
@@ -1967,6 +1980,7 @@ export function AdminDashboard({
   const [revertingRevisionId, setRevertingRevisionId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [activeBuilderPageSlug, setActiveBuilderPageSlug] = useState<ContentPageSlug>("home");
+  const [lastEditedBlockId, setLastEditedBlockId] = useState<string | null>(null);
 
   const departmentOptions = useMemo(
     () => draft.departments.map((department: Department) => ({ label: department.name, value: department.slug })),
@@ -2101,7 +2115,9 @@ export function AdminDashboard({
           content: draft,
           path:
             view === "pages"
-              ? publicPathForPageSlug(activeBuilderPageSlug)
+              ? `${publicPathForPageSlug(activeBuilderPageSlug)}${
+                  lastEditedBlockId ? `#section-${encodeURIComponent(lastEditedBlockId)}` : ""
+                }`
               : view === "events"
               ? "/events"
               : view === "promotions"
@@ -2294,15 +2310,6 @@ export function AdminDashboard({
         onClose={() => setRevisionsOpen(false)}
         onRevert={handleRevertRevision}
       />
-      {view === "pages" ? (
-        <a
-          href="#page-builder-page-picker"
-          className="fixed bottom-28 left-6 z-[85] inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/95 px-4 py-3 text-sm font-semibold text-[#220707] shadow-[0_14px_34px_rgba(31,20,19,0.16)] backdrop-blur transition hover:-translate-y-0.5 hover:border-[#8d120e]/30 hover:text-[#8d120e]"
-        >
-          <ArrowUpIcon />
-          Page picker
-        </a>
-      ) : null}
       <div className={`space-y-8 ${canSave ? "pb-28" : ""}`}>
           <section className="rounded-[2rem] border border-black/10 bg-white p-7 shadow-[0_16px_40px_rgba(28,20,19,0.06)]">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -2563,6 +2570,7 @@ export function AdminDashboard({
                 fieldCallbacks={fieldCallbacks}
                 activePageSlug={activeBuilderPageSlug}
                 onActivePageSlugChange={setActiveBuilderPageSlug}
+                onBlockEdited={setLastEditedBlockId}
               />
 
               {activeCatalogCategorySlug && activeCatalogCategory ? (
@@ -2714,7 +2722,6 @@ export function AdminDashboard({
                         summary: "",
                         description: "",
                         highlights: [],
-                        sku: "",
                         image: "",
                         gallery: [],
                         sizes: [],
@@ -2733,7 +2740,6 @@ export function AdminDashboard({
                         { key: "summary", label: "Summary", type: "textarea" },
                         { key: "description", label: "Description", type: "textarea" },
                         { key: "highlights", label: "Highlights (one per line)", type: "textarea", parse: fromLineList },
-                        { key: "sku", label: "SKU", type: "text" },
                         { key: "image", label: "Primary Image", type: "image" },
                         { key: "gallery", label: "Gallery", type: "image-list" },
                         { key: "sizes", label: "Sizes (one per line)", type: "textarea", parse: fromLineList },

@@ -8,6 +8,12 @@ type RouteContext = {
   params: Promise<{ slug: string }>;
 };
 
+function toMarketingProduct(item: Awaited<ReturnType<typeof listPublishedProductItems>>[number]) {
+  const safeItem = { ...item };
+  delete (safeItem as { sku?: unknown }).sku;
+  return safeItem;
+}
+
 export async function GET(_request: Request, context: RouteContext) {
   const { slug } = await context.params;
   const [category, items] = await Promise.all([
@@ -22,6 +28,6 @@ export async function GET(_request: Request, context: RouteContext) {
   return NextResponse.json({
     category,
     total: items.length,
-    items,
+    items: items.map(toMarketingProduct),
   });
 }

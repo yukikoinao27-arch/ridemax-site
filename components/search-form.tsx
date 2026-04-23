@@ -171,7 +171,7 @@ export function SearchForm({
                   href={result.href}
                   onPointerDown={(event) => handleQuickMatchPointerDown(event, result.href)}
                   onClick={() => setOpen(false)}
-                  className="block rounded-[1.1rem] px-4 py-3 text-white transition hover:bg-white/10"
+                  className="block cursor-pointer rounded-[1.1rem] px-4 py-3 text-white transition hover:bg-white/10"
                 >
                   <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#f0c5bd]">
                     {result.kind}

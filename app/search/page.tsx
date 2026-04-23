@@ -171,7 +171,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   </div>
                   <button
                     type="submit"
-                    className="inline-flex rounded-full bg-[#220707] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white"
+                    className="inline-flex cursor-pointer rounded-full bg-[#220707] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#3a0f0d]"
                   >
                     Apply Filters
                   </button>

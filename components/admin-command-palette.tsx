@@ -100,6 +100,7 @@ export function AdminCommandPalette() {
   const [entries, setEntries] = useState<AdminSearchEntry[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const activeItemRef = useRef<HTMLLIElement | null>(null);
   const router = useRouter();
 
   // Global Ctrl+K / Cmd+K. Also Esc closes. Plus a window-level
@@ -178,6 +179,13 @@ export function AdminCommandPalette() {
   const safeActiveIndex =
     filtered.length === 0 ? -1 : Math.min(activeIndex, filtered.length - 1);
 
+  useEffect(() => {
+    activeItemRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
+  }, [safeActiveIndex]);
+
   if (!open) {
     return null;
   }
@@ -243,7 +251,10 @@ export function AdminCommandPalette() {
             filtered.map((entry, index) => {
               const isActive = index === safeActiveIndex;
               return (
-                <li key={entry.id}>
+                <li
+                  key={entry.id}
+                  ref={isActive ? activeItemRef : null}
+                >
                   <button
                     type="button"
                     onMouseEnter={() => setActiveIndex(index)}
