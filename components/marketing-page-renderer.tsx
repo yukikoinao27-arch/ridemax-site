@@ -130,6 +130,38 @@ function sectionClass(
   return `relative overflow-hidden ${sectionBackgroundClass(block.appearance, fallbackBackground)} ${spacing} ${extraClass}`.trim();
 }
 
+function topDecorationInsetClass(appearance?: BlockAppearance) {
+  const decoration = appearance?.decoration;
+
+  if (!decoration || decoration.position !== "top") {
+    return "";
+  }
+
+  if (decoration.style === "cross-wave") {
+    switch (decoration.size) {
+      case "lg":
+        return "pt-16 md:pt-20";
+      case "sm":
+        return "pt-10 md:pt-12";
+      default:
+        return "pt-12 md:pt-16";
+    }
+  }
+
+  if (decoration.style === "curve" || decoration.style === "wave" || decoration.style === "diagonal") {
+    switch (decoration.size) {
+      case "lg":
+        return "pt-12 md:pt-16";
+      case "sm":
+        return "pt-8 md:pt-10";
+      default:
+        return "pt-10 md:pt-12";
+    }
+  }
+
+  return "";
+}
+
 function SectionDecoration({ appearance }: { appearance?: BlockAppearance }) {
   const decoration = appearance?.decoration;
   const style = decoration?.style ?? "none";
@@ -881,11 +913,12 @@ function renderBlock(
     const departments = content.departments.filter((department) => department.published);
     const jobs = content.jobs.filter((job) => job.published);
     const featuredJobs = block.showFeatured ? pickFeaturedJobs(content.jobs) : [];
+    const topInsetClass = topDecorationInsetClass(block.appearance);
 
     return (
       <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "py-12")}>
         <SectionDecoration appearance={block.appearance} />
-        <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
+        <div className={`relative mx-auto max-w-[72rem] px-6 md:px-10 ${topInsetClass}`.trim()}>
           <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
           <CareersJobBrowser
             departments={departments}

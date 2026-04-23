@@ -18,7 +18,7 @@ import type { BrandFeature, ProductItem } from "@/lib/ridemax-types";
 
 type ProductCategoryPageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ brand?: string | string[]; tag?: string | string[]; sort?: string | string[] }>;
+  searchParams: Promise<{ brand?: string | string[]; sort?: string | string[] }>;
 };
 
 function readFirstQueryValue(value: string | string[] | undefined) {
@@ -27,14 +27,6 @@ function readFirstQueryValue(value: string | string[] | undefined) {
   }
 
   return value ?? "";
-}
-
-function readQueryList(value: string | string[] | undefined) {
-  if (Array.isArray(value)) {
-    return value.filter(Boolean);
-  }
-
-  return value ? [value] : [];
 }
 
 function normalizeBrandKey(value: string) {
@@ -49,19 +41,10 @@ function brandOwnsProduct(brand: BrandFeature, product: ProductItem) {
   );
 }
 
-function buildBrandFilterOptions(products: ProductItem[]) {
-  const preferred = ["Tire", "PCR", "TBR", "PCLT", "Offroad", "Off-road"];
-  const tags = new Set(products.flatMap((product) => product.tags));
-
-  return preferred.filter((option) => option === "Tire" || tags.has(option));
-}
-
 function sortProducts(products: ProductItem[], sort: string) {
   const next = [...products];
 
   switch (sort) {
-    case "newest":
-      return next.sort((left, right) => right.order - left.order);
     case "name-asc":
       return next.sort((left, right) => left.title.localeCompare(right.title));
     case "name-desc":
@@ -95,7 +78,6 @@ export default async function ProductCategoryPage({
   const query = await searchParams;
   const activeBrand = readFirstQueryValue(query.brand);
   const selectedSort = readFirstQueryValue(query.sort) || "best";
-  const selectedTags = new Set(readQueryList(query.tag).map(normalizeBrandKey));
   const category = await findProductCategory(slug);
 
   if (!category) {
@@ -110,18 +92,17 @@ export default async function ProductCategoryPage({
   const brandProducts = activeBrandRecord
     ? products.filter((product) => brandOwnsProduct(activeBrandRecord, product))
     : [];
-  const filterOptions = buildBrandFilterOptions(brandProducts);
-  const filteredBrandProducts =
-    selectedTags.size > 0
-      ? brandProducts.filter((product) =>
-          ["Tire", ...product.tags].some((tag) => selectedTags.has(normalizeBrandKey(tag))),
-        )
-      : brandProducts;
-  const sortedBrandProducts = sortProducts(filteredBrandProducts, selectedSort);
+  const sortedBrandProducts = sortProducts(brandProducts, selectedSort);
   const showBrandSection = Boolean(activeBrandRecord);
   const hasBrandResults = sortedBrandProducts.length > 0;
   const isTiresCategory = category.slug === "tires";
   const showCategoryLandingSections = !activeBrandRecord;
+  const backLinkHref = activeBrandRecord
+    ? `/products/${category.slug}#brand-${activeBrandRecord.slug}`
+    : "/products";
+  const backLinkLabel = activeBrandRecord
+    ? `Back to ${activeBrandRecord.label}`
+    : "Back to Products";
 
   return (
     <main>
@@ -133,10 +114,10 @@ export default async function ProductCategoryPage({
         align="left"
       >
         <Link
-          href="/products"
+          href={backLinkHref}
           className="inline-flex rounded-full border border-white/30 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
         >
-          Back to Products
+          {backLinkLabel}
         </Link>
       </HeroBanner>
 
@@ -154,6 +135,7 @@ export default async function ProductCategoryPage({
               {brands.map((brand) => (
                 <Link
                   key={brand.id}
+                  id={`brand-${brand.slug}`}
                   href={`/products/${category.slug}?brand=${brand.slug}`}
                   className={`group overflow-hidden rounded-[1.25rem] border bg-white shadow-[0_6px_12px_rgba(20,16,16,0.11)] transition hover:-translate-y-1 ${activeBrand === brand.slug ? "border-[#8d120e] ring-2 ring-[#8d120e]/20" : "border-[#d3d3d3]"}`}
                 >
@@ -195,45 +177,7 @@ export default async function ProductCategoryPage({
 
       {showBrandSection ? (
         <section className="bg-[#f3f1f0] py-16">
-          <div className={`mx-auto grid max-w-[72rem] gap-8 px-6 md:px-10 ${hasBrandResults ? "lg:grid-cols-[18rem_1fr]" : ""}`}>
-            {hasBrandResults ? (
-              <aside className="h-fit rounded-[1.25rem] border border-black/10 bg-white p-5 shadow-[0_10px_28px_rgba(31,20,19,0.06)]">
-                <form action={`/products/${category.slug}`} className="space-y-5">
-                  <input type="hidden" name="brand" value={activeBrandRecord?.slug ?? ""} />
-                  <div>
-                    <h2 className="text-2xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
-                      Filter by
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-[#6a4b45]">
-                      Refine {activeBrandRecord?.label} products.
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8d120e]">
-                      Category
-                    </p>
-                    <div className="mt-3 space-y-3">
-                      {filterOptions.map((option) => (
-                        <label key={option} className="flex cursor-pointer items-center gap-3 text-sm text-[#2b1512]">
-                          <input
-                            type="checkbox"
-                            name="tag"
-                            value={option}
-                            defaultChecked={selectedTags.has(normalizeBrandKey(option))}
-                            className="h-4 w-4 rounded border-black/20"
-                          />
-                          <span>{option}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <button type="submit" className="cursor-pointer rounded-full bg-[#220707] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:-translate-y-0.5 hover:bg-[#8d120e]">
-                    Apply filters
-                  </button>
-                </form>
-              </aside>
-            ) : null}
-
+          <div className="mx-auto max-w-[72rem] px-6 md:px-10">
             <div>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
@@ -250,9 +194,6 @@ export default async function ProductCategoryPage({
                 {hasBrandResults ? (
                   <form action={`/products/${category.slug}`} className="flex items-center gap-3">
                     <input type="hidden" name="brand" value={activeBrandRecord?.slug ?? ""} />
-                    {Array.from(selectedTags).map((tag) => (
-                      <input key={tag} type="hidden" name="tag" value={tag} />
-                    ))}
                     <label className="text-sm font-semibold text-[#4d3b37]">
                       Sort by
                       <AutoSubmitSelect
@@ -261,7 +202,6 @@ export default async function ProductCategoryPage({
                         className="ml-3 rounded-full border border-black/10 bg-white px-4 py-3 text-sm font-medium outline-none transition hover:border-[#8d120e]/30 focus:border-[#8d120e]"
                       >
                         <option value="best">Best Match</option>
-                        <option value="newest">Newest</option>
                         <option value="name-asc">Name A-Z</option>
                         <option value="name-desc">Name Z-A</option>
                       </AutoSubmitSelect>
