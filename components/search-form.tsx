@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useDeferredValue, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { PointerEvent } from "react";
+import { useDeferredValue, useEffect, useState, useTransition } from "react";
 import type { SearchRecord } from "@/lib/ridemax-types";
 
 type SearchFormProps = {
@@ -28,6 +30,9 @@ export function SearchForm({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchedQuery, setSearchedQuery] = useState("");
+  const [navigatingHref, setNavigatingHref] = useState<string | null>(null);
+  const [isNavigating, startNavigation] = useTransition();
+  const router = useRouter();
   const deferredQuery = useDeferredValue(query);
   const trimmedQuery = deferredQuery.trim();
   const showFeedback = open && trimmedQuery.length >= 2 && (loading || results.length > 0 || searchedQuery === trimmedQuery);
@@ -40,6 +45,25 @@ export function SearchForm({
     }
 
     window.open(`/search?q=${encodeURIComponent(nextQuery)}`, "_blank", "noopener,noreferrer");
+  }
+
+  function handleQuickMatchPointerDown(event: PointerEvent<HTMLAnchorElement>, href: string) {
+    if (
+      event.button !== 0 ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    setNavigatingHref(href);
+    setOpen(true);
+    startNavigation(() => {
+      router.push(href);
+    });
   }
 
   useEffect(() => {
@@ -148,13 +172,21 @@ export function SearchForm({
                 <Link
                   key={`${result.kind}-${result.href}-${result.title}`}
                   href={result.href}
-                  onClick={() => setOpen(false)}
-                  className="block cursor-pointer rounded-[1.1rem] px-4 py-3 text-white transition hover:bg-white/10"
+                  onPointerDown={(event) => handleQuickMatchPointerDown(event, result.href)}
+                  className="block cursor-pointer rounded-[1.1rem] px-4 py-3 text-white transition hover:bg-white/10 aria-[busy=true]:bg-white/12"
+                  aria-busy={navigatingHref === result.href && isNavigating}
                 >
                   <div className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#f0c5bd]">
                     {result.kind}
                   </div>
-                  <div className="mt-1 text-sm font-semibold">{result.title}</div>
+                  <div className="mt-1 flex items-center justify-between gap-3 text-sm font-semibold">
+                    <span>{result.title}</span>
+                    {navigatingHref === result.href ? (
+                      <span className="shrink-0 rounded-full bg-white/12 px-2 py-0.5 text-[0.62rem] uppercase tracking-[0.14em] text-white/80">
+                        Opening...
+                      </span>
+                    ) : null}
+                  </div>
                   {!compact ? (
                     <div className="mt-1 text-xs leading-5 text-white/74">{result.summary}</div>
                   ) : null}

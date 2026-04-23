@@ -58,7 +58,7 @@ function UploadHint({ helpText }: { helpText?: string }) {
 
 function EmptyPreview({ label }: { label: string }) {
   return (
-    <div className="flex aspect-[16/9] items-center justify-center rounded-[1rem] border border-dashed border-black/12 bg-white text-center text-sm text-[#6a433d]">
+    <div className="flex h-24 items-center justify-center rounded-[1rem] border border-dashed border-black/12 bg-white text-center text-sm text-[#6a433d]">
       No {label.toLowerCase()} uploaded yet.
     </div>
   );
@@ -145,10 +145,10 @@ export function AdminImageUploadField({
   }
 
   return (
-    <div className="mt-1 rounded-[1.25rem] border border-black/10 bg-[#faf8f7] p-3">
+    <div className="mt-1 rounded-[1.1rem] border border-black/10 bg-[#faf8f7] p-2.5">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white">
+          <div className="relative h-11 w-16 shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white">
             {value ? (
               <Image
                 key={value}
@@ -156,7 +156,7 @@ export function AdminImageUploadField({
                 alt="Current uploaded image"
                 fill
                 unoptimized
-                sizes="96px"
+                sizes="64px"
                 className="object-cover"
               />
             ) : (
@@ -166,10 +166,10 @@ export function AdminImageUploadField({
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-[#220707]">
+            <p className="text-sm font-semibold leading-tight text-[#220707]">
               {value ? "Image selected" : "No image selected"}
             </p>
-            <p className="truncate text-xs text-[#6a433d]">
+            <p className="max-w-[18rem] truncate text-xs text-[#6a433d]">
               {value || "Upload or choose an image when needed."}
             </p>
           </div>
@@ -177,7 +177,7 @@ export function AdminImageUploadField({
         <button
           type="button"
           onClick={() => setEditing((current) => !current)}
-          className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-4 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
+          className="inline-flex h-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
         >
           {editing ? "Done" : value ? "Edit Image" : "Add Image"}
         </button>
@@ -199,7 +199,7 @@ export function AdminImageUploadField({
                 width={1600}
                 height={900}
                 unoptimized
-                className="max-h-56 w-full object-cover"
+                className="max-h-32 w-full object-cover"
               />
             </div>
           ) : (
@@ -269,28 +269,28 @@ export function AdminImageGalleryField({
   }
 
   return (
-    <div className="mt-1 rounded-[1.25rem] border border-black/10 bg-[#faf8f7] p-3">
+    <div className="mt-1 rounded-[1.1rem] border border-black/10 bg-[#faf8f7] p-2.5">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           {value.slice(0, 3).map((imageUrl, index) => (
-            <div key={`${imageUrl}-${index}`} className="relative h-14 w-16 shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white">
+            <div key={`${imageUrl}-${index}`} className="relative h-11 w-12 shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white">
               <Image
                 src={imageUrl}
                 alt=""
                 fill
                 unoptimized
-                sizes="64px"
+                sizes="48px"
                 className="object-cover"
               />
             </div>
           ))}
           {value.length === 0 ? (
-            <div className="flex h-14 w-24 shrink-0 items-center justify-center rounded-lg border border-dashed border-black/12 bg-white text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#8a6b65]">
+            <div className="flex h-11 w-20 shrink-0 items-center justify-center rounded-lg border border-dashed border-black/12 bg-white text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-[#8a6b65]">
               No images
             </div>
           ) : null}
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-[#220707]">
+            <p className="text-sm font-semibold leading-tight text-[#220707]">
               {value.length} gallery image{value.length === 1 ? "" : "s"}
             </p>
             <p className="text-xs text-[#6a433d]">
@@ -301,7 +301,7 @@ export function AdminImageGalleryField({
         <button
           type="button"
           onClick={() => setEditing((current) => !current)}
-          className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-4 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
+          className="inline-flex h-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
         >
           {editing ? "Done" : "Edit Gallery"}
         </button>
@@ -310,23 +310,24 @@ export function AdminImageGalleryField({
       {editing ? (
         <div className="mt-3 border-t border-black/8 pt-3">
           {value.length > 0 ? (
-            <div className="grid max-h-72 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+            <div className="grid max-h-56 gap-2 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3">
               {value.map((imageUrl, index) => (
-                <div key={`${imageUrl}-${index}`} className="overflow-hidden rounded-[1rem] border border-black/10 bg-white">
+                <div key={`${imageUrl}-${index}`} className="flex items-center gap-2 overflow-hidden rounded-[1rem] border border-black/10 bg-white p-2">
                   <Image
                     key={imageUrl}
                     src={imageUrl}
                     alt={`Gallery image ${index + 1}`}
-                    width={1200}
-                    height={900}
+                    width={160}
+                    height={120}
                     unoptimized
-                    className="aspect-[4/3] w-full object-cover"
+                    className="h-16 w-20 shrink-0 rounded-lg object-cover"
                   />
-                  <div className="border-t border-black/8 p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs text-[#6a433d]">{imageUrl}</p>
                     <button
                       type="button"
                       onClick={() => onChange(value.filter((_, imageIndex) => imageIndex !== index))}
-                      className="cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e] transition hover:opacity-75"
+                      className="mt-1 cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e] transition hover:opacity-75"
                     >
                       Remove
                     </button>

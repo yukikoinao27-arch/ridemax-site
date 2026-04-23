@@ -13,10 +13,9 @@ type FormValues = {
   email: string;
   phone: string;
   message: string;
-  resumeUrl: string;
 };
 
-type FieldErrors = Partial<Record<keyof FormValues, string>>;
+type FieldErrors = Partial<Record<keyof FormValues | "resumeFile", string>>;
 type Status = "idle" | "saving" | "success" | "error" | "rate-limited";
 
 const initialValues: FormValues = {
@@ -24,12 +23,12 @@ const initialValues: FormValues = {
   email: "",
   phone: "",
   message: "",
-  resumeUrl: "",
 };
 
 const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+const maxResumeBytes = 5 * 1024 * 1024;
 
-function validate(values: FormValues): FieldErrors {
+function validate(values: FormValues, resumeFile: File | null): FieldErrors {
   const errors: FieldErrors = {};
   if (!values.fullName.trim()) {
     errors.fullName = "Full name is required.";
@@ -39,11 +38,12 @@ function validate(values: FormValues): FieldErrors {
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
     errors.email = "Enter a valid email address.";
   }
-  if (values.resumeUrl.trim()) {
-    try {
-      new URL(values.resumeUrl.trim());
-    } catch {
-      errors.resumeUrl = "Link must start with http:// or https://";
+  if (resumeFile) {
+    const isPdf = resumeFile.type === "application/pdf" || resumeFile.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      errors.resumeFile = "Attach a PDF resume.";
+    } else if (resumeFile.size > maxResumeBytes) {
+      errors.resumeFile = "Resume PDF must be 5 MB or smaller.";
     }
   }
   return errors;
@@ -55,8 +55,10 @@ export function JobApplicationForm({ jobSlug, jobTitle, className = "" }: JobApp
   const [errors, setErrors] = useState<FieldErrors>({});
   const [status, setStatus] = useState<Status>("idle");
   const [note, setNote] = useState("");
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [website, setWebsite] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
+  const resumeInputRef = useRef<HTMLInputElement | null>(null);
   const turnstileRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetId = useRef<string | null>(null);
 
@@ -108,7 +110,7 @@ export function JobApplicationForm({ jobSlug, jobTitle, className = "" }: JobApp
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const clientErrors = validate(form);
+    const clientErrors = validate(form, resumeFile);
     if (Object.keys(clientErrors).length > 0) {
       setErrors(clientErrors);
       setStatus("error");
@@ -121,16 +123,22 @@ export function JobApplicationForm({ jobSlug, jobTitle, className = "" }: JobApp
     setNote("");
 
     try {
+      const formData = new FormData();
+      formData.set("jobSlug", jobSlug);
+      formData.set("jobTitle", jobTitle);
+      formData.set("fullName", form.fullName);
+      formData.set("email", form.email);
+      formData.set("phone", form.phone);
+      formData.set("message", form.message);
+      formData.set("website", website);
+      formData.set("turnstileToken", turnstileToken);
+      if (resumeFile) {
+        formData.set("resumeFile", resumeFile);
+      }
+
       const response = await fetch("/api/careers/apply", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jobSlug,
-          jobTitle,
-          ...form,
-          website,
-          turnstileToken,
-        }),
+        body: formData,
       });
 
       const payload = (await response.json().catch(() => ({}))) as {
@@ -155,8 +163,12 @@ export function JobApplicationForm({ jobSlug, jobTitle, className = "" }: JobApp
       setStatus("success");
       setNote(payload.message ?? "Thanks — the hiring team will be in touch.");
       setForm(initialValues);
+      setResumeFile(null);
       setWebsite("");
       setTurnstileToken("");
+      if (resumeInputRef.current) {
+        resumeInputRef.current.value = "";
+      }
       if (turnstileWidgetId.current) {
         window.turnstile?.reset(turnstileWidgetId.current);
       }
@@ -179,7 +191,7 @@ export function JobApplicationForm({ jobSlug, jobTitle, className = "" }: JobApp
         Apply Online
       </h3>
       <p className="mt-2 text-sm text-[#5c4743]">
-        We&apos;ll send your submission to the hiring team. You can optionally link a resume hosted on Drive or Dropbox.
+        We&apos;ll send your submission and attached PDF resume to the hiring team.
       </p>
 
       <div className="mt-5 grid gap-4">
@@ -222,16 +234,29 @@ export function JobApplicationForm({ jobSlug, jobTitle, className = "" }: JobApp
         </div>
 
         <label className="block text-sm text-[#2b1512]">
-          Resume Link (Drive, Dropbox, etc.)
+          Resume PDF
           <input
-            type="url"
-            value={form.resumeUrl}
-            onChange={updateField("resumeUrl")}
-            placeholder="https://..."
-            aria-invalid={errors.resumeUrl ? true : undefined}
-            className={`${inputClass} mt-1`}
+            ref={resumeInputRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            onChange={(event) => {
+              const file = event.target.files?.item(0) ?? null;
+              setResumeFile(file);
+              if (errors.resumeFile) {
+                setErrors((current) => {
+                  const next = { ...current };
+                  delete next.resumeFile;
+                  return next;
+                });
+              }
+            }}
+            aria-invalid={errors.resumeFile ? true : undefined}
+            className="mt-1 w-full cursor-pointer rounded-[1rem] border border-black/15 bg-white px-3 py-2.5 text-sm outline-none transition file:mr-4 file:cursor-pointer file:rounded-full file:border-0 file:bg-[#8d120e] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:border-[#8d120e]/35 focus:border-[#8d120e] aria-[invalid=true]:border-[#9f251d]"
           />
-          {errors.resumeUrl ? <span className="mt-1 block text-xs text-[#9f251d]">{errors.resumeUrl}</span> : null}
+          <span className="mt-1 block text-xs text-[#6a433d]">
+            PDF only, max 5 MB. {resumeFile ? `Selected: ${resumeFile.name}` : "Attach your latest resume."}
+          </span>
+          {errors.resumeFile ? <span className="mt-1 block text-xs text-[#9f251d]">{errors.resumeFile}</span> : null}
         </label>
 
         <label className="block text-sm text-[#2b1512]">

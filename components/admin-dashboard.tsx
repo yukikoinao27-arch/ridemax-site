@@ -529,6 +529,29 @@ function mergeScopedBrands(
   ];
 }
 
+function normalizeBrandCollectionItems(items: Record<string, unknown>[]) {
+  return items.map((item, index) => {
+    const slug = String(item.slug ?? "").trim();
+    const categorySlug = String(item.categorySlug ?? "").trim();
+    const href = String(item.href ?? "").trim();
+
+    return {
+      ...(item as RidemaxSiteContent["brands"][number]),
+      id: String(item.id ?? ""),
+      slug,
+      label: String(item.label ?? ""),
+      title: String(item.title ?? ""),
+      summary: String(item.summary ?? ""),
+      image: String(item.image ?? ""),
+      href: href || (categorySlug && slug ? `/products/${categorySlug}?brand=${slug}` : ""),
+      categorySlug,
+      tags: Array.isArray(item.tags) ? item.tags.map(String) : [],
+      published: Boolean(item.published ?? true),
+      order: parseNumber(item.order, index + 1),
+    };
+  });
+}
+
 const editableCatalogPageSlugs = ["tires", "rims", "accessories"] as const;
 type EditableCatalogPageSlug = (typeof editableCatalogPageSlugs)[number];
 
@@ -553,6 +576,22 @@ function publicPathForPageSlug(slug: ContentPageSlug) {
     default:
       return `/${slug}`;
   }
+}
+
+function displayTitleForPageBlock(block: PageBlock) {
+  if (block.title?.trim()) {
+    return block.title;
+  }
+
+  if (block.type === "brandMarquee") {
+    return "Moving brand images";
+  }
+
+  if (block.type === "imageMarquee") {
+    return "Photo strip";
+  }
+
+  return "Untitled section";
 }
 
 function createProductCategoryTemplate(slug: EditableCatalogPageSlug): ProductCategory {
@@ -918,7 +957,8 @@ function TextareaField({
   useEffect(() => {
     if (lastExternalRef.current !== displayValue) {
       lastExternalRef.current = displayValue;
-      setLocalValue(displayValue);
+      const timeout = window.setTimeout(() => setLocalValue(displayValue), 0);
+      return () => window.clearTimeout(timeout);
     }
   }, [displayValue]);
 
@@ -936,7 +976,7 @@ function TextareaField({
             onChange(committed);
           }}
           onKeyDown={(event) => event.stopPropagation()}
-          className={`${fieldControlClass} min-h-[8rem] resize-y`}
+          className={`${fieldControlClass} min-h-[6rem] resize-y`}
         />
         <FieldMeta field={field} value={localValue} maxLength={maxLength} />
       </>
@@ -1629,7 +1669,7 @@ function PageBuilderSection({
                 const appearanceFields = getPageBlockAppearanceFields(block).map(toPageBuilderFieldConfig);
                 const isDraggingThis =
                   blockDrag?.pageId === activePage.id && blockDrag.index === index;
-                const isExpanded = expandedBlockIds[block.id] ?? (index === 0 || highlightedBlockId === block.id);
+                const isExpanded = expandedBlockIds[block.id] ?? highlightedBlockId === block.id;
 
                 return (
                   <article
@@ -1676,7 +1716,7 @@ function PageBuilderSection({
                             Block {index + 1} - {getPageBlockLabel(block)}
                           </p>
                           <h3 className="mt-2 truncate text-2xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
-                            {block.title || "Untitled section"}
+                            {displayTitleForPageBlock(block)}
                           </h3>
                         </div>
                       </div>
@@ -2582,6 +2622,57 @@ export function AdminDashboard({
                 onBlockEdited={setLastEditedBlockId}
               />
 
+              {activeBuilderPageSlug === "home" ? (
+                <CollectionSection
+                  sectionId="pages-home-brand-strip"
+                  title="Home Moving Brand Images"
+                  description="These brand cards feed the moving strip between the hero and Browse by Category. Edit the images here instead of hunting through raw JSON."
+                  items={draft.brands as unknown as Record<string, unknown>[]}
+                  template={{
+                    id: `brand-home-${Date.now()}`,
+                    slug: "",
+                    label: "",
+                    title: "",
+                    summary: "",
+                    image: "",
+                    href: "",
+                    categorySlug: "tires",
+                    tags: [],
+                    published: true,
+                    order: draft.brands.length + 1,
+                  }}
+                  fields={[
+                    { key: "id", label: "ID", type: "text" },
+                    { key: "slug", label: "Slug", type: "text" },
+                    { key: "label", label: "Small Label", type: "text" },
+                    { key: "title", label: "Card Title", type: "text" },
+                    { key: "summary", label: "Summary", type: "textarea" },
+                    { key: "image", label: "Brand Image", type: "image" },
+                    {
+                      key: "categorySlug",
+                      label: "Product Category",
+                      type: "select",
+                      options: [
+                        { label: "Tires", value: "tires" },
+                        { label: "Rims", value: "rims" },
+                        { label: "Accessories", value: "accessories" },
+                      ],
+                    },
+                    { key: "tags", label: "Tags (one per line)", type: "textarea", parse: fromLineList },
+                    { key: "published", label: "Published", type: "checkbox" },
+                  ]}
+                  onChange={(items) =>
+                    setDraft((current) => ({
+                      ...current,
+                      brands: normalizeBrandCollectionItems(items),
+                    }))
+                  }
+                  fieldCallbacks={fieldCallbacks}
+                  addLabel="Add Brand Image"
+                  itemLabel="Brand Image"
+                />
+              ) : null}
+
               {activeCatalogCategorySlug && activeCatalogCategory ? (
                 <>
                   <SingletonSection
@@ -2924,8 +3015,8 @@ export function AdminDashboard({
 
               <CollectionSection
                 sectionId="careers-jobs"
-                title="Jobs"
-                description="Career openings remain a first-class collection and are surfaced through the jobs list block."
+                title="Job Detail Pages"
+                description="Each job creates an editable public page such as /careers/finance-officer. Update the top hero copy, department, location, type, and role overview here."
                 items={draft.jobs as unknown as Record<string, unknown>[]}
                 template={{
                   id: "",
@@ -2942,7 +3033,12 @@ export function AdminDashboard({
                 }}
                 fields={[
                   { key: "id", label: "ID", type: "text" },
-                  { key: "slug", label: "Slug", type: "text" },
+                  {
+                    key: "slug",
+                    label: "Slug",
+                    type: "text",
+                    helpText: "Public URL path after /careers/, for example finance-officer.",
+                  },
                   { key: "departmentSlug", label: "Department", type: "select", options: departmentOptions },
                   { key: "title", label: "Title", type: "text" },
                   { key: "location", label: "Location", type: "text" },

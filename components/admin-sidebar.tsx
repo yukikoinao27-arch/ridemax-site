@@ -43,6 +43,7 @@ const sectionAnchorsByHref: Record<string, AdminNavAnchor[]> = {
   ],
   "/admin/pages": [
     { href: "#pages-builder", label: "Page Builder" },
+    { href: "#pages-home-brand-strip", label: "Home Brand Strip" },
     { href: "#pages-catalog", label: "Catalog" },
     { href: "#pages-brands", label: "Brands" },
     { href: "#pages-catalog-items", label: "Products" },
@@ -56,7 +57,7 @@ const sectionAnchorsByHref: Record<string, AdminNavAnchor[]> = {
   "/admin/promotions": [{ href: "#content-promotions", label: "Promotions" }],
   "/admin/careers": [
     { href: "#careers-departments", label: "Departments" },
-    { href: "#careers-jobs", label: "Jobs" },
+    { href: "#careers-jobs", label: "Job Detail Pages" },
   ],
 };
 
