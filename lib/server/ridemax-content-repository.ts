@@ -455,6 +455,33 @@ function normalizeSearchPage(page: PageDocument): PageDocument {
   };
 }
 
+function normalizeLegacyBlockAppearance(block: PageBlock): PageBlock {
+  if (block.type !== "imageMarquee" || block.appearance) {
+    return block;
+  }
+
+  if (block.background === "bg-[#E31E24] text-white") {
+    return {
+      ...block,
+      appearance: {
+        background: "brand-red",
+        headingScale: "standard",
+        headingStyle: "standard",
+        textTone: "default",
+        textColorScheme: "light",
+        decoration: {
+          style: "none",
+          position: "bottom",
+          size: "md",
+          color: "surface-1",
+        },
+      },
+    };
+  }
+
+  return block;
+}
+
 function normalizePage(page: PageDocument): PageDocument {
   const nextPage =
     page.slug === "products"
@@ -469,7 +496,9 @@ function normalizePage(page: PageDocument): PageDocument {
 
   return {
     ...nextPage,
-    blocks: [...nextPage.blocks].sort((left, right) => left.order - right.order),
+    blocks: [...nextPage.blocks]
+      .map(normalizeLegacyBlockAppearance)
+      .sort((left, right) => left.order - right.order),
   };
 }
 

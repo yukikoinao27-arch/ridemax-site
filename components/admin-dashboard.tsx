@@ -3,8 +3,10 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AdminBrandGalleryField,
   AdminImageGalleryField,
   AdminImageUploadField,
+  type AdminBrandGalleryOption,
   type AdminNoticeTone,
 } from "@/components/admin-media-fields";
 import {
@@ -62,13 +64,15 @@ type FieldType =
   | "datetime"
   | "select"
   | "image"
-  | "image-list";
+  | "image-list"
+  | "brand-list";
 
 type FieldConfig = {
   key: string;
   label: string;
   type: FieldType;
   options?: SelectOption[];
+  brandOptions?: AdminBrandGalleryOption[];
   parse?: (value: unknown) => unknown;
   format?: (value: unknown) => string;
   helpText?: string;
@@ -385,7 +389,12 @@ function defaultValueForFieldKey(key: string) {
 }
 
 function isWideField(field: FieldConfig) {
-  return field.type === "textarea" || field.type === "image" || field.type === "image-list";
+  return (
+    field.type === "textarea" ||
+    field.type === "image" ||
+    field.type === "image-list" ||
+    field.type === "brand-list"
+  );
 }
 
 function displayFieldValue(item: Record<string, unknown>, field: FieldConfig) {
@@ -408,6 +417,10 @@ function displayFieldValue(item: Record<string, unknown>, field: FieldConfig) {
   }
 
   if (field.type === "image-list") {
+    return Array.isArray(value) ? value.map(String) : [];
+  }
+
+  if (field.type === "brand-list") {
     return Array.isArray(value) ? value.map(String) : [];
   }
 
@@ -592,6 +605,33 @@ function displayTitleForPageBlock(block: PageBlock) {
   }
 
   return "Untitled section";
+}
+
+function brandGalleryOptionsForBlock(
+  block: PageBlock,
+  availableBrands: RidemaxSiteContent["brands"],
+) {
+  if (block.type !== "brandMarquee") {
+    return [] as AdminBrandGalleryOption[];
+  }
+
+  const selectedBrandSlugs = block.brandSlugs ?? [];
+
+  return availableBrands
+    .filter(
+      (brand) =>
+        brand.published &&
+        (!block.categorySlug ||
+          brand.categorySlug === block.categorySlug ||
+          selectedBrandSlugs.includes(brand.slug)),
+    )
+    .sort((left, right) => left.order - right.order)
+    .map((brand) => ({
+      value: brand.slug,
+      label: brand.label,
+      image: brand.image,
+      caption: labelForCategorySlug(brand.categorySlug as ContentPageSlug),
+    }));
 }
 
 function createProductCategoryTemplate(slug: EditableCatalogPageSlug): ProductCategory {
@@ -1032,6 +1072,17 @@ function renderField(
     );
   }
 
+  if (field.type === "brand-list") {
+    return (
+      <AdminBrandGalleryField
+        value={Array.isArray(rawValue) ? rawValue.map(String) : []}
+        options={field.brandOptions ?? []}
+        onChange={onChange as (value: string[]) => void}
+        helpText={field.helpText}
+      />
+    );
+  }
+
   if (field.type === "textarea") {
     return (
       <TextareaField
@@ -1444,6 +1495,7 @@ function CollectionGridNote({ block }: { block: Extract<PageBlock, { type: "coll
 
 function PageBuilderSection({
   pages,
+  availableBrands,
   onChange,
   fieldCallbacks,
   activePageSlug,
@@ -1451,6 +1503,7 @@ function PageBuilderSection({
   onBlockEdited,
 }: {
   pages: PageDocument[];
+  availableBrands: RidemaxSiteContent["brands"];
   onChange: (pages: PageDocument[]) => void;
   fieldCallbacks: FieldCallbacks;
   activePageSlug: ContentPageSlug;
@@ -1664,6 +1717,11 @@ function PageBuilderSection({
                   .map((field) =>
                     field.key === "source"
                       ? { ...field, options: collectionSourceOptionsForPage(activePage.slug) }
+                      : field.key === "brandSlugs"
+                        ? {
+                            ...field,
+                            brandOptions: brandGalleryOptionsForBlock(block, availableBrands),
+                          }
                       : field,
                   );
                 const appearanceFields = getPageBlockAppearanceFields(block).map(toPageBuilderFieldConfig);
@@ -2615,6 +2673,7 @@ export function AdminDashboard({
             <>
               <PageBuilderSection
                 pages={draft.pages}
+                availableBrands={draft.brands}
                 onChange={(pages) => setDraft((current) => ({ ...current, pages }))}
                 fieldCallbacks={fieldCallbacks}
                 activePageSlug={activeBuilderPageSlug}

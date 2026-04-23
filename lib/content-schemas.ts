@@ -17,7 +17,13 @@ const heroImageSchema = z.object({
 });
 
 const motionDirectionSchema = z.enum(["right-to-left", "left-to-right"]);
-const sectionBackgroundVariantSchema = z.enum(["surface-1", "surface-2", "surface-3"]);
+const sectionBackgroundVariantSchema = z.enum([
+  "surface-1",
+  "surface-2",
+  "surface-3",
+  "brand-red",
+  "ink",
+]);
 const sectionDecorationSchema = z.object({
   style: z.enum(["none", "wave", "curve", "diagonal", "blob"]).optional(),
   position: z.enum(["top", "bottom"]).optional(),
@@ -315,6 +321,7 @@ const brandMarqueeBlockSchema = z.object({
   type: z.literal("brandMarquee"),
   direction: motionDirectionSchema,
   categorySlug: z.string().optional(),
+  brandSlugs: z.array(z.string()).optional(),
 });
 
 const categoryTilesBlockSchema = z.object({

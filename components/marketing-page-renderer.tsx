@@ -35,6 +35,8 @@ const sectionBackgroundClasses = {
   "surface-1": "bg-white",
   "surface-2": "bg-[#f2efec]",
   "surface-3": "bg-[#faf8f7]",
+  "brand-red": "bg-[#E31E24]",
+  ink: "bg-[#220707]",
 } satisfies Record<NonNullable<BlockAppearance["background"]>, string>;
 
 const sectionDecorationColors = {
@@ -411,6 +413,28 @@ function renderBrandCards(brands: BrandFeature[], preset: CardPresetVariant) {
   );
 }
 
+function resolveBrandMarqueeBrands(
+  block: Extract<PageBlock, { type: "brandMarquee" }>,
+  brands: BrandFeature[],
+) {
+  const publishedBrands = brands
+    .filter((brand) => brand.published)
+    .sort((left, right) => left.order - right.order);
+  const selectedBrandSlugs = block.brandSlugs?.filter(Boolean) ?? [];
+
+  if (selectedBrandSlugs.length > 0) {
+    const brandsBySlug = new Map(publishedBrands.map((brand) => [brand.slug, brand]));
+
+    return selectedBrandSlugs
+      .map((slug) => brandsBySlug.get(slug))
+      .filter((brand): brand is BrandFeature => Boolean(brand));
+  }
+
+  return publishedBrands.filter(
+    (brand) => !block.categorySlug || brand.categorySlug === block.categorySlug,
+  );
+}
+
 function renderNewsCards(newsItems: NewsItem[], preset: CardPresetVariant) {
   return (
     <div className={CARD_GRID_CLASS}>
@@ -610,9 +634,7 @@ function renderBlock(
   }
 
   if (block.type === "brandMarquee") {
-    const brands = content.brands.filter(
-      (brand) => brand.published && (!block.categorySlug || brand.categorySlug === block.categorySlug),
-    );
+    const brands = resolveBrandMarqueeBrands(block, content.brands);
 
     return (
       <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "py-10", "border-b border-black/10")}>

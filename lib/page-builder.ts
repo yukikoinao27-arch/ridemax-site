@@ -17,7 +17,7 @@ export type SelectOption = {
 export type PageBlockFieldConfig = {
   key: string;
   label: string;
-  type: "text" | "textarea" | "checkbox" | "select" | "image" | "image-list";
+  type: "text" | "textarea" | "checkbox" | "select" | "image" | "image-list" | "brand-list";
   options?: SelectOption[];
   helpText?: string;
 };
@@ -31,6 +31,8 @@ export const sectionBackgroundOptions: SelectOption[] = [
   { label: "Default white", value: "surface-1" },
   { label: "Soft gray", value: "surface-2" },
   { label: "Warm tint", value: "surface-3" },
+  { label: "Brand red", value: "brand-red" },
+  { label: "Charcoal", value: "ink" },
 ];
 
 export const sectionDecorationStyleOptions: SelectOption[] = [
@@ -272,6 +274,7 @@ export function createPageBlockTemplate(type: PageBlockType): PageBlock {
         type,
         direction: "right-to-left",
         categorySlug: "",
+        brandSlugs: [],
       };
     case "categoryTiles":
       return {
@@ -393,6 +396,26 @@ const lightSectionBackgrounds = new Set<NonNullable<BlockAppearance["background"
   "surface-3",
 ]);
 
+function allowedTextColorSchemesForBackground(
+  background: NonNullable<BlockAppearance["background"]>,
+) {
+  return lightSectionBackgrounds.has(background)
+    ? ["default", "dark", "muted", "brand"]
+    : ["light"];
+}
+
+function defaultTextColorSchemeForBackground(
+  background: NonNullable<BlockAppearance["background"]>,
+) {
+  return lightSectionBackgrounds.has(background) ? "default" : "light";
+}
+
+function fallbackDecorationColorForBackground(
+  background: NonNullable<BlockAppearance["background"]>,
+) {
+  return lightSectionBackgrounds.has(background) ? "brand-red" : "surface-1";
+}
+
 function appearanceTargetType(target: AppearanceEditorTarget) {
   return typeof target === "string" ? target : target?.type;
 }
@@ -428,13 +451,17 @@ export function sanitizePageBlockAppearance(block: PageBlock): PageBlock {
   const appearance = { ...(block.appearance ?? {}) };
   const background = appearance.background ?? "surface-1";
   const decoration = { ...(appearance.decoration ?? {}) };
+  const allowedTextSchemes = allowedTextColorSchemesForBackground(background);
 
-  if (lightSectionBackgrounds.has(background) && appearance.textColorScheme === "light") {
-    appearance.textColorScheme = "dark";
+  if (
+    !appearance.textColorScheme ||
+    !allowedTextSchemes.includes(appearance.textColorScheme)
+  ) {
+    appearance.textColorScheme = defaultTextColorSchemeForBackground(background);
   }
 
   if (decoration.color === background) {
-    decoration.color = "brand-red";
+    decoration.color = fallbackDecorationColorForBackground(background);
   }
 
   if (block.type === "hero" && isCompactHero(block) && decoration.size === "lg") {
@@ -463,7 +490,9 @@ export function getPageBlockAppearanceFields(
   const blockType = appearanceTargetType(target);
   const appearance = appearanceTargetAppearance(target);
   const background = appearance?.background ?? "surface-1";
-  const disabledTextSchemes = lightSectionBackgrounds.has(background) ? ["light"] : [];
+  const disabledTextSchemes = sectionTextColorSchemeOptions
+    .map((option) => option.value)
+    .filter((value) => !allowedTextColorSchemesForBackground(background).includes(value));
   const disabledShapeColors = appearance?.decoration?.style === "none" ? [] : [background];
   const disabledShapeSizes = isCompactHero(target) ? ["lg"] : [];
   const base: PageBlockFieldConfig[] = [
@@ -619,6 +648,13 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
           ],
         },
         {
+          key: "brandSlugs",
+          label: "Moving Brands",
+          type: "brand-list",
+          helpText:
+            "Choose the brands and order used in this strip. Leave it empty to use all published brands from the selected category.",
+        },
+        {
           key: "direction",
           label: "Direction",
           type: "select",
@@ -694,7 +730,6 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
           options: motionDirectionOptions,
         },
         { key: "altPrefix", label: "Alt Prefix", type: "text" },
-        { key: "background", label: "Background Class", type: "text" },
       ];
     case "showcase":
       return [

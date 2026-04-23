@@ -23,7 +23,12 @@ export type HeroImage = {
 
 export type MotionDirection = "right-to-left" | "left-to-right";
 
-export type SectionBackgroundVariant = "surface-1" | "surface-2" | "surface-3";
+export type SectionBackgroundVariant =
+  | "surface-1"
+  | "surface-2"
+  | "surface-3"
+  | "brand-red"
+  | "ink";
 
 export type SectionDecorationStyle = "none" | "wave" | "curve" | "diagonal" | "blob";
 
@@ -404,6 +409,7 @@ export type BrandMarqueeBlock = PageBlockBase & {
   type: "brandMarquee";
   direction: MotionDirection;
   categorySlug?: string;
+  brandSlugs?: string[];
 };
 
 export type CategoryTilesBlock = PageBlockBase & {
