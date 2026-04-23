@@ -51,6 +51,13 @@ const sectionHeadingScaleClasses = {
   display: "text-7xl",
 } satisfies Record<NonNullable<BlockAppearance["headingScale"]>, string>;
 
+const sectionHeadingStyleClasses = {
+  standard: "uppercase tracking-[-0.02em]",
+  large: "uppercase tracking-[-0.035em]",
+  emphasis: "uppercase tracking-[-0.02em] drop-shadow-[0_8px_18px_rgba(227,30,36,0.14)]",
+  minimal: "normal-case tracking-[-0.01em]",
+} satisfies Record<NonNullable<BlockAppearance["headingStyle"]>, string>;
+
 const sectionTextToneClasses = {
   default: {
     eyebrow: "text-[#8d120e]",
@@ -68,6 +75,22 @@ const sectionTextToneClasses = {
     summary: "text-[#5d0d0a]",
   },
 } satisfies Record<NonNullable<BlockAppearance["textTone"]>, { eyebrow: string; title: string; summary: string }>;
+
+const sectionTextColorSchemeClasses = {
+  default: sectionTextToneClasses.default,
+  dark: {
+    eyebrow: "text-[#8d120e]",
+    title: "text-[#220707]",
+    summary: "text-[#4d3b37]",
+  },
+  light: {
+    eyebrow: "text-white/80",
+    title: "text-white",
+    summary: "text-white/85",
+  },
+  muted: sectionTextToneClasses.muted,
+  brand: sectionTextToneClasses.brand,
+} satisfies Record<NonNullable<BlockAppearance["textColorScheme"]>, { eyebrow: string; title: string; summary: string }>;
 
 const categoryGridLayoutClasses = {
   standard: "mt-10 grid gap-6 md:grid-cols-3",
@@ -140,7 +163,9 @@ function SectionHeader({
   }
 
   const headingScale = appearance?.headingScale ?? "standard";
-  const textTone = sectionTextToneClasses[appearance?.textTone ?? "default"];
+  const headingStyle = appearance?.headingStyle ?? "standard";
+  const textColorScheme = appearance?.textColorScheme ?? appearance?.textTone ?? "default";
+  const textTone = sectionTextColorSchemeClasses[textColorScheme];
 
   return (
     <div className="max-w-3xl">
@@ -150,7 +175,7 @@ function SectionHeader({
         </p>
       ) : null}
       {title ? (
-        <h2 className={`mt-3 font-[family:var(--font-title)] uppercase leading-none ${sectionHeadingScaleClasses[headingScale]} ${textTone.title}`}>
+        <h2 className={`mt-3 font-[family:var(--font-title)] leading-none ${sectionHeadingScaleClasses[headingScale]} ${sectionHeadingStyleClasses[headingStyle]} ${textTone.title}`}>
           {title}
         </h2>
       ) : null}
@@ -565,6 +590,9 @@ function renderBlock(
         minHeight={block.minHeight}
         align={block.align}
         dark={hasHeroImage ? block.dark : false}
+        headingScale={block.appearance?.headingScale}
+        headingStyle={block.appearance?.headingStyle}
+        textColorScheme={block.appearance?.textColorScheme}
         sectionClassName={sectionBackgroundClass(block.appearance)}
         decoration={<SectionDecoration appearance={block.appearance} />}
       >

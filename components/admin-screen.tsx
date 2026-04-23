@@ -130,11 +130,6 @@ export async function AdminScreen({ view, error }: AdminScreenProps) {
       storageMode={metrics.storageMode}
       initialMediaAssets={mediaAssets}
       initialJobApplications={jobApplications}
-      securitySummary={{
-        adminPasswordConfigured: hasConfiguredPassword,
-        turnstileConfigured: Boolean(process.env.TURNSTILE_SECRET_KEY?.trim()),
-        supabaseConfigured: metrics.storageMode.toLowerCase().includes("supabase"),
-      }}
       view={view}
       previewMode={preview.isEnabled}
     />
