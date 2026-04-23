@@ -141,12 +141,30 @@ function SectionDecoration({ appearance }: { appearance?: BlockAppearance }) {
   const position = decoration?.position ?? "bottom";
   const size = decoration?.size ?? "md";
   const color = decoration?.color ?? "brand-red";
+  const decorationColor = sectionDecorationColors[color];
+
+  if (style === "cross-wave") {
+    return (
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 1000 260"
+        preserveAspectRatio="none"
+        className={`section-decoration section-decoration--vector section-decoration--${style} section-decoration--${position} section-decoration--${size}`}
+        style={{ color: decorationColor } as CSSProperties}
+      >
+        <path
+          fill="currentColor"
+          d="M0 0C188 0 322 70 500 108C678 70 812 0 1000 0V260C812 260 678 190 500 152C322 190 188 260 0 260V0Z"
+        />
+      </svg>
+    );
+  }
 
   return (
     <div
       aria-hidden="true"
       className={`section-decoration section-decoration--${style} section-decoration--${position} section-decoration--${size}`}
-      style={{ "--section-decoration-color": sectionDecorationColors[color] } as CSSProperties}
+      style={{ "--section-decoration-color": decorationColor } as CSSProperties}
     />
   );
 }

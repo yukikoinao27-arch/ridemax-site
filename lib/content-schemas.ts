@@ -26,7 +26,7 @@ const sectionBackgroundVariantSchema = z.enum([
   "ink",
 ]);
 const sectionDecorationSchema = z.object({
-  style: z.enum(["none", "wave", "curve", "diagonal", "blob"]).optional(),
+  style: z.enum(["none", "wave", "curve", "cross-wave", "diagonal", "blob"]).optional(),
   position: z.enum(["top", "bottom"]).optional(),
   size: z.enum(["sm", "md", "lg"]).optional(),
   color: z.enum(["brand-red", "deep-brand-red", "wine", "surface-1", "surface-2", "surface-3"]).optional(),
@@ -44,6 +44,8 @@ const sectionAppearancePresetSchema = z.enum([
   "deep-brand-curve",
   "deep-brand-wave",
   "light-curve-top",
+  "light-cross-wave-top",
+  "light-cross-wave-bottom",
   "warm-wave-top",
   "ink-spotlight",
 ]);

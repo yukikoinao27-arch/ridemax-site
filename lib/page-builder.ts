@@ -41,6 +41,7 @@ export const sectionDecorationStyleOptions: SelectOption[] = [
   { label: "None", value: "none" },
   { label: "Wave", value: "wave" },
   { label: "Curve", value: "curve" },
+  { label: "Cross Wave", value: "cross-wave" },
   { label: "Diagonal", value: "diagonal" },
   { label: "Organic shape", value: "blob" },
 ];
@@ -59,6 +60,8 @@ export const sectionAppearancePresetOptions: SelectOption[] = [
   { label: "Deep Brand Curve", value: "deep-brand-curve" },
   { label: "Deep Brand Wave", value: "deep-brand-wave" },
   { label: "Light Curve Top", value: "light-curve-top" },
+  { label: "Light Cross Wave Top", value: "light-cross-wave-top" },
+  { label: "Light Cross Wave Bottom", value: "light-cross-wave-bottom" },
   { label: "Warm Wave Top", value: "warm-wave-top" },
   { label: "Ink Spotlight", value: "ink-spotlight" },
 ];
@@ -225,6 +228,32 @@ const appearancePresetMap: Record<
     decoration: {
       style: "curve",
       position: "top",
+      size: "lg",
+      color: "deep-brand-red",
+    },
+  },
+  "light-cross-wave-top": {
+    background: "surface-1",
+    headingScale: "display",
+    headingStyle: "standard",
+    textTone: "default",
+    textColorScheme: "default",
+    decoration: {
+      style: "cross-wave",
+      position: "top",
+      size: "lg",
+      color: "deep-brand-red",
+    },
+  },
+  "light-cross-wave-bottom": {
+    background: "surface-1",
+    headingScale: "standard",
+    headingStyle: "standard",
+    textTone: "default",
+    textColorScheme: "default",
+    decoration: {
+      style: "cross-wave",
+      position: "bottom",
       size: "lg",
       color: "deep-brand-red",
     },

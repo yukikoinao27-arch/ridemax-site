@@ -375,14 +375,14 @@
           },
           "showFeatured": true,
           "appearance": {
-            "preset": "light-curve-top",
+            "preset": "light-cross-wave-top",
             "background": "surface-1",
             "headingScale": "display",
             "headingStyle": "standard",
             "textTone": "default",
             "textColorScheme": "default",
             "decoration": {
-              "style": "curve",
+              "style": "cross-wave",
               "position": "top",
               "size": "lg",
               "color": "deep-brand-red"
