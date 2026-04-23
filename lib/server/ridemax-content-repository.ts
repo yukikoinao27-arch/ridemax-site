@@ -26,7 +26,7 @@ import {
   externalProductCatalogSchema,
   siteContentSchema,
 } from "@/lib/content-schemas";
-import { createPageDocumentTemplate, pageSlugOptions } from "@/lib/page-builder";
+import { createPageBlockTemplate, createPageDocumentTemplate, pageSlugOptions } from "@/lib/page-builder";
 import { getServerSupabaseClient, getServerSupabaseStatus } from "@/lib/server/supabase-server";
 
 const siteContentPath = path.join(process.cwd(), "data", "site-content.json");
@@ -35,7 +35,10 @@ const previewSiteContentPath = path.join(process.cwd(), "data", "preview-site-co
 const siteContentRevisionsPath = path.join(process.cwd(), "data", "site-content-revisions.json");
 const contactMessagesPath = path.join(process.cwd(), "data", "contact-messages.json");
 const catalogProductsPath = path.join(process.cwd(), "data", "catalog-products.json");
+const draftCatalogProductsPath = path.join(process.cwd(), "data", "catalog-products.draft.json");
+const previewCatalogProductsPath = path.join(process.cwd(), "data", "preview-catalog-products.json");
 const primaryContentSlug = "primary";
+const primaryCatalogSlug = "primary";
 const REVISION_LIMIT = 50;
 const legacyProductHelperCopy =
   "Category pages stay CMS-managed for layout and storytelling, while product inventory stays read-only in the external catalog adapter.";
@@ -65,9 +68,40 @@ type ContentDocumentUpsert = {
   last_published_at?: string | null;
 };
 
+type CatalogDocumentUpsert = {
+  slug: string;
+  content?: ExternalProductCatalog;
+  draft_content?: ExternalProductCatalog | null;
+  published_content?: ExternalProductCatalog | null;
+  last_published_at?: string | null;
+};
+
 type ContentDocumentTable = {
   upsert: (
     value: ContentDocumentUpsert,
+    options: { onConflict: string },
+  ) => Promise<{ error: { message: string } | null }>;
+  select: (columns: string) => {
+    eq: (
+      column: string,
+      value: string,
+    ) => {
+      maybeSingle: () => Promise<{
+        data: {
+          content?: unknown;
+          draft_content?: unknown;
+          published_content?: unknown;
+          last_published_at?: string | null;
+        } | null;
+        error: { message: string } | null;
+      }>;
+    };
+  };
+};
+
+type CatalogDocumentTable = {
+  upsert: (
+    value: CatalogDocumentUpsert,
     options: { onConflict: string },
   ) => Promise<{ error: { message: string } | null }>;
   select: (columns: string) => {
@@ -175,6 +209,16 @@ function isDraftPublishMigrationError(message: string) {
   );
 }
 
+function isCatalogDraftPublishMigrationError(message: string) {
+  return (
+    message.includes("product_catalog_documents") ||
+    message.includes("product_catalog_revisions") ||
+    message.includes("draft_content") ||
+    message.includes("published_content") ||
+    message.includes("last_published_at")
+  );
+}
+
 // First-ever draft save fails the NOT NULL check on `content` because the
 // row doesn't exist yet. Detect that so we can seed the column.
 function isContentNotNullError(message: string) {
@@ -182,6 +226,14 @@ function isContentNotNullError(message: string) {
     message.includes("null value") &&
     message.includes('"content"') &&
     message.includes("site_content_documents")
+  );
+}
+
+function isCatalogContentNotNullError(message: string) {
+  return (
+    message.includes("null value") &&
+    message.includes('"content"') &&
+    message.includes("product_catalog_documents")
   );
 }
 
@@ -193,10 +245,26 @@ function draftPublishMigrationMessage(message: string) {
   ].join(" ");
 }
 
+function catalogDraftPublishMigrationMessage(message: string) {
+  return [
+    "Supabase is missing the product catalog draft/publish migration.",
+    "Run the idempotent migration block in supabase/schema.sql for product_catalog_documents, then retry the catalog action.",
+    `Original database error: ${message}`,
+  ].join(" ");
+}
+
 function throwSupabaseError(message: string): never {
   throw new Error(
     isDraftPublishMigrationError(message)
       ? draftPublishMigrationMessage(message)
+      : message,
+  );
+}
+
+function throwCatalogSupabaseError(message: string): never {
+  throw new Error(
+    isCatalogDraftPublishMigrationError(message)
+      ? catalogDraftPublishMigrationMessage(message)
       : message,
   );
 }
@@ -225,6 +293,8 @@ function pageHref(slug: ContentPageSlug) {
       return "/";
     case "events-awards":
       return "/events-awards";
+    case "search":
+      return "/search";
     case "tires":
     case "rims":
     case "accessories":
@@ -301,12 +371,130 @@ function normalizeProductsPage(page: PageDocument): PageDocument {
   };
 }
 
+function normalizeHomePage(page: PageDocument): PageDocument {
+  const hasBrandMarquee = page.blocks.some((block) => block.id === "home-brand-marquee");
+  const blocks = hasBrandMarquee
+    ? [...page.blocks]
+    : [
+        ...page.blocks,
+        {
+          ...createPageBlockTemplate("brandMarquee"),
+          id: "home-brand-marquee",
+          order: 2,
+          title: "",
+          summary: "",
+          eyebrow: "",
+          categorySlug: "",
+        },
+      ];
+
+  const ordered = blocks
+    .map((block) => {
+      if (block.id === "home-brand-marquee") {
+        return {
+          ...block,
+          title: "",
+          summary: "",
+          eyebrow: "",
+          order: 2,
+        } satisfies PageBlock;
+      }
+
+      if (block.type === "categoryTiles") {
+        return { ...block, order: 3 } satisfies PageBlock;
+      }
+
+      return block;
+    })
+    .sort((left, right) => {
+      const priority = (block: PageBlock) => {
+        if (block.type === "hero") return 1;
+        if (block.id === "home-brand-marquee") return 2;
+        if (block.type === "categoryTiles") return 3;
+        return block.order + 10;
+      };
+
+      return priority(left) - priority(right);
+    })
+    .map((block, index) => ({ ...block, order: index + 1 }) as PageBlock);
+
+  return { ...page, blocks: ordered };
+}
+
+function normalizeAboutPage(page: PageDocument): PageDocument {
+  return {
+    ...page,
+    blocks: page.blocks.filter((block) => {
+      if (block.id === "about-story") {
+        return false;
+      }
+
+      if (block.type === "featureGrid" && normalize(block.title ?? "").includes("built around riders")) {
+        return false;
+      }
+
+      return true;
+    }),
+  };
+}
+
+function normalizeSearchPage(page: PageDocument): PageDocument {
+  const template = createPageDocumentTemplate("search");
+  const hasHero = page.blocks.some((block) => block.type === "hero");
+  const hasFilters = page.blocks.some((block) => block.type === "searchFilters");
+
+  return {
+    ...page,
+    title: page.title?.trim() ? page.title : template.title,
+    summary: page.summary?.trim() ? page.summary : template.summary,
+    blocks: [
+      ...page.blocks,
+      ...(hasHero ? [] : [template.blocks[0]]),
+      ...(hasFilters ? [] : [template.blocks[1]]),
+    ].filter((block): block is PageBlock => Boolean(block)),
+  };
+}
+
 function normalizePage(page: PageDocument): PageDocument {
-  const nextPage = page.slug === "products" ? normalizeProductsPage(page) : page;
+  const nextPage =
+    page.slug === "products"
+      ? normalizeProductsPage(page)
+      : page.slug === "home"
+        ? normalizeHomePage(page)
+        : page.slug === "about"
+          ? normalizeAboutPage(page)
+          : page.slug === "search"
+            ? normalizeSearchPage(page)
+            : page;
 
   return {
     ...nextPage,
     blocks: [...nextPage.blocks].sort((left, right) => left.order - right.order),
+  };
+}
+
+const brandDrivenCategorySlugs = new Set(["tires", "rims", "accessories"]);
+
+function normalizeBrandKey(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function brandMatchesProduct(brand: BrandFeature, productBrand: string) {
+  const normalizedProductBrand = normalizeBrandKey(productBrand);
+
+  return [brand.slug, brand.label, brand.title].some(
+    (candidate) => normalizeBrandKey(candidate) === normalizedProductBrand,
+  );
+}
+
+function normalizeBrandFeature(brand: BrandFeature): BrandFeature {
+  if (!brandDrivenCategorySlugs.has(brand.categorySlug)) {
+    return brand;
+  }
+
+  return {
+    ...brand,
+    href: `/products/${brand.categorySlug}?brand=${brand.slug}`,
   };
 }
 
@@ -323,7 +511,7 @@ function normalizeSiteContent(content: RidemaxSiteContent) {
   return {
     ...content,
     pages: normalizedPages,
-    brands: sortByOrder(content.brands),
+    brands: sortByOrder(content.brands).map(normalizeBrandFeature),
     promotions: sortByOrder(content.promotions),
     departments: sortByOrder(content.departments),
     jobs: sortByOrder(content.jobs),
@@ -353,6 +541,16 @@ async function readPreviewSiteContent() {
 
 async function readLocalCatalog() {
   const raw = await readJsonFile<unknown>(catalogProductsPath);
+  return normalizeCatalog(externalProductCatalogSchema.parse(raw));
+}
+
+async function readLocalDraftCatalog() {
+  const raw = await readJsonFile<unknown>(draftCatalogProductsPath);
+  return normalizeCatalog(externalProductCatalogSchema.parse(raw));
+}
+
+async function readPreviewProductCatalog() {
+  const raw = await readJsonFile<unknown>(previewCatalogProductsPath);
   return normalizeCatalog(externalProductCatalogSchema.parse(raw));
 }
 
@@ -413,6 +611,124 @@ async function readSupabaseSiteContent(mode: "draft" | "published") {
   }
 
   return null;
+}
+
+async function readSupabaseProductCatalog(mode: "draft" | "published") {
+  const supabase = getServerSupabaseClient();
+
+  if (!supabase) {
+    return null;
+  }
+
+  const catalogTable = supabase.from("product_catalog_documents") as unknown as CatalogDocumentTable;
+  let response = await catalogTable
+    .select("content, draft_content, published_content")
+    .eq("slug", primaryCatalogSlug)
+    .maybeSingle();
+
+  if (response.error && isCatalogDraftPublishMigrationError(response.error.message)) {
+    response = await catalogTable
+      .select("content")
+      .eq("slug", primaryCatalogSlug)
+      .maybeSingle() as typeof response;
+  }
+
+  const { data, error } = response;
+
+  if (error) {
+    throwCatalogSupabaseError(error.message);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const candidates =
+    mode === "draft"
+      ? [data.draft_content, data.published_content, data.content]
+      : [data.published_content, data.content];
+
+  for (const candidate of candidates) {
+    if (candidate) {
+      return normalizeCatalog(externalProductCatalogSchema.parse(candidate));
+    }
+  }
+
+  return null;
+}
+
+async function writeSupabaseDraftProductCatalog(catalog: ExternalProductCatalog) {
+  const supabase = getServerSupabaseClient();
+
+  if (!supabase) {
+    return false;
+  }
+
+  const catalogTable = supabase.from("product_catalog_documents") as unknown as CatalogDocumentTable;
+  let response = await catalogTable.upsert(
+    {
+      slug: primaryCatalogSlug,
+      draft_content: catalog,
+    },
+    { onConflict: "slug" },
+  );
+
+  if (response.error && isCatalogContentNotNullError(response.error.message)) {
+    response = await catalogTable.upsert(
+      {
+        slug: primaryCatalogSlug,
+        content: catalog,
+        draft_content: catalog,
+      },
+      { onConflict: "slug" },
+    );
+  }
+
+  if (response.error) {
+    throwCatalogSupabaseError(response.error.message);
+  }
+
+  return true;
+}
+
+async function writeSupabasePublishedProductCatalog(catalog: ExternalProductCatalog) {
+  const supabase = getServerSupabaseClient();
+
+  if (!supabase) {
+    return false;
+  }
+
+  const catalogTable = supabase.from("product_catalog_documents") as unknown as CatalogDocumentTable;
+  const now = new Date().toISOString();
+  let response = await catalogTable.upsert(
+    {
+      slug: primaryCatalogSlug,
+      content: catalog,
+      draft_content: null,
+      published_content: catalog,
+      last_published_at: now,
+    },
+    { onConflict: "slug" },
+  );
+
+  if (response.error && isContentNotNullError(response.error.message)) {
+    response = await catalogTable.upsert(
+      {
+        slug: primaryCatalogSlug,
+        content: catalog,
+        draft_content: null,
+        published_content: catalog,
+        last_published_at: now,
+      },
+      { onConflict: "slug" },
+    );
+  }
+
+  if (response.error) {
+    throwCatalogSupabaseError(response.error.message);
+  }
+
+  return true;
 }
 
 /**
@@ -811,11 +1127,24 @@ export async function savePreviewSiteContent(content: RidemaxSiteContent) {
   await writeJsonFile(previewSiteContentPath, parsed);
 }
 
+export async function savePreviewProductCatalog(catalog: ExternalProductCatalog) {
+  const parsed = normalizeCatalog(externalProductCatalogSchema.parse(catalog));
+  await writeJsonFile(previewCatalogProductsPath, parsed);
+}
+
 export async function clearPreviewSiteContent() {
   try {
     await fs.unlink(previewSiteContentPath);
   } catch {
     // Ignore missing preview files.
+  }
+}
+
+export async function clearPreviewProductCatalog() {
+  try {
+    await fs.unlink(previewCatalogProductsPath);
+  } catch {
+    // Ignore missing preview catalog files.
   }
 }
 
@@ -834,23 +1163,115 @@ export async function getStorageMode() {
   }
 }
 
-export async function getProductCatalog() {
+export async function getDraftProductCatalog(): Promise<ExternalProductCatalog> {
   noStore();
 
-  const content = await getSiteContent();
-
   try {
-    const remoteCatalog = await fetchRemoteCatalog(content);
+    const supabaseCatalog = await readSupabaseProductCatalog("draft");
 
-    if (remoteCatalog) {
-      return remoteCatalog;
+    if (supabaseCatalog) {
+      return supabaseCatalog;
     }
   } catch {
-    // External product ownership stays outside the CMS, but the public site still
-    // needs a stable fallback while the integration is being wired up.
+    // Fall through to the local snapshot when Supabase is unavailable.
+  }
+
+  try {
+    return await readLocalDraftCatalog();
+  } catch {
+    return readLocalCatalog();
+  }
+}
+
+async function getPublishedProductCatalog(): Promise<ExternalProductCatalog> {
+  try {
+    const supabaseCatalog = await readSupabaseProductCatalog("published");
+
+    if (supabaseCatalog) {
+      return supabaseCatalog;
+    }
+  } catch {
+    // Fall through to the local published snapshot.
   }
 
   return readLocalCatalog();
+}
+
+export async function saveProductCatalog(catalog: ExternalProductCatalog) {
+  const parsed = normalizeCatalog(externalProductCatalogSchema.parse(catalog));
+
+  if (await writeSupabaseDraftProductCatalog(parsed)) {
+    return;
+  }
+
+  await writeJsonFile(draftCatalogProductsPath, parsed);
+}
+
+export async function publishProductCatalog() {
+  const supabase = getServerSupabaseClient();
+
+  if (supabase) {
+    const staged =
+      (await readSupabaseProductCatalog("draft")) ??
+      (await readSupabaseProductCatalog("published"));
+
+    if (!staged) {
+      throw new Error("Nothing to publish - no draft or published product catalog found.");
+    }
+
+    await writeSupabasePublishedProductCatalog(staged);
+    return;
+  }
+
+  let staged: ExternalProductCatalog;
+  try {
+    staged = await readLocalDraftCatalog();
+  } catch {
+    staged = await readLocalCatalog();
+  }
+
+  await writeJsonFile(catalogProductsPath, staged);
+
+  try {
+    await fs.unlink(draftCatalogProductsPath);
+  } catch {
+    // No local draft catalog to clear.
+  }
+}
+
+export async function getProductCatalog() {
+  noStore();
+  const preview = await draftMode();
+  const mode = preview.isEnabled ? "draft" : "published";
+
+  const content = await getSiteContent();
+  if (preview.isEnabled) {
+    try {
+      return await readPreviewProductCatalog();
+    } catch {
+      // Preview catalog is optional; fall through to the staged draft.
+    }
+  }
+
+  const persistedCatalog =
+    mode === "draft"
+      ? await getDraftProductCatalog()
+      : await getPublishedProductCatalog();
+
+  if (!preview.isEnabled) {
+    try {
+      const remoteCatalog = await fetchRemoteCatalog(content);
+
+      if (remoteCatalog) {
+        return remoteCatalog;
+      }
+    } catch {
+      // Keep the persisted catalog snapshot as the public fallback while the
+      // upstream integration is unavailable or still being wired up.
+    }
+  }
+
+  return persistedCatalog;
 }
 
 export async function getPageDocument(slug: ContentPageSlug) {
@@ -907,16 +1328,28 @@ export async function findProductItem(categorySlug: string, itemSlug: string) {
 }
 
 export async function findProductItemBySlug(itemSlug: string) {
-  const [categories, catalog] = await Promise.all([listProductCategories(), getProductCatalog()]);
+  const [content, catalog] = await Promise.all([getSiteContent(), getProductCatalog()]);
   const item = catalog.items.find((candidate) => candidate.slug === itemSlug && candidate.published);
 
   if (!item) {
     return null;
   }
 
-  const category = categories.find((candidate) => candidate.slug === item.categorySlug) ?? null;
+  const category = content.productCategories.find((candidate) => candidate.slug === item.categorySlug) ?? null;
 
-  return category ? { category, item } : null;
+  if (!category) {
+    return null;
+  }
+
+  const brand =
+    content.brands.find(
+      (candidate) =>
+        candidate.published &&
+        candidate.categorySlug === item.categorySlug &&
+        brandMatchesProduct(candidate, item.brand),
+    ) ?? null;
+
+  return { brand, category, item };
 }
 
 export async function findAdjacentProductItems(categorySlug: string, itemSlug: string) {

@@ -91,6 +91,32 @@ create table if not exists public.site_content_revisions (
 create index if not exists site_content_revisions_slug_idx
   on public.site_content_revisions(slug, created_at desc);
 
+-- Product catalog snapshot document. The normalized product tables below are
+-- still useful as a future relational model, but the app currently reads and
+-- writes one catalog snapshot so draft/publish can stay atomic with the page
+-- builder workflow.
+create table if not exists public.product_catalog_documents (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  content jsonb not null,
+  draft_content jsonb,
+  published_content jsonb,
+  last_published_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.product_catalog_documents
+  add column if not exists draft_content jsonb,
+  add column if not exists published_content jsonb,
+  add column if not exists last_published_at timestamptz;
+
+update public.product_catalog_documents
+   set published_content = content,
+       last_published_at = coalesce(last_published_at, updated_at)
+ where published_content is null
+   and content is not null;
+
 create table if not exists public.social_links (
   id uuid primary key default gen_random_uuid(),
   platform text not null,
@@ -527,6 +553,9 @@ begin
   if not exists (select 1 from pg_trigger where tgname = 'trg_site_content_documents_updated_at') then
     create trigger trg_site_content_documents_updated_at before update on public.site_content_documents for each row execute function public.set_updated_at();
   end if;
+  if not exists (select 1 from pg_trigger where tgname = 'trg_product_catalog_documents_updated_at') then
+    create trigger trg_product_catalog_documents_updated_at before update on public.product_catalog_documents for each row execute function public.set_updated_at();
+  end if;
   if not exists (select 1 from pg_trigger where tgname = 'trg_home_page_updated_at') then
     create trigger trg_home_page_updated_at before update on public.home_page for each row execute function public.set_updated_at();
   end if;
@@ -597,6 +626,7 @@ alter table public.site_settings enable row level security;
 alter table public.navigation_links enable row level security;
 alter table public.contact_settings enable row level security;
 alter table public.site_content_documents enable row level security;
+alter table public.product_catalog_documents enable row level security;
 alter table public.social_links enable row level security;
 alter table public.shop_links enable row level security;
 alter table public.home_page enable row level security;
@@ -663,6 +693,8 @@ drop policy if exists "contact_settings_public_read" on public.contact_settings;
 create policy "contact_settings_public_read" on public.contact_settings for select to anon, authenticated using (true);
 drop policy if exists "site_content_documents_public_read" on public.site_content_documents;
 create policy "site_content_documents_public_read" on public.site_content_documents for select to anon, authenticated using (true);
+drop policy if exists "product_catalog_documents_public_read" on public.product_catalog_documents;
+create policy "product_catalog_documents_public_read" on public.product_catalog_documents for select to anon, authenticated using (true);
 drop policy if exists "social_links_public_read" on public.social_links;
 create policy "social_links_public_read" on public.social_links for select to anon, authenticated using (true);
 drop policy if exists "shop_links_public_read" on public.shop_links;
@@ -722,7 +754,7 @@ declare
   tbl text;
 begin
   foreach tbl in array array[
-    'site_settings','navigation_links','contact_settings','site_content_documents','social_links','shop_links',
+    'site_settings','navigation_links','contact_settings','site_content_documents','product_catalog_documents','social_links','shop_links',
     'home_page','products_page','careers_page','careers_gallery_images','careers_why_join_cards',
     'about_page','about_story_cards','events_awards_page','news_page','events_page','awards_page',
     'departments','jobs','news_items','events','awards','promotions','promotion_tags','project_features','brands','brand_tags',

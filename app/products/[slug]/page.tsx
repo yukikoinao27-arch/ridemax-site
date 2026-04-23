@@ -150,7 +150,7 @@ export default async function ProductCategoryPage({
               {brands.map((brand) => (
                 <Link
                   key={brand.id}
-                  href={brand.href}
+                  href={`/products/${category.slug}?brand=${brand.slug}`}
                   className={`group overflow-hidden rounded-[1.25rem] border bg-white shadow-[0_6px_12px_rgba(20,16,16,0.11)] transition hover:-translate-y-1 ${activeBrand === brand.slug ? "border-[#8d120e] ring-2 ring-[#8d120e]/20" : "border-[#d3d3d3]"}`}
                 >
                   <div className="relative h-40 overflow-hidden bg-[#f4f4f4]">

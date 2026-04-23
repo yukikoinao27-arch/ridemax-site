@@ -4,6 +4,7 @@ import { SearchForm } from "@/components/search-form";
 import { HeroBanner } from "@/components/hero-banner";
 import { getHeroBlock } from "@/lib/page-builder";
 import { getSiteContent, searchSite } from "@/lib/server/ridemax-content-repository";
+import type { PageBlock } from "@/lib/ridemax-types";
 
 type SearchPageProps = {
   searchParams: Promise<{
@@ -61,6 +62,17 @@ function sortSearchResults(results: Awaited<ReturnType<typeof searchSite>>, sort
   }
 }
 
+const sortOptionLabels: Record<string, string> = {
+  best: "Best Match",
+  newest: "Newest",
+  "name-asc": "Name A-Z",
+  "name-desc": "Name Z-A",
+};
+
+function getSearchFiltersBlock(blocks: PageBlock[]) {
+  return blocks.find((block): block is Extract<PageBlock, { type: "searchFilters" }> => block.type === "searchFilters") ?? null;
+}
+
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const query = readQuery(params.q);
@@ -68,10 +80,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const selectedKinds = new Set(readMultiValue(params.kind));
   const selectedCategories = new Set(readMultiValue(params.category).map(normalize));
   const content = await getSiteContent();
+  const searchPage = content.pages.find((candidate) => candidate.slug === "search") ?? null;
   const homePage = content.pages.find((candidate) => candidate.slug === "home") ?? null;
-  const heroBlock = getHeroBlock(homePage);
+  const heroBlock = getHeroBlock(searchPage) ?? getHeroBlock(homePage);
+  const filterBlock = searchPage ? getSearchFiltersBlock(searchPage.blocks) : null;
   const rawResults = await searchSite(query);
-  const allCategoryFilters = ["Tire", "PCR", "TBR"];
+  const allCategoryFilters = (filterBlock?.categoryOptions?.length ? filterBlock.categoryOptions : ["Tire", "PCR", "TBR"]).filter(Boolean);
+  const configuredSortOptions = (filterBlock?.sortOptions?.length ? filterBlock.sortOptions : ["best", "newest", "name-asc", "name-desc"])
+    .filter((option) => sortOptionLabels[option]);
+  const sortOptions = configuredSortOptions.length > 0 ? configuredSortOptions : ["best", "newest", "name-asc", "name-desc"];
+  const activeSort = sortOptions.includes(selectedSort) ? selectedSort : "best";
 
   const results = rawResults.filter((result) => {
     if (selectedKinds.size > 0 && !selectedKinds.has(result.kind)) {
@@ -85,14 +103,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     const searchable = [result.title, ...(result.keywords ?? [])].map(normalize).join(" ");
     return [...selectedCategories].some((category) => searchable.includes(category));
   });
-  const sortedResults = sortSearchResults(results, selectedSort);
+  const sortedResults = sortSearchResults(results, activeSort);
 
   return (
     <main>
       <HeroBanner
         image={heroBlock?.image.src ?? content.productCategories[0]?.heroImage.src ?? ""}
-        title="Search"
-        summary="Find pages, products, jobs, events, awards, and story content from Team Ridemax."
+        title={heroBlock?.title ?? "Search"}
+        summary={heroBlock?.summary ?? "Find pages, products, jobs, events, awards, and story content from Team Ridemax."}
         minHeight="min-h-[18rem]"
         sectionClassName="z-30 overflow-visible"
       >
@@ -101,6 +119,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             defaultValue={query}
             placeholder={content.site.searchPlaceholder}
             className="max-w-xl"
+            quickMatchesLabel={filterBlock?.quickMatchesLabel}
+            maxResults={filterBlock?.maxSuggestions}
           />
         </div>
       </HeroBanner>
@@ -126,7 +146,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 </p>
                 <form className="mt-5 space-y-5" action="/search">
                   <input type="hidden" name="q" value={query} />
-                  <input type="hidden" name="sort" value={selectedSort} />
+                  <input type="hidden" name="sort" value={activeSort} />
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e]">
                       Category
@@ -170,13 +190,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       Sort by
                       <select
                         name="sort"
-                        defaultValue={selectedSort}
+                        defaultValue={activeSort}
                         className="ml-3 rounded-full border border-black/10 bg-white px-4 py-3 text-sm font-medium outline-none transition hover:border-[#8d120e]/30 focus:border-[#8d120e]"
                       >
-                        <option value="best">Best Match</option>
-                        <option value="newest">Newest</option>
-                        <option value="name-asc">Name A-Z</option>
-                        <option value="name-desc">Name Z-A</option>
+                        {sortOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {sortOptionLabels[option]}
+                          </option>
+                        ))}
                       </select>
                     </label>
                     <button

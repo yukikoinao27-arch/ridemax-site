@@ -1,7 +1,9 @@
 /**
  * Central content types for the Ridemax marketing site.
- * The CMS bundle owns editorial structure and display rules,
- * while the product catalog is treated as a read-only external source.
+ * The CMS bundle owns editorial structure and display rules, while the
+ * product catalog is a separate snapshot. In local-json mode the admin may
+ * stage that snapshot; in remote-api mode the upstream catalog remains the
+ * source of truth and this app keeps only a fallback copy.
  */
 
 export type LinkItem = {
@@ -40,6 +42,12 @@ export type SectionHeadingScale = "compact" | "standard" | "display";
 
 export type SectionTextTone = "default" | "muted" | "brand";
 
+export type SectionLayoutPreset = "standard" | "compact" | "feature";
+
+export type SectionBodyTextPreset = "standard" | "short" | "editorial";
+
+export type SectionCtaPreset = "solid" | "outline" | "text";
+
 export type SectionDecoration = {
   style?: SectionDecorationStyle;
   position?: SectionDecorationPosition;
@@ -62,6 +70,9 @@ export type BlockAppearance = {
   cardPreset?: CardPresetVariant;
   headingScale?: SectionHeadingScale;
   textTone?: SectionTextTone;
+  layoutPreset?: SectionLayoutPreset;
+  bodyTextPreset?: SectionBodyTextPreset;
+  ctaPreset?: SectionCtaPreset;
 };
 
 export type SocialPlatform =
@@ -156,13 +167,13 @@ export type ProductCategory = {
 };
 
 /**
- * Read-only product data from the external catalog source.
+ * Product data rendered from the current catalog snapshot.
  *
  * This shape is the public contract the site renders against, regardless of
- * whether the current catalog mode is `local-json` or `remote-api`. The admin
- * surface MUST NOT write to any field here — product data is owned by the
- * warehouse/ERP system. Any mutation path introduced here is a design bug and
- * breaks the composable-commerce invariant documented in `docs/architecture.md`.
+ * whether the current catalog mode is `local-json` or `remote-api`. Local JSON
+ * snapshots can be edited by admins for the current site workflow; remote API
+ * snapshots should be treated as read-only fallback data that flows from the
+ * supplier or ERP integration.
  */
 export type ProductItem = {
   /**
@@ -203,11 +214,9 @@ export type CatalogSyncStrategy =
   | "queue-worker";
 
 /**
- * Settings describing how the site is talking to the upstream catalog today.
- * `readOnly` is a literal `true` because the site is never authoritative for
- * product data; if the catalog ever needs writes they happen upstream and
- * flow back through sync. Keeping the flag at the type level prevents a
- * "just this once" mutation path from slipping into admin code.
+ * Settings describing how the site is talking to the catalog today. `readOnly`
+ * is a literal `true` because the public catalog API is never mutated directly
+ * by this app; local-json editing stages a replacement snapshot instead.
  */
 export type CatalogSourceSettings = {
   mode: CatalogSourceMode;
@@ -346,7 +355,8 @@ export type ContentPageSlug =
   | "news"
   | "events"
   | "awards"
-  | "promotions";
+  | "promotions"
+  | "search";
 
 export type PageBlockType =
   | "hero"
@@ -361,6 +371,7 @@ export type PageBlockType =
   | "categorySections"
   | "projectList"
   | "calendar"
+  | "searchFilters"
   | "richText";
 
 export type PageBlockBase = {
@@ -469,6 +480,14 @@ export type CalendarBlock = PageBlockBase & {
   type: "calendar";
 };
 
+export type SearchFiltersBlock = PageBlockBase & {
+  type: "searchFilters";
+  categoryOptions: string[];
+  sortOptions: string[];
+  quickMatchesLabel?: string;
+  maxSuggestions?: number;
+};
+
 export type RichTextBlock = PageBlockBase & {
   type: "richText";
 };
@@ -486,6 +505,7 @@ export type PageBlock =
   | CategorySectionsBlock
   | ProjectListBlock
   | CalendarBlock
+  | SearchFiltersBlock
   | RichTextBlock;
 
 export type PageDocument = {
@@ -531,7 +551,8 @@ export type MediaAsset = {
 
 /**
  * The CMS bundle owns page structure, reusable collections, and display rules.
- * Product inventory lives in a separate read-only catalog source.
+ * Product rows live in a separate catalog snapshot so category/page edits and
+ * inventory edits can publish together without leaking storage details upward.
  */
 export type RidemaxSiteContent = {
   navigation: NavLink[];

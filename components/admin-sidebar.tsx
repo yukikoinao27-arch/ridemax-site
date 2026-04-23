@@ -45,6 +45,7 @@ const sectionAnchorsByHref: Record<string, AdminNavAnchor[]> = {
     { href: "#pages-builder", label: "Page Builder" },
     { href: "#pages-catalog", label: "Catalog" },
     { href: "#pages-brands", label: "Brands" },
+    { href: "#pages-catalog-items", label: "Products" },
   ],
   "/admin/events": [
     { href: "#content-news", label: "News" },

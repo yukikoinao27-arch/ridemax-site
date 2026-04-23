@@ -10,6 +10,8 @@ type SearchFormProps = {
   className?: string;
   placeholder?: string;
   theme?: "dark" | "light";
+  quickMatchesLabel?: string;
+  maxResults?: number;
 };
 
 export function SearchForm({
@@ -18,6 +20,8 @@ export function SearchForm({
   className = "",
   placeholder = "Search...",
   theme = "dark",
+  quickMatchesLabel = "Quick matches",
+  maxResults = 6,
 }: SearchFormProps) {
   const [query, setQuery] = useState(defaultValue ?? "");
   const [results, setResults] = useState<SearchRecord[]>([]);
@@ -62,7 +66,8 @@ export function SearchForm({
         }
 
         const payload = (await response.json()) as { results?: SearchRecord[] };
-        setResults((payload.results ?? []).slice(0, compact ? 4 : 6));
+        const resultLimit = compact ? Math.min(maxResults, 4) : maxResults;
+        setResults((payload.results ?? []).slice(0, resultLimit));
         setSearchedQuery(normalizedQuery);
       } catch {
         setResults([]);
@@ -75,7 +80,7 @@ export function SearchForm({
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [compact, deferredQuery]);
+  }, [compact, deferredQuery, maxResults]);
 
   return (
     <div className={`relative z-[80] ${compact ? "w-[14rem]" : "w-full max-w-xl"} ${className}`.trim()}>
@@ -137,7 +142,7 @@ export function SearchForm({
           ) : (
             <>
               <div className="px-4 pb-1 pt-2 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#f0c5bd]">
-                {results.length} quick match{results.length === 1 ? "" : "es"}
+                {results.length} {quickMatchesLabel}
               </div>
               {results.map((result) => (
                 <Link

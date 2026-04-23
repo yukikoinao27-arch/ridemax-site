@@ -27,12 +27,18 @@ const sectionDecorationSchema = z.object({
 const cardPresetVariantSchema = z.enum(["standard", "imageOverlay", "brandLogo"]);
 const sectionHeadingScaleSchema = z.enum(["compact", "standard", "display"]);
 const sectionTextToneSchema = z.enum(["default", "muted", "brand"]);
+const sectionLayoutPresetSchema = z.enum(["standard", "compact", "feature"]);
+const sectionBodyTextPresetSchema = z.enum(["standard", "short", "editorial"]);
+const sectionCtaPresetSchema = z.enum(["solid", "outline", "text"]);
 const blockAppearanceSchema = z.object({
   background: sectionBackgroundVariantSchema.optional(),
   decoration: sectionDecorationSchema.optional(),
   cardPreset: cardPresetVariantSchema.optional(),
   headingScale: sectionHeadingScaleSchema.optional(),
   textTone: sectionTextToneSchema.optional(),
+  layoutPreset: sectionLayoutPresetSchema.optional(),
+  bodyTextPreset: sectionBodyTextPresetSchema.optional(),
+  ctaPreset: sectionCtaPresetSchema.optional(),
 });
 const socialPlatformSchema = z.enum([
   "facebook",
@@ -142,8 +148,8 @@ const externalCatalogCategorySchema = z.object({
 });
 
 // `readOnly` is a literal `true` — see CatalogSourceSettings in ridemax-types.
-// The schema rejects `false` at parse time so a hand-edited JSON file can't
-// silently opt out of the catalog invariant.
+// The schema rejects `false` at parse time so catalog edits stay snapshot-based
+// instead of turning this app into a direct upstream product writer.
 const catalogSourceSchema = z.object({
   mode: z.enum(["local-json", "remote-api"]),
   provider: z.string(),
@@ -277,6 +283,7 @@ const pageSlugSchema = z.enum([
   "events",
   "awards",
   "promotions",
+  "search",
 ]);
 
 const blockBaseSchema = {
@@ -394,6 +401,15 @@ const calendarBlockSchema = z.object({
   type: z.literal("calendar"),
 });
 
+const searchFiltersBlockSchema = z.object({
+  ...blockBaseSchema,
+  type: z.literal("searchFilters"),
+  categoryOptions: z.array(z.string()),
+  sortOptions: z.array(z.string()),
+  quickMatchesLabel: z.string().optional(),
+  maxSuggestions: z.number().int().optional(),
+});
+
 const richTextBlockSchema = z.object({
   ...blockBaseSchema,
   type: z.literal("richText"),
@@ -412,6 +428,7 @@ const pageBlockSchema = z.discriminatedUnion("type", [
   categorySectionsBlockSchema,
   projectListBlockSchema,
   calendarBlockSchema,
+  searchFiltersBlockSchema,
   richTextBlockSchema,
 ]);
 

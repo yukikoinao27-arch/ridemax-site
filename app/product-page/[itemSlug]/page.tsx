@@ -52,7 +52,13 @@ export default async function ProductLandingPage({ params }: ProductLandingPageP
           {record.item.brand ? (
             <>
               {" / "}
-              <span>{record.item.brand}</span>
+              {record.brand ? (
+                <Link href={`/products/${record.category.slug}?brand=${record.brand.slug}`} className="hover:underline">
+                  {record.item.brand}
+                </Link>
+              ) : (
+                <span>{record.item.brand}</span>
+              )}
             </>
           ) : null}
           {" / "}
@@ -102,10 +108,10 @@ export default async function ProductLandingPage({ params }: ProductLandingPageP
               so the link is obvious even before hover.
             */}
             <Link
-              href={`/products/${record.category.slug}`}
+              href={record.brand ? `/products/${record.category.slug}?brand=${record.brand.slug}` : `/products/${record.category.slug}`}
               className="mt-8 inline-flex items-center justify-center rounded-full bg-[#220707] px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[0_10px_24px_rgba(34,7,7,0.18)] transition hover:-translate-y-0.5 hover:bg-[#3a0f0d]"
             >
-              <span className="text-white">Back to {record.category.name}</span>
+              <span className="text-white">Back to {record.brand?.label ?? record.category.name}</span>
             </Link>
           </article>
         </section>

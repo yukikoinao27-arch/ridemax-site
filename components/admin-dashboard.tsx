@@ -18,13 +18,17 @@ import {
   type SelectOption,
 } from "@/lib/page-builder";
 import type {
+  CategorySection,
   ContactMessage,
   CollectionGridSource,
   Department,
   ContentPageSlug,
+  ExternalProductCatalog,
   MediaAsset,
   PageBlock,
   PageDocument,
+  ProductCategory,
+  ProductItem,
   RidemaxSiteContent,
   SocialPlatform,
 } from "@/lib/ridemax-types";
@@ -41,6 +45,7 @@ export type AdminView =
 
 type AdminDashboardProps = {
   initialContent: RidemaxSiteContent;
+  initialCatalog: ExternalProductCatalog;
   messages: ContactMessage[];
   storageMode: string;
   initialMediaAssets: MediaAsset[];
@@ -368,6 +373,12 @@ function defaultValueForFieldKey(key: string) {
       return "standard";
     case "appearance.cardPreset":
       return "standard";
+    case "appearance.layoutPreset":
+      return "standard";
+    case "appearance.bodyTextPreset":
+      return "standard";
+    case "appearance.ctaPreset":
+      return "solid";
     default:
       return undefined;
   }
@@ -459,6 +470,7 @@ function collectionBlockOptionsForPage(slug: PageDocument["slug"]) {
     events: ["hero", "collectionGrid", "calendar", "richText"],
     awards: ["hero", "collectionGrid", "richText"],
     promotions: ["hero", "collectionGrid", "richText"],
+    search: ["hero", "searchFilters", "richText"],
   };
   const allowed = new Set(allowedBySlug[slug] ?? ["hero", "collectionGrid", "richText"]);
   return pageBlockTypeOptions.filter((option) => allowed.has(option.value as PageBlock["type"]));
@@ -486,6 +498,7 @@ function collectionSourceOptionsForPage(slug: PageDocument["slug"]) {
     events: ["events"],
     awards: ["awards"],
     promotions: ["promotions"],
+    search: [],
   };
 
   return allowedBySlug[slug].map((value) => ({ label: labels[value], value }));
@@ -506,6 +519,7 @@ function mergeScopedBrands(
   const nextScopedBrands = scopedItems.map((item, index) => ({
     ...(item as RidemaxSiteContent["brands"][number]),
     categorySlug,
+    href: `/products/${categorySlug}?brand=${String(item.slug ?? "")}`,
     order: parseNumber(item.order, index + 1),
   }));
 
@@ -513,6 +527,119 @@ function mergeScopedBrands(
     ...brands.filter((brand) => brand.categorySlug !== categorySlug),
     ...nextScopedBrands,
   ];
+}
+
+const editableCatalogPageSlugs = ["tires", "rims", "accessories"] as const;
+type EditableCatalogPageSlug = (typeof editableCatalogPageSlugs)[number];
+
+function isEditableCatalogPageSlug(slug: ContentPageSlug): slug is EditableCatalogPageSlug {
+  return (editableCatalogPageSlugs as readonly string[]).includes(slug);
+}
+
+function labelForCategorySlug(slug: string) {
+  return pageSlugOptions.find((option) => option.value === slug)?.label ?? slug;
+}
+
+function createProductCategoryTemplate(slug: EditableCatalogPageSlug): ProductCategory {
+  const label = labelForCategorySlug(slug);
+
+  return {
+    slug,
+    name: label,
+    description: "",
+    heroTitle: label,
+    heroSummary: "",
+    heroImage: { src: "", alt: `${label} category visual` },
+    featuredImage: "",
+    browseTitle: `Featured ${label}`,
+    browseSummary: "",
+    sectionTitle: `${label} Categories`,
+    sectionSummary: "",
+    sections: [],
+  };
+}
+
+function readScopedCategory(
+  categories: ProductCategory[],
+  categorySlug: EditableCatalogPageSlug,
+) {
+  return categories.find((category) => category.slug === categorySlug) ?? createProductCategoryTemplate(categorySlug);
+}
+
+function upsertScopedCategory(
+  categories: ProductCategory[],
+  categorySlug: EditableCatalogPageSlug,
+  nextCategory: ProductCategory,
+) {
+  const normalizedCategory = {
+    ...nextCategory,
+    slug: categorySlug,
+    sections: nextCategory.sections ?? [],
+  };
+  const hasCategory = categories.some((category) => category.slug === categorySlug);
+
+  return hasCategory
+    ? categories.map((category) => (category.slug === categorySlug ? normalizedCategory : category))
+    : [...categories, normalizedCategory];
+}
+
+function normalizeCategorySections(items: Record<string, unknown>[]): CategorySection[] {
+  return items.map((item, index) => ({
+    id: String(item.id ?? ""),
+    slug: String(item.slug ?? ""),
+    title: String(item.title ?? ""),
+    subtitle: String(item.subtitle ?? ""),
+    image: String(item.image ?? ""),
+    imageAlt: String(item.imageAlt ?? ""),
+    paragraphs: Array.isArray(item.paragraphs) ? item.paragraphs.map(String) : [],
+    published: Boolean(item.published ?? true),
+    order: parseNumber(item.order, index + 1),
+  }));
+}
+
+function scopedProductItems(catalog: ExternalProductCatalog, categorySlug: string) {
+  return catalog.items.filter((item) => item.categorySlug === categorySlug);
+}
+
+function mergeScopedProductItems(
+  catalog: ExternalProductCatalog,
+  categorySlug: string,
+  scopedItems: Record<string, unknown>[],
+) {
+  const nextScopedItems = scopedItems.map((item, index) => ({
+    ...(item as ProductItem),
+    categorySlug,
+    highlights: Array.isArray(item.highlights) ? item.highlights.map(String) : [],
+    gallery: Array.isArray(item.gallery) ? item.gallery.map(String) : [],
+    sizes: Array.isArray(item.sizes) ? item.sizes.map(String) : [],
+    tags: Array.isArray(item.tags) ? item.tags.map(String) : [],
+    searchKeywords: Array.isArray(item.searchKeywords) ? item.searchKeywords.map(String) : [],
+    published: Boolean(item.published ?? true),
+    order: parseNumber(item.order, index + 1),
+  }));
+
+  return {
+    ...catalog,
+    items: [
+      ...catalog.items.filter((item) => item.categorySlug !== categorySlug),
+      ...nextScopedItems,
+    ],
+  } satisfies ExternalProductCatalog;
+}
+
+function syncCatalogSnapshot(
+  content: RidemaxSiteContent,
+  catalog: ExternalProductCatalog,
+) {
+  return {
+    ...catalog,
+    source: content.catalogSource,
+    categories: content.productCategories.map((category) => ({
+      slug: category.slug,
+      name: category.name,
+      description: category.description,
+    })),
+  } satisfies ExternalProductCatalog;
 }
 
 function ToastStack({ toasts }: { toasts: ToastMessage[] }) {
@@ -1169,11 +1296,15 @@ function toPageBuilderFieldConfig(field: ReturnType<typeof getPageBlockFields>[n
           : undefined,
     parse:
       field.key === "tilesText"
-        ? fromLinkPairs
+          ? fromLinkPairs
         : field.key === "itemsText"
           ? fromFeaturePairs
+          : field.key === "categoryOptions" || field.key === "sortOptions"
+            ? fromLineList
           : field.key === "limit"
             ? (value) => parseNumber(value, 0)
+            : field.key === "maxSuggestions"
+              ? (value) => parseNumber(value, 6)
             : undefined,
   };
 }
@@ -1792,6 +1923,7 @@ const viewMeta: Record<AdminView, { eyebrow: string; title: string; description:
 
 export function AdminDashboard({
   initialContent,
+  initialCatalog,
   messages,
   storageMode,
   initialMediaAssets,
@@ -1802,6 +1934,8 @@ export function AdminDashboard({
 }: AdminDashboardProps) {
   const [draft, setDraft] = useState<RidemaxSiteContent>(initialContent);
   const [savedDraft, setSavedDraft] = useState<RidemaxSiteContent>(initialContent);
+  const [draftCatalog, setDraftCatalog] = useState<ExternalProductCatalog>(initialCatalog);
+  const [savedDraftCatalog, setSavedDraftCatalog] = useState<ExternalProductCatalog>(initialCatalog);
   const [inboxMessages, setInboxMessages] = useState<ContactMessage[]>(messages);
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>(initialMediaAssets);
   const [jobApplications, setJobApplications] = useState<JobApplication[]>(initialJobApplications);
@@ -1888,14 +2022,22 @@ export function AdminDashboard({
   ];
 
   const canSave = view !== "overview" && view !== "media";
-  const hasUnsavedChanges = draft !== savedDraft;
-  const showTireBrandControls = view === "pages" && activeBuilderPageSlug === "tires";
+  const hasUnsavedChanges = draft !== savedDraft || draftCatalog !== savedDraftCatalog;
+  const activeCatalogCategorySlug =
+    view === "pages" && isEditableCatalogPageSlug(activeBuilderPageSlug)
+      ? activeBuilderPageSlug
+      : null;
+  const activeCatalogCategory = activeCatalogCategorySlug
+    ? readScopedCategory(draft.productCategories, activeCatalogCategorySlug)
+    : null;
+  const catalogEditingEnabled = draft.catalogSource.mode === "local-json";
 
   async function handleSave() {
     setSaving(true);
     setSaveState("saving");
 
     try {
+      const nextCatalog = syncCatalogSnapshot(draft, draftCatalog);
       const response = await fetch("/api/admin/content", {
         method: "PUT",
         headers: {
@@ -1912,13 +2054,30 @@ export function AdminDashboard({
         return;
       }
 
+      const catalogResponse = await fetch("/api/admin/catalog", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(nextCatalog),
+      });
+      const catalogPayload = (await catalogResponse.json()) as { error?: string; message?: string };
+
+      if (!catalogResponse.ok) {
+        fieldCallbacks.onNotice("error", catalogPayload.error ?? "Unable to save the product catalog.");
+        setSaveState("error");
+        return;
+      }
+
       setSavedDraft(draft);
+      setDraftCatalog(nextCatalog);
+      setSavedDraftCatalog(nextCatalog);
       setLastSavedAt(new Date().toISOString());
       setSaveState("success");
-      fieldCallbacks.onNotice("success", payload.message ?? "Draft saved.");
+      fieldCallbacks.onNotice("success", `${payload.message ?? "Draft saved."} Catalog draft saved.`);
     } catch {
       setSaveState("error");
-      fieldCallbacks.onNotice("error", "Unable to save the content bundle.");
+      fieldCallbacks.onNotice("error", "Unable to save the content bundle and product catalog.");
     } finally {
       setSaving(false);
     }
@@ -1934,9 +2093,12 @@ export function AdminDashboard({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          catalog: syncCatalogSnapshot(draft, draftCatalog),
           content: draft,
           path:
-            view === "events"
+            view === "pages" && activeCatalogCategorySlug
+              ? `/products/${activeCatalogCategorySlug}`
+              : view === "events"
               ? "/events"
               : view === "promotions"
                 ? "/promotions"
@@ -2426,45 +2588,201 @@ export function AdminDashboard({
                 onActivePageSlugChange={setActiveBuilderPageSlug}
               />
 
-              {showTireBrandControls ? (
-                <CollectionSection
-                  sectionId="pages-tire-brands"
-                  title="Tire Brands"
-                  description="Cards and links for the Tires page brand grid. Product rows still come from the catalog, so this panel only controls the brand grouping and merchandising copy."
-                  items={scopedBrands(draft.brands, "tires") as unknown as Record<string, unknown>[]}
-                  template={{
-                    id: "",
-                    slug: "",
-                    label: "",
-                    title: "",
-                    summary: "",
-                    image: "",
-                    href: "/products/tires?brand=",
-                    categorySlug: "tires",
-                    tags: [],
-                    published: true,
-                    order: scopedBrands(draft.brands, "tires").length + 1,
-                  }}
-                  fields={[
-                    { key: "id", label: "ID", type: "text" },
-                    { key: "slug", label: "Slug", type: "text" },
-                    { key: "label", label: "Label", type: "text" },
-                    { key: "title", label: "Title", type: "text" },
-                    { key: "summary", label: "Summary", type: "textarea" },
-                    { key: "image", label: "Brand Image", type: "image" },
-                    { key: "href", label: "Brand Link", type: "text" },
-                    { key: "tags", label: "Tags (one per line)", type: "textarea", parse: fromLineList },
-                    { key: "published", label: "Published", type: "checkbox" },
-                  ]}
-                  onChange={(items) =>
-                    setDraft((current) => ({
-                      ...current,
-                      brands: mergeScopedBrands(current.brands, "tires", items),
-                    }))
-                  }
-                  fieldCallbacks={fieldCallbacks}
-                  itemLabel="Tire Brand"
-                />
+              {activeCatalogCategorySlug && activeCatalogCategory ? (
+                <>
+                  <SingletonSection
+                    sectionId="pages-catalog"
+                    title={`${labelForCategorySlug(activeCatalogCategorySlug)} Category Page`}
+                    description="Edit the public category route metadata that wraps the brand list, product results, and detail rows."
+                    value={activeCatalogCategory as unknown as Record<string, unknown>}
+                    fields={[
+                      { key: "name", label: "Category Name", type: "text" },
+                      { key: "description", label: "Category Description", type: "textarea" },
+                      { key: "heroTitle", label: "Hero Title", type: "text" },
+                      { key: "heroSummary", label: "Hero Summary", type: "textarea" },
+                      { key: "heroImage.src", label: "Hero Image", type: "image" },
+                      { key: "heroImage.alt", label: "Hero Image Alt", type: "text" },
+                      { key: "featuredImage", label: "Category Card Image", type: "image" },
+                      { key: "browseTitle", label: "Products Heading", type: "text" },
+                      { key: "browseSummary", label: "Products Intro", type: "textarea" },
+                      { key: "sectionTitle", label: "Detail Rows Heading", type: "text" },
+                      { key: "sectionSummary", label: "Detail Rows Intro", type: "textarea" },
+                    ]}
+                    onChange={(value) =>
+                      setDraft((current) => ({
+                        ...current,
+                        productCategories: upsertScopedCategory(
+                          current.productCategories,
+                          activeCatalogCategorySlug,
+                          {
+                            ...activeCatalogCategory,
+                            name: String(value.name ?? ""),
+                            description: String(value.description ?? ""),
+                            heroTitle: String(value.heroTitle ?? ""),
+                            heroSummary: String(value.heroSummary ?? ""),
+                            heroImage: {
+                              src: String(readValue(value, "heroImage.src") ?? ""),
+                              alt: String(readValue(value, "heroImage.alt") ?? ""),
+                            },
+                            featuredImage: String(value.featuredImage ?? ""),
+                            browseTitle: String(value.browseTitle ?? ""),
+                            browseSummary: String(value.browseSummary ?? ""),
+                            sectionTitle: String(value.sectionTitle ?? ""),
+                            sectionSummary: String(value.sectionSummary ?? ""),
+                          },
+                        ),
+                      }))
+                    }
+                    fieldCallbacks={fieldCallbacks}
+                  />
+
+                  <CollectionSection
+                    sectionId="pages-category-sections"
+                    title={`${labelForCategorySlug(activeCatalogCategorySlug)} Detail Rows`}
+                    description="Rows rendered near the bottom of the category route. Use them for tire types, wheel styles, accessory groups, and other page-specific guidance."
+                    items={activeCatalogCategory.sections as unknown as Record<string, unknown>[]}
+                    template={{
+                      id: `section-${activeCatalogCategorySlug}-${Date.now()}`,
+                      slug: "",
+                      title: "",
+                      subtitle: "",
+                      image: "",
+                      imageAlt: "",
+                      paragraphs: [],
+                      published: true,
+                      order: activeCatalogCategory.sections.length + 1,
+                    }}
+                    fields={[
+                      { key: "id", label: "ID", type: "text" },
+                      { key: "slug", label: "Slug", type: "text" },
+                      { key: "title", label: "Title", type: "text" },
+                      { key: "subtitle", label: "Subtitle", type: "text" },
+                      { key: "image", label: "Image", type: "image" },
+                      { key: "imageAlt", label: "Image Alt", type: "text" },
+                      { key: "paragraphs", label: "Paragraphs (one per line)", type: "textarea", parse: fromLineList },
+                      { key: "published", label: "Published", type: "checkbox" },
+                    ]}
+                    onChange={(items) =>
+                      setDraft((current) => {
+                        const currentCategory = readScopedCategory(current.productCategories, activeCatalogCategorySlug);
+                        return {
+                          ...current,
+                          productCategories: upsertScopedCategory(
+                            current.productCategories,
+                            activeCatalogCategorySlug,
+                            {
+                              ...currentCategory,
+                              sections: normalizeCategorySections(items),
+                            },
+                          ),
+                        };
+                      })
+                    }
+                    fieldCallbacks={fieldCallbacks}
+                    addLabel="Add Row"
+                    itemLabel="Detail Row"
+                  />
+
+                  <CollectionSection
+                    sectionId="pages-brands"
+                    title={`${labelForCategorySlug(activeCatalogCategorySlug)} Brands`}
+                    description="Brand cards feed the category grid. Their public links are generated from the category route and brand slug so See More always lands on the filtered listing."
+                    items={scopedBrands(draft.brands, activeCatalogCategorySlug) as unknown as Record<string, unknown>[]}
+                    template={{
+                      id: `brand-${activeCatalogCategorySlug}-${Date.now()}`,
+                      slug: "",
+                      label: "",
+                      title: "",
+                      summary: "",
+                      image: "",
+                      href: `/products/${activeCatalogCategorySlug}?brand=`,
+                      categorySlug: activeCatalogCategorySlug,
+                      tags: [],
+                      published: true,
+                      order: scopedBrands(draft.brands, activeCatalogCategorySlug).length + 1,
+                    }}
+                    fields={[
+                      { key: "id", label: "ID", type: "text" },
+                      { key: "slug", label: "Slug", type: "text" },
+                      { key: "label", label: "Label", type: "text" },
+                      { key: "title", label: "Title", type: "text" },
+                      { key: "summary", label: "Summary", type: "textarea" },
+                      { key: "image", label: "Brand Image", type: "image" },
+                      { key: "tags", label: "Tags (one per line)", type: "textarea", parse: fromLineList },
+                      { key: "published", label: "Published", type: "checkbox" },
+                    ]}
+                    onChange={(items) =>
+                      setDraft((current) => ({
+                        ...current,
+                        brands: mergeScopedBrands(current.brands, activeCatalogCategorySlug, items),
+                      }))
+                    }
+                    fieldCallbacks={fieldCallbacks}
+                    addLabel="Add Brand"
+                    itemLabel={`${labelForCategorySlug(activeCatalogCategorySlug)} Brand`}
+                  />
+
+                  {catalogEditingEnabled ? (
+                    <CollectionSection
+                      sectionId="pages-catalog-items"
+                      title={`${labelForCategorySlug(activeCatalogCategorySlug)} Products`}
+                      description="Products feed brand-specific listings, product detail pages, and search. Set Brand to the exact public brand label, such as Michelin or BFGoodrich, so filtered brand pages populate."
+                      items={scopedProductItems(draftCatalog, activeCatalogCategorySlug) as unknown as Record<string, unknown>[]}
+                      template={{
+                        id: `product-${activeCatalogCategorySlug}-${Date.now()}`,
+                        slug: "",
+                        categorySlug: activeCatalogCategorySlug,
+                        brand: "",
+                        title: "",
+                        summary: "",
+                        description: "",
+                        highlights: [],
+                        sku: "",
+                        image: "",
+                        gallery: [],
+                        sizes: [],
+                        tags: [],
+                        searchKeywords: [],
+                        published: true,
+                        order: scopedProductItems(draftCatalog, activeCatalogCategorySlug).length + 1,
+                      }}
+                      fields={[
+                        { key: "id", label: "ID", type: "text" },
+                        { key: "slug", label: "Slug", type: "text" },
+                        { key: "brand", label: "Brand", type: "text" },
+                        { key: "title", label: "Title", type: "text" },
+                        { key: "summary", label: "Summary", type: "textarea" },
+                        { key: "description", label: "Description", type: "textarea" },
+                        { key: "highlights", label: "Highlights (one per line)", type: "textarea", parse: fromLineList },
+                        { key: "sku", label: "SKU", type: "text" },
+                        { key: "image", label: "Primary Image", type: "image" },
+                        { key: "gallery", label: "Gallery", type: "image-list" },
+                        { key: "sizes", label: "Sizes (one per line)", type: "textarea", parse: fromLineList },
+                        { key: "tags", label: "Tags (one per line)", type: "textarea", parse: fromLineList },
+                        { key: "searchKeywords", label: "Search Keywords (one per line)", type: "textarea", parse: fromLineList },
+                        { key: "published", label: "Published", type: "checkbox" },
+                      ]}
+                      onChange={(items) =>
+                        setDraftCatalog((current) =>
+                          mergeScopedProductItems(current, activeCatalogCategorySlug, items),
+                        )
+                      }
+                      fieldCallbacks={fieldCallbacks}
+                      addLabel="Add Product"
+                      itemLabel={`${labelForCategorySlug(activeCatalogCategorySlug)} Product`}
+                    />
+                  ) : (
+                    <SectionCard
+                      sectionId="pages-catalog-items"
+                      title={`${labelForCategorySlug(activeCatalogCategorySlug)} Products`}
+                      description="Product item editing is paused because Catalog Mode is Remote API. Keep product changes upstream, then sync them back into the snapshot."
+                    >
+                      <div className="rounded-[1.25rem] border border-dashed border-black/12 bg-[#faf8f7] p-5 text-sm leading-7 text-[#5c4743]">
+                        Switch Catalog Mode to Local JSON in Settings if this site should stage product rows directly for now.
+                      </div>
+                    </SectionCard>
+                  )}
+                </>
               ) : null}
             </>
           ) : null}

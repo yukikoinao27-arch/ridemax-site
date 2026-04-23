@@ -10,6 +10,7 @@ import { listJobApplications } from "@/lib/server/job-applications";
 import { listMediaAssets } from "@/lib/server/media-library";
 import {
   getAdminMetrics,
+  getDraftProductCatalog,
   getDraftSiteContent,
   listContactMessages,
 } from "@/lib/server/ridemax-content-repository";
@@ -109,8 +110,9 @@ export async function AdminScreen({ view, error }: AdminScreenProps) {
     );
   }
 
-  const [content, metrics, messages, mediaAssets, jobApplications] = await Promise.all([
+  const [content, catalog, metrics, messages, mediaAssets, jobApplications] = await Promise.all([
     getDraftSiteContent(),
+    getDraftProductCatalog(),
     getAdminMetrics(),
     listContactMessages(),
     listMediaAssets(),
@@ -123,6 +125,7 @@ export async function AdminScreen({ view, error }: AdminScreenProps) {
   return (
     <AdminDashboard
       initialContent={content}
+      initialCatalog={catalog}
       messages={messages}
       storageMode={metrics.storageMode}
       initialMediaAssets={mediaAssets}
