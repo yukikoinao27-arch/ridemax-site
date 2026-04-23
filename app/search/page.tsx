@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { AutoSubmitSelect } from "@/components/auto-submit-select";
 import { SearchForm } from "@/components/search-form";
 import { HeroBanner } from "@/components/hero-banner";
 import { getHeroBlock } from "@/lib/page-builder";
@@ -112,6 +113,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         title={heroBlock?.title ?? "Search"}
         summary={heroBlock?.summary ?? "Find pages, products, jobs, events, awards, and story content from Team Ridemax."}
         minHeight="min-h-[18rem]"
+        headingScale={heroBlock?.appearance?.headingScale}
+        headingStyle={heroBlock?.appearance?.headingStyle}
+        textColorScheme={heroBlock?.appearance?.textColorScheme}
         sectionClassName="z-30 overflow-visible"
       >
         <div className="mx-auto max-w-xl">
@@ -188,7 +192,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     ))}
                     <label className="text-sm font-semibold text-[#4d3b37]">
                       Sort by
-                      <select
+                      <AutoSubmitSelect
                         name="sort"
                         defaultValue={activeSort}
                         className="ml-3 rounded-full border border-black/10 bg-white px-4 py-3 text-sm font-medium outline-none transition hover:border-[#8d120e]/30 focus:border-[#8d120e]"
@@ -198,14 +202,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             {sortOptionLabels[option]}
                           </option>
                         ))}
-                      </select>
+                      </AutoSubmitSelect>
                     </label>
-                    <button
-                      type="submit"
-                      className="rounded-full border border-black/10 bg-white px-4 py-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:border-[#8d120e]/25 hover:bg-[#fff4f3]"
-                    >
-                      Sort
-                    </button>
                   </form>
                 </div>
                 <div className="mt-6 space-y-4">

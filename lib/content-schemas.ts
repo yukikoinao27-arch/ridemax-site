@@ -26,7 +26,9 @@ const sectionDecorationSchema = z.object({
 });
 const cardPresetVariantSchema = z.enum(["standard", "imageOverlay", "brandLogo"]);
 const sectionHeadingScaleSchema = z.enum(["compact", "standard", "display"]);
+const sectionHeadingStyleSchema = z.enum(["standard", "large", "emphasis", "minimal"]);
 const sectionTextToneSchema = z.enum(["default", "muted", "brand"]);
+const sectionTextColorSchemeSchema = z.enum(["default", "dark", "light", "muted", "brand"]);
 const sectionLayoutPresetSchema = z.enum(["standard", "compact", "feature"]);
 const sectionBodyTextPresetSchema = z.enum(["standard", "short", "editorial"]);
 const sectionCtaPresetSchema = z.enum(["solid", "outline", "text"]);
@@ -35,7 +37,9 @@ const blockAppearanceSchema = z.object({
   decoration: sectionDecorationSchema.optional(),
   cardPreset: cardPresetVariantSchema.optional(),
   headingScale: sectionHeadingScaleSchema.optional(),
+  headingStyle: sectionHeadingStyleSchema.optional(),
   textTone: sectionTextToneSchema.optional(),
+  textColorScheme: sectionTextColorSchemeSchema.optional(),
   layoutPreset: sectionLayoutPresetSchema.optional(),
   bodyTextPreset: sectionBodyTextPresetSchema.optional(),
   ctaPreset: sectionCtaPresetSchema.optional(),

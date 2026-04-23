@@ -11,6 +11,7 @@ import type {
 export type SelectOption = {
   label: string;
   value: string;
+  disabled?: boolean;
 };
 
 export type PageBlockFieldConfig = {
@@ -59,16 +60,38 @@ export const sectionDecorationSizeOptions: SelectOption[] = [
   { label: "Large", value: "lg" },
 ];
 
+export const heroMinHeightOptions: SelectOption[] = [
+  { label: "Compact", value: "min-h-[18rem]" },
+  { label: "Standard", value: "min-h-[26rem]" },
+  { label: "Tall", value: "min-h-[28rem]" },
+  { label: "Feature", value: "min-h-[38rem]" },
+];
+
 export const sectionHeadingScaleOptions: SelectOption[] = [
   { label: "Compact", value: "compact" },
   { label: "Standard", value: "standard" },
   { label: "Display", value: "display" },
 ];
 
+export const sectionHeadingStyleOptions: SelectOption[] = [
+  { label: "Standard", value: "standard" },
+  { label: "Large", value: "large" },
+  { label: "Emphasis", value: "emphasis" },
+  { label: "Minimal", value: "minimal" },
+];
+
 export const sectionTextToneOptions: SelectOption[] = [
   { label: "Default", value: "default" },
   { label: "Muted", value: "muted" },
   { label: "Brand red", value: "brand" },
+];
+
+export const sectionTextColorSchemeOptions: SelectOption[] = [
+  { label: "Default", value: "default" },
+  { label: "Dark", value: "dark" },
+  { label: "Light", value: "light" },
+  { label: "Muted", value: "muted" },
+  { label: "Brand", value: "brand" },
 ];
 
 export const sectionLayoutPresetOptions: SelectOption[] = [
@@ -167,7 +190,9 @@ export function createPageDocumentTemplate(slug: ContentPageSlug): PageDocument 
           appearance: {
             background: "surface-1",
             headingScale: "display",
+            headingStyle: "standard",
             textTone: "default",
+            textColorScheme: "default",
             decoration: { style: "none", position: "bottom", size: "md", color: "brand-red" },
           },
         },
@@ -184,7 +209,9 @@ export function createPageDocumentTemplate(slug: ContentPageSlug): PageDocument 
           appearance: {
             background: "surface-1",
             headingScale: "standard",
+            headingStyle: "standard",
             textTone: "default",
+            textColorScheme: "default",
             decoration: { style: "none", position: "bottom", size: "md", color: "brand-red" },
           },
         },
@@ -205,7 +232,9 @@ export function createPageBlockTemplate(type: PageBlockType): PageBlock {
   const defaultAppearance: BlockAppearance = {
     background: "surface-1",
     headingScale: "standard",
+    headingStyle: "standard",
     textTone: "default",
+    textColorScheme: "default",
     decoration: {
       style: "none",
       position: "bottom",
@@ -356,6 +385,72 @@ export function getPageBlockLabel(block: Pick<PageBlock, "type">) {
   return blockLabel(block.type);
 }
 
+type AppearanceEditorTarget = PageBlock | PageBlockType | undefined;
+
+const lightSectionBackgrounds = new Set<NonNullable<BlockAppearance["background"]>>([
+  "surface-1",
+  "surface-2",
+  "surface-3",
+]);
+
+function appearanceTargetType(target: AppearanceEditorTarget) {
+  return typeof target === "string" ? target : target?.type;
+}
+
+function appearanceTargetAppearance(target: AppearanceEditorTarget) {
+  return typeof target === "string" ? undefined : target?.appearance;
+}
+
+function disableOptions(options: SelectOption[], disabledValues: string[]) {
+  const disabled = new Set(disabledValues);
+  return options.map((option) => ({
+    ...option,
+    disabled: disabled.has(option.value),
+  }));
+}
+
+function isCompactHero(target: AppearanceEditorTarget) {
+  if (typeof target === "string" || target?.type !== "hero") {
+    return false;
+  }
+
+  return ["min-h-[16rem]", "min-h-[18rem]", "min-h-[20rem]"].includes(
+    target.minHeight ?? "",
+  );
+}
+
+/**
+ * Normalizes unsafe appearance combinations at the page-builder seam.
+ * The renderer can stay simple because invalid text/shape choices are folded
+ * back into safe presets as editors make changes.
+ */
+export function sanitizePageBlockAppearance(block: PageBlock): PageBlock {
+  const appearance = { ...(block.appearance ?? {}) };
+  const background = appearance.background ?? "surface-1";
+  const decoration = { ...(appearance.decoration ?? {}) };
+
+  if (lightSectionBackgrounds.has(background) && appearance.textColorScheme === "light") {
+    appearance.textColorScheme = "dark";
+  }
+
+  if (decoration.color === background) {
+    decoration.color = "brand-red";
+  }
+
+  if (block.type === "hero" && isCompactHero(block) && decoration.size === "lg") {
+    decoration.size = "md";
+  }
+
+  return {
+    ...block,
+    ...(block.type === "hero" && !block.image.src.trim() ? { dark: false } : {}),
+    appearance: {
+      ...appearance,
+      decoration,
+    },
+  } as PageBlock;
+}
+
 /**
  * Appearance fields shown in the block editor. When `blockType` is a
  * card-style block (collection grid or feature grid), we also expose the
@@ -363,15 +458,40 @@ export function getPageBlockLabel(block: Pick<PageBlock, "type">) {
  * so hiding it avoids a shallow knob per AGENTS.md §7.
  */
 export function getPageBlockAppearanceFields(
-  blockType?: PageBlockType,
+  target?: AppearanceEditorTarget,
 ): PageBlockFieldConfig[] {
+  const blockType = appearanceTargetType(target);
+  const appearance = appearanceTargetAppearance(target);
+  const background = appearance?.background ?? "surface-1";
+  const disabledTextSchemes = lightSectionBackgrounds.has(background) ? ["light"] : [];
+  const disabledShapeColors = appearance?.decoration?.style === "none" ? [] : [background];
+  const disabledShapeSizes = isCompactHero(target) ? ["lg"] : [];
   const base: PageBlockFieldConfig[] = [
     {
       key: "appearance.background",
       label: "Section Background",
       type: "select",
       options: sectionBackgroundOptions,
-      helpText: "Use alternating surfaces to separate long marketing pages without one-off styling.",
+      helpText: "Choose the surface behind this section.",
+    },
+    {
+      key: "appearance.textColorScheme",
+      label: "Text Color Scheme",
+      type: "select",
+      options: disableOptions(sectionTextColorSchemeOptions, disabledTextSchemes),
+      helpText: "Only readable color choices are available for the selected background.",
+    },
+    {
+      key: "appearance.headingScale",
+      label: "Heading Size",
+      type: "select",
+      options: sectionHeadingScaleOptions,
+    },
+    {
+      key: "appearance.headingStyle",
+      label: "Heading Style",
+      type: "select",
+      options: sectionHeadingStyleOptions,
     },
     {
       key: "appearance.decoration.style",
@@ -383,7 +503,7 @@ export function getPageBlockAppearanceFields(
       key: "appearance.decoration.color",
       label: "Shape Color",
       type: "select",
-      options: sectionDecorationColorOptions,
+      options: disableOptions(sectionDecorationColorOptions, disabledShapeColors),
     },
     {
       key: "appearance.decoration.position",
@@ -395,14 +515,7 @@ export function getPageBlockAppearanceFields(
       key: "appearance.decoration.size",
       label: "Shape Size",
       type: "select",
-      options: sectionDecorationSizeOptions,
-    },
-    {
-      key: "appearance.headingScale",
-      label: "Heading Size",
-      type: "select",
-      options: sectionHeadingScaleOptions,
-      helpText: "Use presets instead of custom font sizes so mobile layouts remain stable.",
+      options: disableOptions(sectionDecorationSizeOptions, disabledShapeSizes),
     },
   ];
 
@@ -412,7 +525,7 @@ export function getPageBlockAppearanceFields(
       label: "Card Style",
       type: "select",
       options: cardPresetOptions,
-      helpText: "Preset owns the mobile layout. Marketing cannot break card breakpoints.",
+      helpText: "Choose the card look for this section.",
     });
   }
 
@@ -423,7 +536,7 @@ export function getPageBlockAppearanceFields(
         label: "Layout",
         type: "select",
         options: sectionLayoutPresetOptions,
-        helpText: "Controls the section rhythm without exposing columns or breakpoints.",
+        helpText: "Choose how roomy the card grid should feel.",
       },
       {
         key: "appearance.bodyTextPreset",
@@ -466,7 +579,7 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
           ],
         },
         { key: "dark", label: "Dark Overlay", type: "checkbox" },
-        { key: "minHeight", label: "Min Height Class", type: "text" },
+        { key: "minHeight", label: "Hero Height", type: "select", options: heroMinHeightOptions },
         {
           key: "tone",
           label: "Tone",

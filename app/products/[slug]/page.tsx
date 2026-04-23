@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlternatingFeatureRows } from "@/components/alternating-feature-rows";
+import { AutoSubmitSelect } from "@/components/auto-submit-select";
 import { HeroBanner } from "@/components/hero-banner";
 import {
   findProductCategory,
@@ -117,6 +118,7 @@ export default async function ProductCategoryPage({
         )
       : brandProducts;
   const sortedBrandProducts = sortProducts(filteredBrandProducts, selectedSort);
+  const showBrandProducts = Boolean(activeBrandRecord && brandProducts.length > 0);
   const isTiresCategory = category.slug === "tires";
 
   return (
@@ -189,7 +191,7 @@ export default async function ProductCategoryPage({
         </section>
       ) : null}
 
-      {activeBrandRecord ? (
+      {activeBrandRecord && showBrandProducts ? (
         <section className="bg-[#f3f1f0] py-16">
           <div className="mx-auto grid max-w-[72rem] gap-8 px-6 md:px-10 lg:grid-cols-[18rem_1fr]">
             <aside className="h-fit rounded-[1.25rem] border border-black/10 bg-white p-5 shadow-[0_10px_28px_rgba(31,20,19,0.06)]">
@@ -248,7 +250,7 @@ export default async function ProductCategoryPage({
                   ))}
                   <label className="text-sm font-semibold text-[#4d3b37]">
                     Sort by
-                    <select
+                    <AutoSubmitSelect
                       name="sort"
                       defaultValue={selectedSort}
                       className="ml-3 rounded-full border border-black/10 bg-white px-4 py-3 text-sm font-medium outline-none transition hover:border-[#8d120e]/30 focus:border-[#8d120e]"
@@ -257,60 +259,51 @@ export default async function ProductCategoryPage({
                       <option value="newest">Newest</option>
                       <option value="name-asc">Name A-Z</option>
                       <option value="name-desc">Name Z-A</option>
-                    </select>
+                    </AutoSubmitSelect>
                   </label>
-                  <button type="submit" className="rounded-full border border-black/10 bg-white px-4 py-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:border-[#8d120e]/25 hover:bg-[#fff4f3]">
-                    Sort
-                  </button>
                 </form>
               </div>
 
-              {sortedBrandProducts.length > 0 ? (
-                <div className="mt-8 grid gap-5">
-                  {sortedBrandProducts.map((product) => (
-                    <Link
-                      key={product.id}
-                      href={`/product-page/${product.slug}`}
-                      className="group grid overflow-hidden rounded-[1.25rem] border border-black/10 bg-white shadow-[0_10px_30px_rgba(31,20,19,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(31,20,19,0.10)] md:grid-cols-[16rem_1fr]"
-                    >
-                      <div className="relative min-h-[12rem] bg-[#f7f7f7]">
-                        <Image
-                          src={product.image}
-                          alt={product.title}
-                          fill
-                          className="object-cover transition duration-500 group-hover:scale-105"
-                          sizes="(min-width: 768px) 16rem, 100vw"
-                        />
+              <div className="mt-8 grid gap-5">
+                {sortedBrandProducts.map((product) => (
+                  <Link
+                    key={product.id}
+                    href={`/product-page/${product.slug}`}
+                    className="group grid overflow-hidden rounded-[1.25rem] border border-black/10 bg-white shadow-[0_10px_30px_rgba(31,20,19,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(31,20,19,0.10)] md:grid-cols-[16rem_1fr]"
+                  >
+                    <div className="relative min-h-[12rem] bg-[#f7f7f7]">
+                      <Image
+                        src={product.image}
+                        alt={product.title}
+                        fill
+                        className="object-cover transition duration-500 group-hover:scale-105"
+                        sizes="(min-width: 768px) 16rem, 100vw"
+                      />
+                    </div>
+                    <div className="p-6">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8d120e]">
+                        Product
+                      </p>
+                      <h3 className="mt-3 text-4xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
+                        {product.title}
+                      </h3>
+                      <p className="mt-4 max-w-3xl text-sm leading-7 text-[#5c4743]">
+                        {product.summary}
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {product.tags.map((tag) => (
+                          <span
+                            key={`${product.id}-${tag}`}
+                            className="rounded-full border border-black/10 px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#6a4b45]"
+                          >
+                            {tag}
+                          </span>
+                        ))}
                       </div>
-                      <div className="p-6">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8d120e]">
-                          Product
-                        </p>
-                        <h3 className="mt-3 text-4xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
-                          {product.title}
-                        </h3>
-                        <p className="mt-4 max-w-3xl text-sm leading-7 text-[#5c4743]">
-                          {product.summary}
-                        </p>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {product.tags.map((tag) => (
-                            <span
-                              key={`${product.id}-${tag}`}
-                              className="rounded-full border border-black/10 px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#6a4b45]"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="mt-8 rounded-[1.25rem] border border-dashed border-black/12 bg-white p-6 text-sm leading-7 text-[#5c4743]">
-                  No published {category.name.toLowerCase()} are attached to {activeBrandRecord.label} yet. Add or sync catalog products with the matching brand name to populate this listing.
-                </div>
-              )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </section>

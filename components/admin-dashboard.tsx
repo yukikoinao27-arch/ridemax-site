@@ -15,6 +15,7 @@ import {
   getPageBlockLabel,
   pageBlockTypeOptions,
   pageSlugOptions,
+  sanitizePageBlockAppearance,
   type SelectOption,
 } from "@/lib/page-builder";
 import type {
@@ -50,15 +51,8 @@ type AdminDashboardProps = {
   storageMode: string;
   initialMediaAssets: MediaAsset[];
   initialJobApplications: JobApplication[];
-  securitySummary: AdminSecuritySummary;
   view: AdminView;
   previewMode: boolean;
-};
-
-export type AdminSecuritySummary = {
-  adminPasswordConfigured: boolean;
-  turnstileConfigured: boolean;
-  supabaseConfigured: boolean;
 };
 
 type FieldType =
@@ -371,6 +365,10 @@ function defaultValueForFieldKey(key: string) {
       return "md";
     case "appearance.headingScale":
       return "standard";
+    case "appearance.headingStyle":
+      return "standard";
+    case "appearance.textColorScheme":
+      return "default";
     case "appearance.cardPreset":
       return "standard";
     case "appearance.layoutPreset":
@@ -379,6 +377,8 @@ function defaultValueForFieldKey(key: string) {
       return "standard";
     case "appearance.ctaPreset":
       return "solid";
+    case "minHeight":
+      return "min-h-[28rem]";
     default:
       return undefined;
   }
@@ -538,6 +538,21 @@ function isEditableCatalogPageSlug(slug: ContentPageSlug): slug is EditableCatal
 
 function labelForCategorySlug(slug: string) {
   return pageSlugOptions.find((option) => option.value === slug)?.label ?? slug;
+}
+
+function publicPathForPageSlug(slug: ContentPageSlug) {
+  switch (slug) {
+    case "home":
+      return "/";
+    case "tires":
+    case "rims":
+    case "accessories":
+      return `/products/${slug}`;
+    case "events-awards":
+      return "/events-awards";
+    default:
+      return `/${slug}`;
+  }
 }
 
 function createProductCategoryTemplate(slug: EditableCatalogPageSlug): ProductCategory {
@@ -925,6 +940,7 @@ function renderField(
           value={stringValue}
           maxLength={maxLength}
           onChange={(event) => onChange(normalizeFieldValue(field, event.target.value))}
+          onKeyDown={(event) => event.stopPropagation()}
           className={`${fieldControlClass} min-h-[8rem] resize-y`}
         />
         <FieldMeta field={field} value={stringValue} maxLength={maxLength} />
@@ -954,7 +970,7 @@ function renderField(
           className={fieldControlClass}
         >
           {field.options?.map((option) => (
-            <option key={option.value} value={option.value}>
+            <option key={option.value} value={option.value} disabled={option.disabled}>
               {option.label}
             </option>
           ))}
@@ -1313,13 +1329,13 @@ function updatePageBlockField(block: PageBlock, fieldKey: string, nextValue: unk
   const nextBlock = writeValue(block, fieldKey, nextValue) as PageBlock;
 
   if (block.type === "collectionGrid" && fieldKey === "source") {
-    return {
+    return sanitizePageBlockAppearance({
       ...nextBlock,
       variant: collectionVariantForSource(nextValue as CollectionGridSource),
-    } as PageBlock;
+    } as PageBlock);
   }
 
-  return nextBlock;
+  return sanitizePageBlockAppearance(nextBlock);
 }
 
 function CollectionGridNote({ block }: { block: Extract<PageBlock, { type: "collectionGrid" }> }) {
@@ -1509,6 +1525,7 @@ function PageBuilderSection({
                 <textarea
                   value={activePage.summary ?? ""}
                   maxLength={200}
+                  onKeyDown={(event) => event.stopPropagation()}
                   onChange={(event) =>
                     onChange(
                       pages.map((candidate) =>
@@ -1585,7 +1602,7 @@ function PageBuilderSection({
                       ? { ...field, options: collectionSourceOptionsForPage(activePage.slug) }
                       : field,
                   );
-                const appearanceFields = getPageBlockAppearanceFields(block.type).map(toPageBuilderFieldConfig);
+                const appearanceFields = getPageBlockAppearanceFields(block).map(toPageBuilderFieldConfig);
                 const isDraggingThis =
                   blockDrag?.pageId === activePage.id && blockDrag.index === index;
                 const isExpanded = expandedBlockIds[block.id] ?? (index === 0 || highlightedBlockId === block.id);
@@ -1879,9 +1896,9 @@ function MediaLibrarySection({
 const viewMeta: Record<AdminView, { eyebrow: string; title: string; description: string }> = {
   overview: {
     eyebrow: "CMS Dashboard",
-    title: "Manage the live CMS bundle",
+    title: "Marketing control room",
     description:
-      "This admin is organized by marketing jobs: page sections, stories, campaigns, careers, settings, and the contact inbox.",
+      "Preview, publish, and track pages, campaigns, careers, product content, and customer messages from one place.",
   },
   settings: {
     eyebrow: "Settings",
@@ -1928,7 +1945,6 @@ export function AdminDashboard({
   storageMode,
   initialMediaAssets,
   initialJobApplications,
-  securitySummary,
   view,
   previewMode,
 }: AdminDashboardProps) {
@@ -1992,33 +2008,11 @@ export function AdminDashboard({
   void storageMode;
   const metrics = [
     { label: "Pages", value: String(draft.pages.length) },
-    { label: "Promotions", value: String(draft.promotions.length) },
-    { label: "Categories", value: String(draft.productCategories.length) },
-    { label: "Jobs", value: String(draft.jobs.length) },
+    { label: "Campaigns", value: String(draft.promotions.length) },
+    { label: "Product Categories", value: String(draft.productCategories.length) },
+    { label: "Open Roles", value: String(draft.jobs.filter((job) => job.published).length) },
     { label: "Events", value: String(draft.events.length) },
-    { label: "Media Assets", value: String(mediaAssets.length) },
-  ];
-  const securityItems = [
-    {
-      label: "Admin Password",
-      value: securitySummary.adminPasswordConfigured ? "Active" : "Needs setup",
-      ready: securitySummary.adminPasswordConfigured,
-    },
-    {
-      label: "Audit Log",
-      value: securitySummary.supabaseConfigured ? "Supabase-backed" : "Local fallback",
-      ready: securitySummary.supabaseConfigured,
-    },
-    {
-      label: "Rate Limits",
-      value: "Login, forms, writes",
-      ready: true,
-    },
-    {
-      label: "Bot Check",
-      value: securitySummary.turnstileConfigured ? "Turnstile active" : "Not configured",
-      ready: securitySummary.turnstileConfigured,
-    },
+    { label: "Images", value: String(mediaAssets.length) },
   ];
 
   const canSave = view !== "overview" && view !== "media";
@@ -2031,6 +2025,16 @@ export function AdminDashboard({
     ? readScopedCategory(draft.productCategories, activeCatalogCategorySlug)
     : null;
   const catalogEditingEnabled = draft.catalogSource.mode === "local-json";
+  const activeScopedBrands = activeCatalogCategorySlug
+    ? scopedBrands(draft.brands, activeCatalogCategorySlug)
+    : [];
+  const activeBrandSelectOptions = activeScopedBrands.map((brand) => ({
+    label: brand.label || brand.title || brand.slug,
+    value: brand.label || brand.title || brand.slug,
+  }));
+  const activeScopedProductItems = activeCatalogCategorySlug
+    ? scopedProductItems(draftCatalog, activeCatalogCategorySlug)
+    : [];
 
   async function handleSave() {
     setSaving(true);
@@ -2096,8 +2100,8 @@ export function AdminDashboard({
           catalog: syncCatalogSnapshot(draft, draftCatalog),
           content: draft,
           path:
-            view === "pages" && activeCatalogCategorySlug
-              ? `/products/${activeCatalogCategorySlug}`
+            view === "pages"
+              ? publicPathForPageSlug(activeBuilderPageSlug)
               : view === "events"
               ? "/events"
               : view === "promotions"
@@ -2290,6 +2294,15 @@ export function AdminDashboard({
         onClose={() => setRevisionsOpen(false)}
         onRevert={handleRevertRevision}
       />
+      {view === "pages" ? (
+        <a
+          href="#page-builder-page-picker"
+          className="fixed bottom-28 left-6 z-[85] inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/95 px-4 py-3 text-sm font-semibold text-[#220707] shadow-[0_14px_34px_rgba(31,20,19,0.16)] backdrop-blur transition hover:-translate-y-0.5 hover:border-[#8d120e]/30 hover:text-[#8d120e]"
+        >
+          <ArrowUpIcon />
+          Page picker
+        </a>
+      ) : null}
       <div className={`space-y-8 ${canSave ? "pb-28" : ""}`}>
           <section className="rounded-[2rem] border border-black/10 bg-white p-7 shadow-[0_16px_40px_rgba(28,20,19,0.06)]">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -2327,42 +2340,6 @@ export function AdminDashboard({
 
           {view === "overview" ? (
             <>
-              {/*
-                Internal architecture callouts (Block-Based CMS, Database
-                Options, Security Options) have been deleted. They were
-                dev-facing design notes, not editable content, and marketing
-                users should not see them. The overview now leads straight
-                into the Inbox, which is what editors actually need here.
-              */}
-
-              <SectionCard
-                sectionId="security-footprint"
-                title="Security Footprint"
-                description="Operational guardrails for the admin surface and public submission forms."
-              >
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  {securityItems.map((item) => (
-                    <div
-                      key={item.label}
-                      className="rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-4"
-                    >
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#7e5a53]">
-                        {item.label}
-                      </p>
-                      <div className="mt-3 flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-[#220707]">{item.value}</p>
-                        <span
-                          className={`h-2.5 w-2.5 rounded-full ${
-                            item.ready ? "bg-[#1d7f45]" : "bg-[#c87b1f]"
-                          }`}
-                          aria-hidden="true"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </SectionCard>
-
               <SectionCard
                 sectionId="inbox"
                 title="Inbox"
@@ -2686,8 +2663,8 @@ export function AdminDashboard({
                   <CollectionSection
                     sectionId="pages-brands"
                     title={`${labelForCategorySlug(activeCatalogCategorySlug)} Brands`}
-                    description="Brand cards feed the category grid. Their public links are generated from the category route and brand slug so See More always lands on the filtered listing."
-                    items={scopedBrands(draft.brands, activeCatalogCategorySlug) as unknown as Record<string, unknown>[]}
+                    description="Brand cards feed the category grid. Add products below and choose one of these brand names so the public See More page fills in."
+                    items={activeScopedBrands as unknown as Record<string, unknown>[]}
                     template={{
                       id: `brand-${activeCatalogCategorySlug}-${Date.now()}`,
                       slug: "",
@@ -2699,7 +2676,7 @@ export function AdminDashboard({
                       categorySlug: activeCatalogCategorySlug,
                       tags: [],
                       published: true,
-                      order: scopedBrands(draft.brands, activeCatalogCategorySlug).length + 1,
+                      order: activeScopedBrands.length + 1,
                     }}
                     fields={[
                       { key: "id", label: "ID", type: "text" },
@@ -2725,14 +2702,14 @@ export function AdminDashboard({
                   {catalogEditingEnabled ? (
                     <CollectionSection
                       sectionId="pages-catalog-items"
-                      title={`${labelForCategorySlug(activeCatalogCategorySlug)} Products`}
-                      description="Products feed brand-specific listings, product detail pages, and search. Set Brand to the exact public brand label, such as Michelin or BFGoodrich, so filtered brand pages populate."
-                      items={scopedProductItems(draftCatalog, activeCatalogCategorySlug) as unknown as Record<string, unknown>[]}
+                      title={`${labelForCategorySlug(activeCatalogCategorySlug)} Products by Brand`}
+                      description="Add products for the brands on this page. Choose the Brand from the dropdown so each brand card knows which products to show."
+                      items={activeScopedProductItems as unknown as Record<string, unknown>[]}
                       template={{
                         id: `product-${activeCatalogCategorySlug}-${Date.now()}`,
                         slug: "",
                         categorySlug: activeCatalogCategorySlug,
-                        brand: "",
+                        brand: activeBrandSelectOptions[0]?.value ?? "",
                         title: "",
                         summary: "",
                         description: "",
@@ -2744,12 +2721,14 @@ export function AdminDashboard({
                         tags: [],
                         searchKeywords: [],
                         published: true,
-                        order: scopedProductItems(draftCatalog, activeCatalogCategorySlug).length + 1,
+                        order: activeScopedProductItems.length + 1,
                       }}
                       fields={[
                         { key: "id", label: "ID", type: "text" },
                         { key: "slug", label: "Slug", type: "text" },
-                        { key: "brand", label: "Brand", type: "text" },
+                        activeBrandSelectOptions.length > 0
+                          ? { key: "brand", label: "Brand", type: "select", options: activeBrandSelectOptions }
+                          : { key: "brand", label: "Brand", type: "text" },
                         { key: "title", label: "Title", type: "text" },
                         { key: "summary", label: "Summary", type: "textarea" },
                         { key: "description", label: "Description", type: "textarea" },
@@ -2768,7 +2747,7 @@ export function AdminDashboard({
                         )
                       }
                       fieldCallbacks={fieldCallbacks}
-                      addLabel="Add Product"
+                      addLabel={activeCatalogCategorySlug === "tires" ? "Add Tire" : "Add Product"}
                       itemLabel={`${labelForCategorySlug(activeCatalogCategorySlug)} Product`}
                     />
                   ) : (

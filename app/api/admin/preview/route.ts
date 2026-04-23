@@ -1,15 +1,22 @@
 import { draftMode } from "next/headers";
 import { NextResponse } from "next/server";
 import { externalProductCatalogSchema, siteContentSchema } from "@/lib/content-schemas";
-import { isAdminAuthenticated } from "@/lib/server/admin-auth";
+import { getAdminIdentity, isAdminAuthenticated } from "@/lib/server/admin-auth";
+import { logAdminActivity } from "@/lib/server/admin-activity-log";
+import { adminRateLimitResponse, consumeAdminWriteRateLimit } from "@/lib/server/admin-rate-limit";
 import {
-  savePreviewProductCatalog,
-  savePreviewSiteContent,
+  saveProductCatalog,
+  saveSiteContent,
 } from "@/lib/server/ridemax-content-repository";
 
 export async function POST(request: Request) {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rateLimit = consumeAdminWriteRateLimit(request, "preview");
+  if (!rateLimit.ok) {
+    return adminRateLimitResponse(rateLimit.resetAt);
   }
 
   const body = (await request.json()) as {
@@ -38,17 +45,33 @@ export async function POST(request: Request) {
     );
   }
 
-  await savePreviewSiteContent(parsed.data);
-  if (parsedCatalog?.success) {
-    await savePreviewProductCatalog(parsedCatalog.data);
+  const destination = typeof body.path === "string" && body.path.startsWith("/")
+    ? body.path
+    : "/";
+
+  try {
+    await saveSiteContent(parsed.data);
+    if (parsedCatalog?.success) {
+      await saveProductCatalog(parsedCatalog.data);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to prepare preview.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 
   const preview = await draftMode();
   preview.enable();
 
-  const destination = typeof body.path === "string" && body.path.startsWith("/")
-    ? body.path
-    : "/";
+  await logAdminActivity({
+    actorEmail: await getAdminIdentity(),
+    action: "save_draft",
+    entityType: "preview",
+    entityId: destination,
+    metadata: {
+      path: destination,
+      productCatalog: Boolean(parsedCatalog?.success),
+    },
+  });
 
   return NextResponse.json({
     previewUrl: new URL(destination, request.url).toString(),

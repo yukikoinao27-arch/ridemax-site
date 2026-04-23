@@ -42,6 +42,10 @@ export type SectionHeadingScale = "compact" | "standard" | "display";
 
 export type SectionTextTone = "default" | "muted" | "brand";
 
+export type SectionHeadingStyle = "standard" | "large" | "emphasis" | "minimal";
+
+export type SectionTextColorScheme = "default" | "dark" | "light" | "muted" | "brand";
+
 export type SectionLayoutPreset = "standard" | "compact" | "feature";
 
 export type SectionBodyTextPreset = "standard" | "short" | "editorial";
@@ -69,7 +73,9 @@ export type BlockAppearance = {
   decoration?: SectionDecoration;
   cardPreset?: CardPresetVariant;
   headingScale?: SectionHeadingScale;
+  headingStyle?: SectionHeadingStyle;
   textTone?: SectionTextTone;
+  textColorScheme?: SectionTextColorScheme;
   layoutPreset?: SectionLayoutPreset;
   bodyTextPreset?: SectionBodyTextPreset;
   ctaPreset?: SectionCtaPreset;
