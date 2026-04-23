@@ -121,6 +121,7 @@ export default async function ProductCategoryPage({
   const showBrandSection = Boolean(activeBrandRecord);
   const hasBrandResults = sortedBrandProducts.length > 0;
   const isTiresCategory = category.slug === "tires";
+  const showCategoryLandingSections = !activeBrandRecord;
 
   return (
     <main>
@@ -139,7 +140,7 @@ export default async function ProductCategoryPage({
         </Link>
       </HeroBanner>
 
-      {brands.length > 0 ? (
+      {showCategoryLandingSections && brands.length > 0 ? (
         <section className="bg-white py-16">
           <div className="mx-auto max-w-[72rem] px-6 md:px-10">
             <div className="max-w-3xl">
@@ -320,18 +321,20 @@ export default async function ProductCategoryPage({
         </section>
       ) : null}
 
-      <section className="bg-white py-16">
-        <div className="mx-auto max-w-[72rem] px-6 md:px-10">
-          <div className="max-w-3xl">
-            <h2 className="text-6xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
-              {category.sectionTitle}
-            </h2>
-            <p className="mt-4 text-base leading-8 text-[#4d3b37]">{category.sectionSummary}</p>
-          </div>
+      {showCategoryLandingSections ? (
+        <section className="bg-white py-16">
+          <div className="mx-auto max-w-[72rem] px-6 md:px-10">
+            <div className="max-w-3xl">
+              <h2 className="text-6xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
+                {category.sectionTitle}
+              </h2>
+              <p className="mt-4 text-base leading-8 text-[#4d3b37]">{category.sectionSummary}</p>
+            </div>
 
-          <AlternatingFeatureRows sections={category.sections} />
-        </div>
-      </section>
+            <AlternatingFeatureRows sections={category.sections} />
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

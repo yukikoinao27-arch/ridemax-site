@@ -633,6 +633,36 @@ function renderBlock(
     );
   }
 
+  if (block.type === "careersIntro") {
+    return (
+      <section
+        key={block.id}
+        id={`section-${block.id}`}
+        className={sectionClass(block, "pb-20 pt-16 md:pb-24 md:pt-20")}
+      >
+        <SectionDecoration appearance={block.appearance} />
+        <div className="relative mx-auto max-w-[118rem] px-6 md:px-10">
+          <div className="mx-auto max-w-4xl text-center">
+            <SectionHeader
+              eyebrow={block.eyebrow}
+              title={block.title}
+              summary={block.summary}
+              appearance={block.appearance}
+            />
+          </div>
+          {block.images.length > 0 ? (
+            <ImageMarquee
+              images={block.images}
+              direction={block.direction}
+              altPrefix={block.altPrefix ?? block.title ?? "Gallery image"}
+              className="mt-10 md:mt-12"
+            />
+          ) : null}
+        </div>
+      </section>
+    );
+  }
+
   if (block.type === "brandMarquee") {
     const brands = resolveBrandMarqueeBrands(block, content.brands);
 
@@ -1038,7 +1068,16 @@ function renderBlock(
                 className={`min-h-24 rounded-2xl border p-3 ${item.inMonth ? "border-black/10 bg-white" : "border-transparent bg-white/35 text-black/35"}`}
               >
                 <div className="text-sm font-semibold">{item.label}</div>
-                {item.title ? <div className="mt-2 text-xs leading-5 text-[#8d120e]">{item.title}</div> : null}
+                {item.title ? (
+                  <>
+                    <div className="mt-2 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-[#8d120e] sm:hidden">
+                      Event
+                    </div>
+                    <div className="mt-2 hidden text-xs leading-5 text-[#8d120e] sm:block">
+                      {item.title}
+                    </div>
+                  </>
+                ) : null}
               </div>
             ))}
           </div>

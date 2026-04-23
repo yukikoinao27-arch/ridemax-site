@@ -265,14 +265,14 @@
       "slug": "apollo-apterra-at2",
       "brand": "Apollo Tyres",
       "title": "Apollo Apterra AT2",
-      "summary": "A sample all-terrain Apollo tire for mixed road use, weekend trail drives, and tougher SUV fitments.",
-      "description": "Apollo Apterra AT2 is a sample Apollo tire entry for the Ridemax catalog. It gives the Apollo brand page a real product card with an all-terrain fitment story, balanced everyday comfort, and stronger traction for drivers who split time between city roads and outdoor runs.",
+      "summary": "The Apollo Apterra AT2 is built for drivers who want one tire that can confidently handle daily roads, provincial drives, and light trail weekends without giving up ride comfort.",
+      "description": "The Apollo Apterra AT2 is a practical all-terrain option for SUVs and pickups that need steady on-road manners, more confident loose-surface traction, and a tougher visual stance for adventure-ready builds.",
       "highlights": [
-        "Sample Apollo catalog row for the brand detail view.",
-        "Balanced all-terrain tread for road and light trail use.",
-        "Comfort-minded daily driving with added grip on rougher surfaces."
+        "Balanced on-road and light off-road usability.",
+        "Confident tread blocks for gravel, dirt, and mixed-surface driving.",
+        "Comfort-minded fitment for everyday commutes and weekend escapes."
       ],
-      "sku": "APTERRAAT2",
+      "sku": "APTERRA-AT2",
       "image": "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
       "gallery": [
         "https://static.wixstatic.com/media/2d031a_163529c45be34d1baa46781022b601f8~mv2.png/v1/fit/w_960,h_540,q_90,enc_avif,quality_auto/2d031a_163529c45be34d1baa46781022b601f8~mv2.png",
@@ -281,6 +281,7 @@
       "sizes": [
         "225/65R17",
         "235/65R17",
+        "255/60R18",
         "265/60R18"
       ],
       "tags": [
@@ -291,6 +292,7 @@
       "searchKeywords": [
         "apollo",
         "apterra",
+        "apterra at2",
         "all terrain",
         "tires",
         "suv"

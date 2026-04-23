@@ -143,6 +143,7 @@ export const pageSlugOptions: SelectOption[] = [
 
 export const pageBlockTypeOptions: SelectOption[] = [
   { label: "Hero Banner", value: "hero" },
+  { label: "Careers Intro Band", value: "careersIntro" },
   { label: "Brand Carousel", value: "brandMarquee" },
   { label: "Category Buttons", value: "categoryTiles" },
   { label: "Card Grid", value: "collectionGrid" },
@@ -164,6 +165,22 @@ function pageLabel(slug: ContentPageSlug) {
 
 function blockLabel(type: PageBlockType) {
   return pageBlockTypeOptions.find((option) => option.value === type)?.label ?? type;
+}
+
+function createCareersIntroAppearance(): BlockAppearance {
+  return {
+    background: "brand-red",
+    headingScale: "display",
+    headingStyle: "standard",
+    textTone: "default",
+    textColorScheme: "light",
+    decoration: {
+      style: "curve",
+      position: "bottom",
+      size: "lg",
+      color: "surface-1",
+    },
+  };
 }
 
 export function collectionVariantForSource(source: CollectionGridSource) {
@@ -267,6 +284,15 @@ export function createPageBlockTemplate(type: PageBlockType): PageBlock {
         dark: true,
         minHeight: "min-h-[28rem]",
         tone: "default",
+      };
+    case "careersIntro":
+      return {
+        ...base,
+        type,
+        images: [],
+        direction: "right-to-left",
+        altPrefix: "Ridemax careers gallery",
+        appearance: createCareersIntroAppearance(),
       };
     case "brandMarquee":
       return {
@@ -448,6 +474,13 @@ function isCompactHero(target: AppearanceEditorTarget) {
  * back into safe presets as editors make changes.
  */
 export function sanitizePageBlockAppearance(block: PageBlock): PageBlock {
+  if (block.type === "careersIntro") {
+    return {
+      ...block,
+      appearance: createCareersIntroAppearance(),
+    };
+  }
+
   const appearance = { ...(block.appearance ?? {}) };
   const background = appearance.background ?? "surface-1";
   const decoration = { ...(appearance.decoration ?? {}) };
@@ -488,6 +521,10 @@ export function getPageBlockAppearanceFields(
   target?: AppearanceEditorTarget,
 ): PageBlockFieldConfig[] {
   const blockType = appearanceTargetType(target);
+  if (blockType === "careersIntro") {
+    return [];
+  }
+
   const appearance = appearanceTargetAppearance(target);
   const background = appearance?.background ?? "surface-1";
   const disabledTextSchemes = sectionTextColorSchemeOptions
@@ -630,6 +667,29 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
         },
         { key: "cta.label", label: "CTA Label", type: "text", helpText: "Button text shown over the hero image. Leave blank to hide the button." },
         { key: "cta.href", label: "CTA Link", type: "text", helpText: "URL the button navigates to, e.g. /products or https://example.com." },
+      ];
+    case "careersIntro":
+      return [
+        ...common,
+        {
+          key: "images",
+          label: "Moving Images",
+          type: "image-list",
+          helpText:
+            "Upload or select the photos that move across this red intro band. Their order here is the order used on the public page.",
+        },
+        {
+          key: "direction",
+          label: "Direction",
+          type: "select",
+          options: motionDirectionOptions,
+        },
+        {
+          key: "altPrefix",
+          label: "Alt Prefix",
+          type: "text",
+          helpText: "Shared alt text prefix for the moving image strip.",
+        },
       ];
     case "brandMarquee":
       return [
