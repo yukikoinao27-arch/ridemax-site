@@ -131,7 +131,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
     <div className="pointer-events-none fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-3">
       {open ? (
         <section
-          className={`pointer-events-auto overflow-hidden rounded-[1.25rem] bg-[#E31E24] text-white shadow-[0_22px_60px_rgba(20,16,18,0.3)] transition-[width,height] duration-200 ${
+          className={`pointer-events-auto overflow-hidden rounded-[1.25rem] bg-[#0B2E63] text-white shadow-[0_22px_60px_rgba(20,16,18,0.3)] transition-[width,height] duration-200 ${
             expanded
               ? "h-[min(42rem,calc(100vh-6rem))] w-[min(34rem,calc(100vw-1.5rem))]"
               : "h-auto w-[min(22rem,calc(100vw-1.5rem))]"
@@ -202,7 +202,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
               <div className="mt-4 rounded-2xl bg-white p-3 text-[#1f2430]">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#fdecec]">
+                    <span className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#e8edf5]">
                       <Image src="/rider-avatar.svg" alt="Rider support avatar" width={40} height={40} className="h-10 w-10 object-cover" />
                     </span>
                     <p className="text-sm font-semibold text-[#26315a]">Team Ridemax PH</p>
@@ -219,7 +219,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                     setMessage("");
                     setScreen("chat");
                   }}
-                  className="mt-4 flex w-full cursor-pointer items-center justify-between rounded-lg bg-[#E31E24] px-3 py-2 text-left text-sm font-semibold text-white transition hover:bg-[#B6161B]"
+                  className="mt-4 flex w-full cursor-pointer items-center justify-between rounded-lg bg-[#0B2E63] px-3 py-2 text-left text-sm font-semibold text-white transition hover:bg-[#123E7A]"
                 >
                   <span>Start a new chat</span>
                   <span className="rounded bg-white/15 px-2 py-1 text-xs uppercase tracking-[0.12em]">Send</span>
@@ -243,9 +243,9 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                       <path d="M15 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
-                  <span className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#fdecec]">
+                  <span className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#e8edf5]">
                     {/* Headset support avatar (matches the Wix reference). */}
-                    <svg viewBox="0 0 24 24" className="h-6 w-6 text-[#E31E24]" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <svg viewBox="0 0 24 24" className="h-6 w-6 text-[#0B2E63]" fill="none" stroke="currentColor" strokeWidth="1.8">
                       <path d="M4 14v-2a8 8 0 0 1 16 0v2" strokeLinecap="round" />
                       <path d="M4 14h3v5H5a1 1 0 0 1-1-1v-4Z" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M20 14h-3v5h2a1 1 0 0 0 1-1v-4Z" strokeLinecap="round" strokeLinejoin="round" />
@@ -323,7 +323,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
                       aria-label="Upload file"
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#3d4f76] transition hover:bg-[#E31E24]/10 hover:text-[#E31E24] disabled:cursor-wait disabled:opacity-60"
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#3d4f76] transition hover:bg-[#0B2E63]/10 hover:text-[#0B2E63] disabled:cursor-wait disabled:opacity-60"
                     >
                       {uploading ? (
                         <svg viewBox="0 0 24 24" className="h-4 w-4 animate-spin" fill="none" stroke="currentColor" strokeWidth="2">
@@ -350,8 +350,8 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                       aria-pressed={emojiOpen}
                       className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition ${
                         emojiOpen
-                          ? "bg-[#E31E24]/15 text-[#E31E24]"
-                          : "text-[#3d4f76] hover:bg-[#E31E24]/10 hover:text-[#E31E24]"
+                          ? "bg-[#0B2E63]/15 text-[#0B2E63]"
+                          : "text-[#3d4f76] hover:bg-[#0B2E63]/10 hover:text-[#0B2E63]"
                       }`}
                     >
                       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -377,7 +377,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                       type="submit"
                       disabled={!message.trim()}
                       aria-label="Send message"
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E31E24] text-white transition hover:bg-[#B6161B] disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0B2E63] text-white transition hover:bg-[#123E7A] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M3 11l18-8-8 18-2-8-8-2Z" strokeLinecap="round" strokeLinejoin="round" />
@@ -398,7 +398,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
           setScreen("welcome");
           setExpanded(false);
         }}
-        className="pointer-events-auto inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#E31E24] text-white shadow-[0_16px_35px_rgba(227,30,36,0.4)] transition hover:scale-[1.03]"
+        className="pointer-events-auto inline-flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-[#0B2E63] text-white shadow-[0_16px_35px_rgba(11,46,99,0.4)] transition hover:scale-[1.03] hover:bg-[#123E7A]"
         aria-label={open ? "Hide chat" : "Open chat"}
       >
         <MessageBubbleIcon />

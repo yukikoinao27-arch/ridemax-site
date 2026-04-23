@@ -224,7 +224,7 @@ export default async function ProductCategoryPage({
                     ))}
                   </div>
                 </div>
-                <button type="submit" className="rounded-full bg-[#220707] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:-translate-y-0.5 hover:bg-[#8d120e]">
+                <button type="submit" className="cursor-pointer rounded-full bg-[#220707] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:-translate-y-0.5 hover:bg-[#8d120e]">
                   Apply filters
                 </button>
               </form>
