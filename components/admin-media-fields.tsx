@@ -31,6 +31,20 @@ type AdminImageGalleryFieldProps = SharedUploadProps & {
   onChange: (value: string[]) => void;
 };
 
+export type AdminBrandGalleryOption = {
+  value: string;
+  label: string;
+  image: string;
+  caption?: string;
+};
+
+type AdminBrandGalleryFieldProps = {
+  value: string[];
+  options: AdminBrandGalleryOption[];
+  onChange: (value: string[]) => void;
+  helpText?: string;
+};
+
 async function uploadImage(file: File) {
   const formData = new FormData();
   formData.append("file", file);
@@ -348,6 +362,156 @@ export function AdminImageGalleryField({
             />
           </div>
           <UploadHint helpText={helpText} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function AdminBrandGalleryField({
+  value,
+  options,
+  onChange,
+  helpText,
+}: AdminBrandGalleryFieldProps) {
+  const [editing, setEditing] = useState(false);
+  const selectedOptions = value
+    .map((slug) => options.find((option) => option.value === slug))
+    .filter((option): option is AdminBrandGalleryOption => Boolean(option));
+  const availableOptions = options.filter((option) => !value.includes(option.value));
+  const [pendingValue, setPendingValue] = useState("");
+  const resolvedPendingValue = availableOptions.some((option) => option.value === pendingValue)
+    ? pendingValue
+    : (availableOptions[0]?.value ?? "");
+
+  return (
+    <div className="mt-1 rounded-[1.1rem] border border-black/10 bg-[#faf8f7] p-2.5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          {selectedOptions.slice(0, 3).map((brand) => (
+            <div
+              key={brand.value}
+              className="relative h-11 w-12 shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white"
+            >
+              {brand.image ? (
+                <Image
+                  src={brand.image}
+                  alt=""
+                  fill
+                  unoptimized
+                  sizes="48px"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center px-1 text-center text-[0.52rem] font-semibold uppercase tracking-[0.12em] text-[#8a6b65]">
+                  {brand.label}
+                </div>
+              )}
+            </div>
+          ))}
+          {selectedOptions.length === 0 ? (
+            <div className="flex h-11 w-20 shrink-0 items-center justify-center rounded-lg border border-dashed border-black/12 bg-white text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-[#8a6b65]">
+              No brands
+            </div>
+          ) : null}
+          <div className="min-w-0">
+            <p className="text-sm font-semibold leading-tight text-[#220707]">
+              {selectedOptions.length} selected brand{selectedOptions.length === 1 ? "" : "s"}
+            </p>
+            <p className="text-xs text-[#6a433d]">
+              Expand only when you need to add or remove brands.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setEditing((current) => !current)}
+          className="inline-flex h-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
+        >
+          {editing ? "Done" : "Edit Gallery"}
+        </button>
+      </div>
+
+      {editing ? (
+        <div className="mt-3 border-t border-black/8 pt-3">
+          {selectedOptions.length > 0 ? (
+            <div className="grid max-h-56 gap-2 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3">
+              {selectedOptions.map((brand) => (
+                <div
+                  key={brand.value}
+                  className="flex items-center gap-2 overflow-hidden rounded-[1rem] border border-black/10 bg-white p-2"
+                >
+                  <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-lg border border-black/10 bg-[#f3f0ee]">
+                    {brand.image ? (
+                      <Image
+                        src={brand.image}
+                        alt={brand.label}
+                        fill
+                        unoptimized
+                        sizes="80px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center px-2 text-center text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-[#8a6b65]">
+                        {brand.label}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-[#220707]">{brand.label}</p>
+                    {brand.caption ? (
+                      <p className="truncate text-xs text-[#6a433d]">{brand.caption}</p>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => onChange(value.filter((slug) => slug !== brand.value))}
+                      className="mt-1 cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e] transition hover:opacity-75"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyPreview label="brand" />
+          )}
+
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+            <select
+              value={resolvedPendingValue}
+              onChange={(event) => setPendingValue(event.target.value)}
+              className="w-full rounded-[1rem] border border-black/12 bg-white px-3 py-2.5 outline-none transition duration-150 ease-out hover:border-[#8d120e]/30 focus:border-[#8d120e] focus:shadow-[0_0_0_3px_rgba(141,18,14,0.08)]"
+            >
+              <option value="">Select brand</option>
+              {availableOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={!resolvedPendingValue}
+              onClick={() => {
+                if (!resolvedPendingValue || value.includes(resolvedPendingValue)) {
+                  return;
+                }
+
+                onChange([...value, resolvedPendingValue]);
+                setPendingValue("");
+              }}
+              className="inline-flex h-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#8d120e] px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#a51611] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              Add Brand
+            </button>
+          </div>
+          <UploadHint
+            helpText={
+              helpText ??
+              "Choose the published brands and order used in this strip. Edit each brand image in the Brands panel below."
+            }
+          />
         </div>
       ) : null}
     </div>

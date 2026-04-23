@@ -192,6 +192,13 @@ summary::-webkit-details-marker {
   transform: translateY(0);
 }
 
+@media (hover: none), (pointer: coarse) {
+  .card-lift-reveal {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Careers "Fuel Your Passion" bento grid (matches reference layout). */
 .grid-container {
   display: grid;

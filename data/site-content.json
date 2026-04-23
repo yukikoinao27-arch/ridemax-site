@@ -143,7 +143,23 @@
           "summary": "",
           "eyebrow": "",
           "type": "brandMarquee",
-          "direction": "right-to-left"
+          "direction": "right-to-left",
+          "brandSlugs": [
+            "monsta",
+            "rigid",
+            "patriot-tires",
+            "venom-power",
+            "apollo-tyres",
+            "arivo-tires",
+            "bfgoodrich",
+            "michelin",
+            "atlander-tires",
+            "fuel-off-road",
+            "cooper-tires",
+            "work-wheels",
+            "linglong-tires",
+            "profender"
+          ]
         },
         {
           "id": "home-category-tiles",
@@ -315,7 +331,19 @@
           ],
           "direction": "right-to-left",
           "altPrefix": "Ridemax careers gallery",
-          "background": "bg-[#E31E24] text-white"
+          "appearance": {
+            "background": "brand-red",
+            "headingScale": "standard",
+            "headingStyle": "standard",
+            "textTone": "default",
+            "textColorScheme": "light",
+            "decoration": {
+              "style": "none",
+              "position": "bottom",
+              "size": "md",
+              "color": "surface-1"
+            }
+          }
         },
         {
           "id": "careers-why-join",

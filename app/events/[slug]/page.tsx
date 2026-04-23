@@ -1,5 +1,6 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EventCountdown } from "@/components/event-countdown";
 import { MapEmbed } from "@/components/map-embed";
@@ -31,7 +32,14 @@ export default async function EventDetailPage({ params }: EventPageProps) {
   return (
     <main className="bg-[#f7f4f1] py-16">
       <div className="mx-auto max-w-[72rem] px-6 md:px-10">
-        <section className="grid gap-8 bg-[#ebe6e4] p-8 lg:grid-cols-[22rem_1fr]">
+        <Link
+          href="/events"
+          className="inline-flex rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:border-[#8d120e]/30 hover:bg-[#fff7f6] hover:text-[#8d120e]"
+        >
+          Back to Events
+        </Link>
+
+        <section className="mt-8 grid gap-8 bg-[#ebe6e4] p-8 lg:grid-cols-[22rem_1fr]">
           <div className="relative min-h-[30rem] overflow-hidden">
             <Image src={event.detailImage} alt={event.title} fill className="object-contain bg-white" sizes="22rem" />
           </div>
@@ -49,7 +57,7 @@ export default async function EventDetailPage({ params }: EventPageProps) {
                 links={[
                   { platform: "facebook", label: "Facebook", href: event.shareLinks.facebook },
                   { platform: "x", label: "X", href: event.shareLinks.x },
-                  { platform: "linkedin", label: "LinkedIn", href: event.shareLinks.linkedin }
+                  { platform: "linkedin", label: "LinkedIn", href: event.shareLinks.linkedin },
                 ]}
               />
             </div>
