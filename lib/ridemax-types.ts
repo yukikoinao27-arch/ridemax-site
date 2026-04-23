@@ -28,6 +28,7 @@ export type SectionBackgroundVariant =
   | "surface-2"
   | "surface-3"
   | "brand-red"
+  | "deep-brand-red"
   | "ink";
 
 export type SectionDecorationStyle = "none" | "wave" | "curve" | "diagonal" | "blob";
@@ -38,10 +39,24 @@ export type SectionDecorationSize = "sm" | "md" | "lg";
 
 export type SectionDecorationColor =
   | "brand-red"
+  | "deep-brand-red"
   | "wine"
   | "surface-1"
   | "surface-2"
   | "surface-3";
+
+/**
+ * Section presets bundle a safe background/text/shape combination into a
+ * single dropdown so marketing can reproduce approved looks without juggling
+ * every appearance control from scratch.
+ */
+export type SectionAppearancePreset =
+  | "custom"
+  | "deep-brand-curve"
+  | "deep-brand-wave"
+  | "light-curve-top"
+  | "warm-wave-top"
+  | "ink-spotlight";
 
 export type SectionHeadingScale = "compact" | "standard" | "display";
 
@@ -74,6 +89,7 @@ export type SectionDecoration = {
 export type CardPresetVariant = "standard" | "imageOverlay" | "brandLogo";
 
 export type BlockAppearance = {
+  preset?: SectionAppearancePreset;
   background?: SectionBackgroundVariant;
   decoration?: SectionDecoration;
   cardPreset?: CardPresetVariant;

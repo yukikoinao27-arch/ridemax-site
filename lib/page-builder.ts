@@ -6,6 +6,7 @@ import type {
   PageBlockType,
   PageDocument,
   RidemaxSiteContent,
+  SectionAppearancePreset,
 } from "@/lib/ridemax-types";
 
 export type SelectOption = {
@@ -32,6 +33,7 @@ export const sectionBackgroundOptions: SelectOption[] = [
   { label: "Soft gray", value: "surface-2" },
   { label: "Warm tint", value: "surface-3" },
   { label: "Brand red", value: "brand-red" },
+  { label: "Deep brand red", value: "deep-brand-red" },
   { label: "Charcoal", value: "ink" },
 ];
 
@@ -45,10 +47,20 @@ export const sectionDecorationStyleOptions: SelectOption[] = [
 
 export const sectionDecorationColorOptions: SelectOption[] = [
   { label: "Brand red", value: "brand-red" },
+  { label: "Deep brand red", value: "deep-brand-red" },
   { label: "Dark wine", value: "wine" },
   { label: "Default white", value: "surface-1" },
   { label: "Soft gray", value: "surface-2" },
   { label: "Warm tint", value: "surface-3" },
+];
+
+export const sectionAppearancePresetOptions: SelectOption[] = [
+  { label: "Custom", value: "custom" },
+  { label: "Deep Brand Curve", value: "deep-brand-curve" },
+  { label: "Deep Brand Wave", value: "deep-brand-wave" },
+  { label: "Light Curve Top", value: "light-curve-top" },
+  { label: "Warm Wave Top", value: "warm-wave-top" },
+  { label: "Ink Spotlight", value: "ink-spotlight" },
 ];
 
 export const sectionDecorationPositionOptions: SelectOption[] = [
@@ -144,7 +156,7 @@ export const pageSlugOptions: SelectOption[] = [
 export const pageBlockTypeOptions: SelectOption[] = [
   { label: "Hero Banner", value: "hero" },
   { label: "Careers Intro Band", value: "careersIntro" },
-  { label: "Brand Carousel", value: "brandMarquee" },
+  { label: "Moving Brand Images", value: "brandMarquee" },
   { label: "Category Buttons", value: "categoryTiles" },
   { label: "Card Grid", value: "collectionGrid" },
   { label: "Feature Cards", value: "featureGrid" },
@@ -167,9 +179,19 @@ function blockLabel(type: PageBlockType) {
   return pageBlockTypeOptions.find((option) => option.value === type)?.label ?? type;
 }
 
-function createCareersIntroAppearance(): BlockAppearance {
+function cloneAppearance(appearance: BlockAppearance): BlockAppearance {
   return {
-    background: "brand-red",
+    ...appearance,
+    decoration: appearance.decoration ? { ...appearance.decoration } : undefined,
+  };
+}
+
+const appearancePresetMap: Record<
+  Exclude<SectionAppearancePreset, "custom">,
+  BlockAppearance
+> = {
+  "deep-brand-curve": {
+    background: "deep-brand-red",
     headingScale: "display",
     headingStyle: "standard",
     textTone: "default",
@@ -180,6 +202,93 @@ function createCareersIntroAppearance(): BlockAppearance {
       size: "lg",
       color: "surface-1",
     },
+  },
+  "deep-brand-wave": {
+    background: "deep-brand-red",
+    headingScale: "display",
+    headingStyle: "standard",
+    textTone: "default",
+    textColorScheme: "light",
+    decoration: {
+      style: "wave",
+      position: "bottom",
+      size: "lg",
+      color: "surface-1",
+    },
+  },
+  "light-curve-top": {
+    background: "surface-1",
+    headingScale: "display",
+    headingStyle: "standard",
+    textTone: "default",
+    textColorScheme: "default",
+    decoration: {
+      style: "curve",
+      position: "top",
+      size: "lg",
+      color: "deep-brand-red",
+    },
+  },
+  "warm-wave-top": {
+    background: "surface-3",
+    headingScale: "standard",
+    headingStyle: "standard",
+    textTone: "default",
+    textColorScheme: "default",
+    decoration: {
+      style: "wave",
+      position: "top",
+      size: "lg",
+      color: "deep-brand-red",
+    },
+  },
+  "ink-spotlight": {
+    background: "ink",
+    headingScale: "display",
+    headingStyle: "emphasis",
+    textTone: "default",
+    textColorScheme: "light",
+    decoration: {
+      style: "blob",
+      position: "bottom",
+      size: "lg",
+      color: "deep-brand-red",
+    },
+  },
+};
+
+function createAppearancePreset(preset: SectionAppearancePreset): BlockAppearance {
+  if (preset === "custom") {
+    return {};
+  }
+
+  return cloneAppearance(appearancePresetMap[preset]);
+}
+
+function applyAppearancePreset(appearance?: BlockAppearance): BlockAppearance {
+  const nextAppearance = cloneAppearance(appearance ?? {});
+  const preset = nextAppearance.preset;
+
+  if (!preset || preset === "custom") {
+    return nextAppearance;
+  }
+
+  const presetAppearance = createAppearancePreset(preset);
+
+  return {
+    ...nextAppearance,
+    ...presetAppearance,
+    decoration: {
+      ...(nextAppearance.decoration ?? {}),
+      ...(presetAppearance.decoration ?? {}),
+    },
+  };
+}
+
+function createCareersIntroAppearance(): BlockAppearance {
+  return {
+    preset: "deep-brand-curve",
+    ...createAppearancePreset("deep-brand-curve"),
   };
 }
 
@@ -249,6 +358,7 @@ export function createPageDocumentTemplate(slug: ContentPageSlug): PageDocument 
 
 export function createPageBlockTemplate(type: PageBlockType): PageBlock {
   const defaultAppearance: BlockAppearance = {
+    preset: "custom",
     background: "surface-1",
     headingScale: "standard",
     headingStyle: "standard",
@@ -474,14 +584,7 @@ function isCompactHero(target: AppearanceEditorTarget) {
  * back into safe presets as editors make changes.
  */
 export function sanitizePageBlockAppearance(block: PageBlock): PageBlock {
-  if (block.type === "careersIntro") {
-    return {
-      ...block,
-      appearance: createCareersIntroAppearance(),
-    };
-  }
-
-  const appearance = { ...(block.appearance ?? {}) };
+  const appearance = applyAppearancePreset(block.appearance);
   const background = appearance.background ?? "surface-1";
   const decoration = { ...(appearance.decoration ?? {}) };
   const allowedTextSchemes = allowedTextColorSchemesForBackground(background);
@@ -521,10 +624,6 @@ export function getPageBlockAppearanceFields(
   target?: AppearanceEditorTarget,
 ): PageBlockFieldConfig[] {
   const blockType = appearanceTargetType(target);
-  if (blockType === "careersIntro") {
-    return [];
-  }
-
   const appearance = appearanceTargetAppearance(target);
   const background = appearance?.background ?? "surface-1";
   const disabledTextSchemes = sectionTextColorSchemeOptions
@@ -533,6 +632,14 @@ export function getPageBlockAppearanceFields(
   const disabledShapeColors = appearance?.decoration?.style === "none" ? [] : [background];
   const disabledShapeSizes = isCompactHero(target) ? ["lg"] : [];
   const base: PageBlockFieldConfig[] = [
+    {
+      key: "appearance.preset",
+      label: "Section Preset",
+      type: "select",
+      options: sectionAppearancePresetOptions,
+      helpText:
+        "Choose a preconfigured combination. Changing a section appearance control switches the block back to Custom.",
+    },
     {
       key: "appearance.background",
       label: "Section Background",
@@ -699,7 +806,7 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
           label: "Brand Category",
           type: "select",
           helpText:
-            "The moving logo strip uses published brand images from the Brands panel for this category.",
+            "Use all published brands from one category, or leave it on All brands and choose an explicit list below.",
           options: [
             { label: "All brands", value: "" },
             { label: "Tires", value: "tires" },
@@ -712,7 +819,7 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
           label: "Moving Brands",
           type: "brand-list",
           helpText:
-            "Choose the brands and order used in this strip. Leave it empty to use all published brands from the selected category.",
+            "Choose the brands and order used in this strip. Edit each card image, summary, category, and tags in the Brands sections below.",
         },
         {
           key: "direction",

@@ -36,11 +36,13 @@ const sectionBackgroundClasses = {
   "surface-2": "bg-[#f2efec]",
   "surface-3": "bg-[#faf8f7]",
   "brand-red": "bg-[#E31E24]",
+  "deep-brand-red": "bg-[#A00000]",
   ink: "bg-[#220707]",
 } satisfies Record<NonNullable<BlockAppearance["background"]>, string>;
 
 const sectionDecorationColors = {
   "brand-red": "#b30d0d",
+  "deep-brand-red": "#A00000",
   wine: "#300000",
   "surface-1": "#ffffff",
   "surface-2": "#f2efec",

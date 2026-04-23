@@ -22,13 +22,14 @@ const sectionBackgroundVariantSchema = z.enum([
   "surface-2",
   "surface-3",
   "brand-red",
+  "deep-brand-red",
   "ink",
 ]);
 const sectionDecorationSchema = z.object({
   style: z.enum(["none", "wave", "curve", "diagonal", "blob"]).optional(),
   position: z.enum(["top", "bottom"]).optional(),
   size: z.enum(["sm", "md", "lg"]).optional(),
-  color: z.enum(["brand-red", "wine", "surface-1", "surface-2", "surface-3"]).optional(),
+  color: z.enum(["brand-red", "deep-brand-red", "wine", "surface-1", "surface-2", "surface-3"]).optional(),
 });
 const cardPresetVariantSchema = z.enum(["standard", "imageOverlay", "brandLogo"]);
 const sectionHeadingScaleSchema = z.enum(["compact", "standard", "display"]);
@@ -38,7 +39,16 @@ const sectionTextColorSchemeSchema = z.enum(["default", "dark", "light", "muted"
 const sectionLayoutPresetSchema = z.enum(["standard", "compact", "feature"]);
 const sectionBodyTextPresetSchema = z.enum(["standard", "short", "editorial"]);
 const sectionCtaPresetSchema = z.enum(["solid", "outline", "text"]);
+const sectionAppearancePresetSchema = z.enum([
+  "custom",
+  "deep-brand-curve",
+  "deep-brand-wave",
+  "light-curve-top",
+  "warm-wave-top",
+  "ink-spotlight",
+]);
 const blockAppearanceSchema = z.object({
+  preset: sectionAppearancePresetSchema.optional(),
   background: sectionBackgroundVariantSchema.optional(),
   decoration: sectionDecorationSchema.optional(),
   cardPreset: cardPresetVariantSchema.optional(),
