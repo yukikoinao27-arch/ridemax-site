@@ -50,9 +50,9 @@ export async function POST(request: Request) {
     : "/";
 
   try {
-    await saveSiteContent(parsed.data);
+    await saveSiteContent(parsed.data, { allowLocalFallback: false });
     if (parsedCatalog?.success) {
-      await saveProductCatalog(parsedCatalog.data);
+      await saveProductCatalog(parsedCatalog.data, { allowLocalFallback: false });
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to prepare preview.";

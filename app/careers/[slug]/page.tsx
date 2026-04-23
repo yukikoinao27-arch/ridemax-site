@@ -40,9 +40,9 @@ export default async function JobPage({ params }: JobPageProps) {
         title={job.title}
         summary={job.summary}
         minHeight="min-h-[22rem]"
-        align="left"
+        align="center"
       >
-        <div className="flex flex-wrap gap-3 text-sm font-semibold uppercase tracking-[0.14em] text-white/85">
+        <div className="flex flex-wrap justify-center gap-3 text-sm font-semibold uppercase tracking-[0.14em] text-white/85">
           <span>{department?.name ?? "Team"}</span>
           <span>{job.location}</span>
           <span>{job.type}</span>

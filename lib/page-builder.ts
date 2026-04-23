@@ -560,7 +560,12 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
   const common: PageBlockFieldConfig[] = [
     { key: "title", label: "Title", type: "text" },
     { key: "summary", label: "Summary", type: "textarea" },
-    { key: "eyebrow", label: "Eyebrow", type: "text" },
+    {
+      key: "eyebrow",
+      label: "Eyebrow",
+      type: "text",
+      helpText: "Small text above the main title, used for context or category.",
+    },
   ];
 
   switch (block.type) {
@@ -578,7 +583,12 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
             { label: "Left", value: "left" },
           ],
         },
-        { key: "dark", label: "Dark Overlay", type: "checkbox" },
+        {
+          key: "dark",
+          label: "Dark Overlay",
+          type: "checkbox",
+          helpText: "Adds a dark layer over the image to improve text readability.",
+        },
         { key: "minHeight", label: "Hero Height", type: "select", options: heroMinHeightOptions },
         {
           key: "tone",
@@ -645,8 +655,18 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
         { key: "limit", label: "Limit", type: "text" },
         { key: "featuredOnly", label: "Featured Only", type: "checkbox" },
         { key: "categorySlug", label: "Category Filter", type: "text" },
-        { key: "cta.label", label: "CTA Label", type: "text" },
-        { key: "cta.href", label: "CTA Link", type: "text" },
+        {
+          key: "cta.label",
+          label: "CTA Label",
+          type: "text",
+          helpText: "Button text shown in this section.",
+        },
+        {
+          key: "cta.href",
+          label: "CTA Link",
+          type: "text",
+          helpText: "Where the button should open.",
+        },
       ];
     case "featureGrid":
       return [
@@ -693,8 +713,18 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
         ...common,
         { key: "featuredTitle", label: "Featured Title", type: "text" },
         { key: "featuredSummary", label: "Featured Summary", type: "textarea" },
-        { key: "aboutCta.label", label: "About CTA Label", type: "text" },
-        { key: "aboutCta.href", label: "About CTA Link", type: "text" },
+        {
+          key: "aboutCta.label",
+          label: "About CTA Label",
+          type: "text",
+          helpText: "Button text shown below the jobs list.",
+        },
+        {
+          key: "aboutCta.href",
+          label: "About CTA Link",
+          type: "text",
+          helpText: "Where the button should open.",
+        },
         { key: "showFeatured", label: "Show Featured", type: "checkbox" },
       ];
     case "contact":

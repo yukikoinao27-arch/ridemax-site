@@ -2,10 +2,9 @@ import { randomUUID } from "node:crypto";
 import type { JobApplicationInput } from "@/lib/content-schemas";
 import { getServerSupabaseClient } from "@/lib/server/supabase-server";
 
-// Public shape returned to the admin inbox. `resumeUrl` is a free-text URL the
-// applicant supplies (they host the file on Drive/Dropbox/etc). We intentionally
-// don't accept binary uploads here — an unauthenticated file pipeline is a
-// large class of security risk marketing shouldn't own.
+// Public shape returned to the admin inbox. `resumeUrl` remains for legacy rows
+// and externally-hosted resume links; new submissions can attach a PDF through
+// /api/careers/apply and deliver it through the HR notification channel.
 export type JobApplication = {
   id: string;
   jobSlug: string;

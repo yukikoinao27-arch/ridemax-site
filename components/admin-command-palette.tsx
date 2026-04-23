@@ -100,7 +100,7 @@ export function AdminCommandPalette() {
   const [entries, setEntries] = useState<AdminSearchEntry[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const listRef = useRef<HTMLUListElement | null>(null);
+  const activeItemRef = useRef<HTMLLIElement | null>(null);
   const router = useRouter();
 
   // Global Ctrl+K / Cmd+K. Also Esc closes. Plus a window-level
@@ -180,9 +180,10 @@ export function AdminCommandPalette() {
     filtered.length === 0 ? -1 : Math.min(activeIndex, filtered.length - 1);
 
   useEffect(() => {
-    if (safeActiveIndex < 0 || !listRef.current) return;
-    const item = listRef.current.children[safeActiveIndex] as HTMLElement | undefined;
-    item?.scrollIntoView({ block: "nearest" });
+    activeItemRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
   }, [safeActiveIndex]);
 
   if (!open) {
@@ -243,14 +244,17 @@ export function AdminCommandPalette() {
             className="w-full bg-transparent text-base text-[#220707] outline-none placeholder:text-[#a0918d]"
           />
         </div>
-        <ul ref={listRef} className="max-h-96 overflow-y-auto py-2">
+        <ul className="max-h-96 overflow-y-auto py-2">
           {filtered.length === 0 ? (
             <li className="px-4 py-6 text-center text-sm text-[#6a433d]">No results</li>
           ) : (
             filtered.map((entry, index) => {
               const isActive = index === safeActiveIndex;
               return (
-                <li key={entry.id}>
+                <li
+                  key={entry.id}
+                  ref={isActive ? activeItemRef : null}
+                >
                   <button
                     type="button"
                     onMouseEnter={() => setActiveIndex(index)}
