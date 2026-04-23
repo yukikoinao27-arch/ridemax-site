@@ -582,6 +582,7 @@ function renderBlock(
     return (
       <HeroBanner
         key={block.id}
+        sectionId={`section-${block.id}`}
         image={block.image.src}
         alt={block.image.alt}
         eyebrow={block.eyebrow}
@@ -614,7 +615,7 @@ function renderBlock(
     );
 
     return (
-      <section key={block.id} className={sectionClass(block, "py-10", "border-b border-black/10")}>
+      <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "py-10", "border-b border-black/10")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[76rem] px-6 md:px-10">
           <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
@@ -628,7 +629,7 @@ function renderBlock(
 
   if (block.type === "categoryTiles") {
     return (
-      <section key={block.id} className={sectionClass(block, "py-16")}>
+      <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "py-16")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[76rem] px-6 md:px-10">
           <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
@@ -650,7 +651,7 @@ function renderBlock(
 
   if (block.type === "collectionGrid") {
     return (
-      <section key={block.id} className={sectionClass(block, "py-16")}>
+      <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "py-16")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -676,7 +677,7 @@ function renderBlock(
 
   if (block.type === "featureGrid") {
     return (
-      <section key={block.id} className={sectionClass(block, "py-16")}>
+      <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "py-16")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
           <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
@@ -692,6 +693,7 @@ function renderBlock(
     return (
       <section
         key={block.id}
+        id={`section-${block.id}`}
         className={block.appearance ? sectionClass(block, "py-14") : `relative overflow-hidden py-14 ${legacyBackground}`}
       >
         <SectionDecoration appearance={block.appearance} />
@@ -721,7 +723,7 @@ function renderBlock(
 
     if (useBentoLayout) {
       return (
-        <section key={block.id} className={sectionClass(block, "pb-16 pt-14")}>
+        <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "pb-16 pt-14")}>
           <SectionDecoration appearance={block.appearance} />
           <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
             <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
@@ -777,7 +779,7 @@ function renderBlock(
     }
 
     return (
-      <section key={block.id} className={sectionClass(block, "pb-16 pt-14")}>
+      <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "pb-16 pt-14")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto grid max-w-[72rem] gap-10 px-6 md:px-10 lg:grid-cols-[1fr_0.9fr]">
           <div className="items-start text-left">
@@ -807,7 +809,7 @@ function renderBlock(
     const featuredJobs = block.showFeatured ? pickFeaturedJobs(content.jobs) : [];
 
     return (
-      <section key={block.id} className={sectionClass(block, "py-12")}>
+      <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "py-12")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
           <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
@@ -863,7 +865,7 @@ function renderBlock(
 
   if (block.type === "contact") {
     return (
-      <section key={block.id} className={sectionClass(block, "py-16")}>
+      <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "py-16")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
           <div className="grid gap-8 rounded-[2rem] bg-white px-6 py-8 shadow-[0_18px_44px_rgba(31,20,19,0.08)] md:px-8 lg:grid-cols-[1fr_0.95fr]">
@@ -935,7 +937,7 @@ function renderBlock(
     }
 
     return (
-      <section key={block.id} className={sectionClass(block, "py-16")}>
+      <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "py-16")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
           <SectionHeader
@@ -954,7 +956,7 @@ function renderBlock(
     const projects = content.projectFeatures.filter((project) => project.published);
 
     return (
-      <section key={block.id} className={sectionClass(block, "py-16")}>
+      <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "py-16")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
           <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
@@ -991,7 +993,7 @@ function renderBlock(
     const calendarItems = buildCalendarItems(events);
 
     return (
-      <section key={block.id} className={sectionClass(block, "py-16", "", "surface-2")}>
+      <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "py-16", "", "surface-2")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
           <div className="flex items-center justify-between">
@@ -1022,7 +1024,7 @@ function renderBlock(
   }
 
   return (
-    <section key={block.id} className={sectionClass(block, "py-16")}>
+    <section key={block.id} id={`section-${block.id}`} className={sectionClass(block, "py-16")}>
       <SectionDecoration appearance={block.appearance} />
       <div className="relative mx-auto max-w-[72rem] px-6 md:px-10">
         <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />

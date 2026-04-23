@@ -970,11 +970,18 @@ export async function getDraftSiteContent(): Promise<RidemaxSiteContent> {
  * Save a draft. This is what the sticky "Save" bar in admin writes to.
  * Public pages are unaffected until {@link publishSiteContent} runs.
  */
-export async function saveSiteContent(content: RidemaxSiteContent) {
+export async function saveSiteContent(
+  content: RidemaxSiteContent,
+  options: { allowLocalFallback?: boolean } = {},
+) {
   const parsed = normalizeSiteContent(siteContentSchema.parse(content));
 
   if (await writeSupabaseDraftContent(parsed)) {
     return;
+  }
+
+  if (options.allowLocalFallback === false) {
+    throw new Error("Preview requires Supabase draft storage in this deployment.");
   }
 
   await writeJsonFile(draftSiteContentPath, parsed);
@@ -1122,16 +1129,6 @@ function toRevisionMeta(row: RevisionRow): SiteContentRevision {
   };
 }
 
-export async function savePreviewSiteContent(content: RidemaxSiteContent) {
-  const parsed = normalizeSiteContent(siteContentSchema.parse(content));
-  await writeJsonFile(previewSiteContentPath, parsed);
-}
-
-export async function savePreviewProductCatalog(catalog: ExternalProductCatalog) {
-  const parsed = normalizeCatalog(externalProductCatalogSchema.parse(catalog));
-  await writeJsonFile(previewCatalogProductsPath, parsed);
-}
-
 export async function clearPreviewSiteContent() {
   try {
     await fs.unlink(previewSiteContentPath);
@@ -1197,11 +1194,18 @@ async function getPublishedProductCatalog(): Promise<ExternalProductCatalog> {
   return readLocalCatalog();
 }
 
-export async function saveProductCatalog(catalog: ExternalProductCatalog) {
+export async function saveProductCatalog(
+  catalog: ExternalProductCatalog,
+  options: { allowLocalFallback?: boolean } = {},
+) {
   const parsed = normalizeCatalog(externalProductCatalogSchema.parse(catalog));
 
   if (await writeSupabaseDraftProductCatalog(parsed)) {
     return;
+  }
+
+  if (options.allowLocalFallback === false) {
+    throw new Error("Preview requires Supabase catalog draft storage in this deployment.");
   }
 
   await writeJsonFile(draftCatalogProductsPath, parsed);
@@ -1460,7 +1464,6 @@ function toSearchRecords(
       sortOrder: item.order,
       keywords: [
         item.brand,
-        item.sku,
         item.categorySlug,
         ...item.tags,
         ...item.highlights,

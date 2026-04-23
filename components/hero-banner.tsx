@@ -13,6 +13,7 @@ type HeroBannerProps = {
   headingScale?: BlockAppearance["headingScale"];
   headingStyle?: BlockAppearance["headingStyle"];
   textColorScheme?: BlockAppearance["textColorScheme"];
+  sectionId?: string;
   sectionClassName?: string;
   decoration?: ReactNode;
   children?: ReactNode;
@@ -65,6 +66,7 @@ export function HeroBanner({
   headingScale = "standard",
   headingStyle = "standard",
   textColorScheme = "default",
+  sectionId,
   sectionClassName = "",
   decoration,
   children,
@@ -75,7 +77,7 @@ export function HeroBanner({
   const depthClass = dark ? "ridemax-white-depth" : "";
 
   return (
-    <section className={`relative overflow-hidden ${minHeight} ${sectionClassName}`.trim()}>
+    <section id={sectionId} className={`relative overflow-hidden ${minHeight} ${sectionClassName}`.trim()}>
       <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${image})` }} />
       <div className={dark ? "absolute inset-0 bg-[linear-gradient(180deg,rgba(14,14,14,0.56),rgba(14,14,14,0.62))]" : "absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.4),rgba(255,255,255,0.25))]"} />
       {decoration}

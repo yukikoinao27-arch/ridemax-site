@@ -58,7 +58,7 @@ function UploadHint({ helpText }: { helpText?: string }) {
 
 function EmptyPreview({ label }: { label: string }) {
   return (
-    <div className="flex aspect-[16/9] items-center justify-center rounded-[1.25rem] border border-dashed border-black/12 bg-white text-center text-sm text-[#6a433d]">
+    <div className="flex aspect-[16/9] items-center justify-center rounded-[1rem] border border-dashed border-black/12 bg-white text-center text-sm text-[#6a433d]">
       No {label.toLowerCase()} uploaded yet.
     </div>
   );
@@ -113,6 +113,7 @@ export function AdminImageUploadField({
   onNotice,
 }: AdminImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   async function handleFiles(files: FileList) {
     const file = files.item(0);
@@ -132,6 +133,7 @@ export function AdminImageUploadField({
       }
 
       onNotice?.("success", payload.message ?? "Image uploaded successfully.");
+      setEditing(false);
     } catch (error) {
       onNotice?.(
         "error",
@@ -143,47 +145,86 @@ export function AdminImageUploadField({
   }
 
   return (
-    <div className="mt-2 rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-4">
-      {value ? (
-        <div className="relative overflow-hidden rounded-[1.25rem] border border-black/10 bg-white">
-          {/*
-           * `unoptimized` is deliberate: admin previews can come from any of
-           * the configured media backends (Supabase, S3, local JSON) and we do
-           * not want a missing remotePatterns entry to degrade the preview to
-           * alt text only. A cache-busting key makes a fresh upload replace a
-           * stale cached broken state immediately.
-           */}
-          <Image
-            key={value}
-            src={value}
-            alt="Current uploaded image"
-            width={1600}
-            height={900}
-            unoptimized
-            className="aspect-[16/9] w-full object-cover"
-          />
+    <div className="mt-1 rounded-[1.25rem] border border-black/10 bg-[#faf8f7] p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white">
+            {value ? (
+              <Image
+                key={value}
+                src={value}
+                alt="Current uploaded image"
+                fill
+                unoptimized
+                sizes="96px"
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#8a6b65]">
+                No image
+              </div>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[#220707]">
+              {value ? "Image selected" : "No image selected"}
+            </p>
+            <p className="truncate text-xs text-[#6a433d]">
+              {value || "Upload or choose an image when needed."}
+            </p>
+          </div>
         </div>
-      ) : (
-        <EmptyPreview label="image" />
-      )}
-
-      <div className="mt-4 flex flex-wrap gap-3">
-        <UploadButton
-          label={uploading ? "Uploading..." : "Upload Image"}
-          disabled={uploading}
-          onFilesSelected={handleFiles}
-        />
-        {value ? (
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            className="inline-flex h-11 cursor-pointer items-center justify-center rounded-full border border-black/10 px-5 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
-          >
-            Remove
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={() => setEditing((current) => !current)}
+          className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-4 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
+        >
+          {editing ? "Done" : value ? "Edit Image" : "Add Image"}
+        </button>
       </div>
-      <UploadHint helpText={helpText} />
+
+      {editing ? (
+        <div className="mt-3 border-t border-black/8 pt-3">
+          {value ? (
+            <div className="relative overflow-hidden rounded-[1rem] border border-black/10 bg-white">
+              {/*
+               * `unoptimized` is deliberate: admin previews can come from any
+               * configured media backend and should not depend on public image
+               * optimizer allowlists.
+               */}
+              <Image
+                key={value}
+                src={value}
+                alt="Current uploaded image"
+                width={1600}
+                height={900}
+                unoptimized
+                className="max-h-56 w-full object-cover"
+              />
+            </div>
+          ) : (
+            <EmptyPreview label="image" />
+          )}
+
+          <div className="mt-3 flex flex-wrap gap-3">
+            <UploadButton
+              label={uploading ? "Uploading..." : "Upload Image"}
+              disabled={uploading}
+              onFilesSelected={handleFiles}
+            />
+            {value ? (
+              <button
+                type="button"
+                onClick={() => onChange("")}
+                className="inline-flex h-11 cursor-pointer items-center justify-center rounded-full border border-black/10 px-5 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
+              >
+                Remove
+              </button>
+            ) : null}
+          </div>
+          <UploadHint helpText={helpText} />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -196,6 +237,7 @@ export function AdminImageGalleryField({
   onNotice,
 }: AdminImageGalleryFieldProps) {
   const [uploading, setUploading] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   async function handleFiles(files: FileList) {
     setUploading(true);
@@ -215,6 +257,7 @@ export function AdminImageGalleryField({
 
       onChange([...value, ...uploadedUrls]);
       onNotice?.("success", `${uploadedUrls.length} image${uploadedUrls.length === 1 ? "" : "s"} uploaded successfully.`);
+      setEditing(false);
     } catch (error) {
       onNotice?.(
         "error",
@@ -226,45 +269,86 @@ export function AdminImageGalleryField({
   }
 
   return (
-    <div className="mt-2 rounded-[1.5rem] border border-black/10 bg-[#faf8f7] p-4">
-      {value.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {value.map((imageUrl, index) => (
-            <div key={`${imageUrl}-${index}`} className="overflow-hidden rounded-[1.25rem] border border-black/10 bg-white">
+    <div className="mt-1 rounded-[1.25rem] border border-black/10 bg-[#faf8f7] p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          {value.slice(0, 3).map((imageUrl, index) => (
+            <div key={`${imageUrl}-${index}`} className="relative h-14 w-16 shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white">
               <Image
-                key={imageUrl}
                 src={imageUrl}
-                alt={`Gallery image ${index + 1}`}
-                width={1200}
-                height={900}
+                alt=""
+                fill
                 unoptimized
-                className="aspect-[4/3] w-full object-cover"
+                sizes="64px"
+                className="object-cover"
               />
-              <div className="border-t border-black/8 p-3">
-                <button
-                  type="button"
-                  onClick={() => onChange(value.filter((_, imageIndex) => imageIndex !== index))}
-                  className="cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e] transition hover:opacity-75"
-                >
-                  Remove
-                </button>
-              </div>
             </div>
           ))}
+          {value.length === 0 ? (
+            <div className="flex h-14 w-24 shrink-0 items-center justify-center rounded-lg border border-dashed border-black/12 bg-white text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#8a6b65]">
+              No images
+            </div>
+          ) : null}
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[#220707]">
+              {value.length} gallery image{value.length === 1 ? "" : "s"}
+            </p>
+            <p className="text-xs text-[#6a433d]">
+              Expand only when you need to add or remove images.
+            </p>
+          </div>
         </div>
-      ) : (
-        <EmptyPreview label="gallery image" />
-      )}
-
-      <div className="mt-4 flex flex-wrap gap-3">
-        <UploadButton
-          label={uploading ? "Uploading..." : "Upload Images"}
-          disabled={uploading}
-          multiple
-          onFilesSelected={handleFiles}
-        />
+        <button
+          type="button"
+          onClick={() => setEditing((current) => !current)}
+          className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white px-4 text-sm font-semibold text-[#220707] transition hover:-translate-y-0.5 hover:bg-white"
+        >
+          {editing ? "Done" : "Edit Gallery"}
+        </button>
       </div>
-      <UploadHint helpText={helpText} />
+
+      {editing ? (
+        <div className="mt-3 border-t border-black/8 pt-3">
+          {value.length > 0 ? (
+            <div className="grid max-h-72 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+              {value.map((imageUrl, index) => (
+                <div key={`${imageUrl}-${index}`} className="overflow-hidden rounded-[1rem] border border-black/10 bg-white">
+                  <Image
+                    key={imageUrl}
+                    src={imageUrl}
+                    alt={`Gallery image ${index + 1}`}
+                    width={1200}
+                    height={900}
+                    unoptimized
+                    className="aspect-[4/3] w-full object-cover"
+                  />
+                  <div className="border-t border-black/8 p-3">
+                    <button
+                      type="button"
+                      onClick={() => onChange(value.filter((_, imageIndex) => imageIndex !== index))}
+                      className="cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] text-[#8d120e] transition hover:opacity-75"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyPreview label="gallery image" />
+          )}
+
+          <div className="mt-3 flex flex-wrap gap-3">
+            <UploadButton
+              label={uploading ? "Uploading..." : "Upload Images"}
+              disabled={uploading}
+              multiple
+              onFilesSelected={handleFiles}
+            />
+          </div>
+          <UploadHint helpText={helpText} />
+        </div>
+      ) : null}
     </div>
   );
 }

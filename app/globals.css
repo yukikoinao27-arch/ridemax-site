@@ -7,6 +7,24 @@
   --font-title: "Oswald", sans-serif;
 }
 
+@keyframes preview-section-highlight {
+  0%,
+  70% {
+    box-shadow: inset 0 0 0 9999px rgba(28, 78, 216, 0.16);
+  }
+  100% {
+    box-shadow: inset 0 0 0 0 rgba(28, 78, 216, 0);
+  }
+}
+
+[id^="section-"] {
+  scroll-margin-top: 6rem;
+}
+
+[id^="section-"]:target {
+  animation: preview-section-highlight 2.4s ease-out;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

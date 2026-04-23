@@ -17,9 +17,8 @@ import { RidemaxLogo } from "@/components/ridemax-logo";
  *  - Inline emoji quick-picker (no heavyweight library) so the send form has
  *    feature parity with the Wix reference without pulling in a bundle.
  *
- * Brand tokens are centralized at the top of the render tree
- * (`#E31E24`, `#111111`, `#FFFFFF`) so a future theme override can happen in
- * one place rather than every button.
+ * Brand tokens are centralized at the top of the render tree so a future
+ * theme override can happen in one place rather than every button.
  */
 type ChatWidgetProps = {
   /** Admin-configured logo for light surfaces (the white chip behind the mark). */
@@ -142,7 +141,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
               <div>
                 {/*
                  * Logo sits on an opaque white chip so the admin-configured
-       * mark keeps its native colors on the red chat surface. No
+                 * mark keeps its native colors on the navy chat surface. No
                  * CSS inversion, no filters, per brand guidelines. RidemaxLogo
                  * itself handles the SVG fallback when the upload is missing.
                  */}
@@ -165,7 +164,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                 <button
                   type="button"
                   onClick={() => setExpanded((current) => !current)}
-                  className="rounded-full p-1 text-white/90 transition hover:scale-110 hover:bg-white/14 hover:text-white"
+                  className="cursor-pointer rounded-full p-1 text-white/90 transition hover:scale-110 hover:bg-white/14 hover:text-white"
                   aria-label={expanded ? "Collapse chat window" : "Expand chat window"}
                   aria-pressed={expanded}
                 >
@@ -188,7 +187,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                     setOpen(false);
                     setExpanded(false);
                   }}
-                  className="rounded-full p-1 text-white/90 transition hover:bg-white/14 hover:text-white"
+                  className="cursor-pointer rounded-full p-1 text-white/90 transition hover:bg-white/14 hover:text-white"
                   aria-label="Minimize chat"
                 >
                   <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
@@ -237,7 +236,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                     type="button"
                     onClick={() => setScreen("welcome")}
                     aria-label="Back to chat start"
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#26315a] transition hover:bg-black/5"
+                  className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#26315a] transition hover:bg-black/5"
                   >
                     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M15 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" />
@@ -258,7 +257,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                   <div className={expanded ? "h-full" : "h-28"} />
                 </div>
                 {uploadError ? (
-                  <p className="mt-2 rounded-md bg-[#fff4f3] px-3 py-2 text-xs font-medium text-[#8d120e]">
+                  <p className="mt-2 rounded-md bg-[#eef4ff] px-3 py-2 text-xs font-medium text-[#0B2E63]">
                     {uploadError}
                   </p>
                 ) : null}
@@ -279,7 +278,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                           key={emoji}
                           type="button"
                           onClick={() => insertEmoji(emoji)}
-                          className="flex h-8 w-8 items-center justify-center rounded-md text-base transition hover:bg-black/5"
+                          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-base transition hover:bg-black/5"
                           aria-label={`Insert ${emoji}`}
                         >
                           {emoji}
@@ -323,7 +322,7 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
                       aria-label="Upload file"
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#3d4f76] transition hover:bg-[#0B2E63]/10 hover:text-[#0B2E63] disabled:cursor-wait disabled:opacity-60"
+                      className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#3d4f76] transition hover:bg-[#0B2E63]/10 hover:text-[#0B2E63] disabled:cursor-wait disabled:opacity-60"
                     >
                       {uploading ? (
                         <svg viewBox="0 0 24 24" className="h-4 w-4 animate-spin" fill="none" stroke="currentColor" strokeWidth="2">
@@ -372,12 +371,12 @@ export function ChatWidget({ logoSrc, logoLightSrc, alt = "Team Ridemax Philippi
                       placeholder="Write your message..."
                       className="min-w-0 flex-1 bg-transparent text-sm outline-none"
                     />
-                {/* Send button uses a paper-plane icon in brand red. */}
+                {/* Send button uses a paper-plane icon in the chat theme color. */}
                     <button
                       type="submit"
                       disabled={!message.trim()}
                       aria-label="Send message"
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0B2E63] text-white transition hover:bg-[#123E7A] disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#0B2E63] text-white transition hover:bg-[#123E7A] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M3 11l18-8-8 18-2-8-8-2Z" strokeLinecap="round" strokeLinejoin="round" />
