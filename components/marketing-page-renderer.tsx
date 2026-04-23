@@ -69,6 +69,27 @@ const sectionTextToneClasses = {
   },
 } satisfies Record<NonNullable<BlockAppearance["textTone"]>, { eyebrow: string; title: string; summary: string }>;
 
+const categoryGridLayoutClasses = {
+  standard: "mt-10 grid gap-6 md:grid-cols-3",
+  compact: "mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4",
+  feature: "mt-10 grid gap-7 lg:grid-cols-3",
+} satisfies Record<NonNullable<BlockAppearance["layoutPreset"]>, string>;
+
+const categoryBodyTextClasses = {
+  standard: "mt-4 text-sm leading-7 text-[#4d3b37]",
+  short: "mt-4 text-sm leading-6 text-[#4d3b37] line-clamp-2",
+  editorial: "mt-4 text-base leading-8 text-[#4d3b37]",
+} satisfies Record<NonNullable<BlockAppearance["bodyTextPreset"]>, string>;
+
+const categoryCtaClasses = {
+  solid:
+    "mt-5 inline-flex items-center gap-2 rounded-full bg-[#E31E24] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(227,30,36,0.25)] transition hover:-translate-y-0.5 hover:bg-[#b8181c]",
+  outline:
+    "mt-5 inline-flex items-center gap-2 rounded-full border border-[#E31E24]/40 bg-white px-5 py-2.5 text-sm font-semibold text-[#8d120e] transition hover:-translate-y-0.5 hover:border-[#E31E24] hover:bg-[#fff6f5]",
+  text:
+    "mt-5 inline-flex items-center gap-2 rounded-md px-1 py-1 text-sm font-semibold text-[#E31E24] transition hover:-translate-y-0.5 hover:bg-[#fff6f5]",
+} satisfies Record<NonNullable<BlockAppearance["ctaPreset"]>, string>;
+
 function sectionBackgroundClass(appearance?: BlockAppearance, fallback: NonNullable<BlockAppearance["background"]> = "surface-1") {
   return sectionBackgroundClasses[appearance?.background ?? fallback];
 }
@@ -415,9 +436,13 @@ function renderPromotionCards(promotions: PromotionItem[]) {
   );
 }
 
-function renderCategoryCards(categories: ProductCategory[]) {
+function renderCategoryCards(categories: ProductCategory[], appearance?: BlockAppearance) {
+  const layoutPreset = appearance?.layoutPreset ?? "standard";
+  const bodyTextPreset = appearance?.bodyTextPreset ?? "standard";
+  const ctaPreset = appearance?.ctaPreset ?? "solid";
+
   return (
-    <div className="mt-10 grid gap-6 md:grid-cols-3">
+    <div className={categoryGridLayoutClasses[layoutPreset]}>
       {categories.map((category) => (
         <article
           key={category.slug}
@@ -436,7 +461,7 @@ function renderCategoryCards(categories: ProductCategory[]) {
             <h3 className="text-5xl font-[family:var(--font-title)] uppercase leading-none text-[#220707]">
               {category.name}
             </h3>
-            <p className="mt-4 text-sm leading-7 text-[#4d3b37]">{category.description}</p>
+            <p className={categoryBodyTextClasses[bodyTextPreset]}>{category.description}</p>
             {/*
               Brand red gives the CTA the same optical weight as the header
               search chip and the primary "Read More" buttons on /, so the
@@ -446,10 +471,10 @@ function renderCategoryCards(categories: ProductCategory[]) {
             */}
             <Link
               href={`/products/${category.slug}`}
-              className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#E31E24] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(227,30,36,0.25)] transition hover:-translate-y-0.5 hover:bg-[#b8181c]"
+              className={categoryCtaClasses[ctaPreset]}
             >
               View More
-              <span aria-hidden="true">→</span>
+              <span aria-hidden="true">-&gt;</span>
             </Link>
           </div>
         </article>
@@ -500,7 +525,7 @@ function renderCollectionGrid(block: Extract<PageBlock, { type: "collectionGrid"
     return renderPromotionCards(promotions);
   }
 
-  return renderCategoryCards(limitItems(content.productCategories, block.limit));
+  return renderCategoryCards(limitItems(content.productCategories, block.limit), block.appearance);
 }
 
 function renderFeatureItems(items: ReadonlyArray<{ title: string; summary: string }>) {
@@ -527,6 +552,8 @@ function renderBlock(
   initialDepartment: string,
 ) {
   if (block.type === "hero") {
+    const hasHeroImage = Boolean(block.image.src.trim());
+
     return (
       <HeroBanner
         key={block.id}
@@ -537,7 +564,7 @@ function renderBlock(
         summary={block.summary}
         minHeight={block.minHeight}
         align={block.align}
-        dark={block.dark}
+        dark={hasHeroImage ? block.dark : false}
         sectionClassName={sectionBackgroundClass(block.appearance)}
         decoration={<SectionDecoration appearance={block.appearance} />}
       >
@@ -559,11 +586,11 @@ function renderBlock(
     );
 
     return (
-      <section key={block.id} className={sectionClass(block, "py-14")}>
+      <section key={block.id} className={sectionClass(block, "py-10", "border-b border-black/10")}>
         <SectionDecoration appearance={block.appearance} />
         <div className="relative mx-auto max-w-[76rem] px-6 md:px-10">
           <SectionHeader eyebrow={block.eyebrow} title={block.title} summary={block.summary} appearance={block.appearance} />
-          <div className="mt-8">
+          <div className={block.eyebrow || block.title || block.summary ? "mt-8" : ""}>
             <BrandMarquee brands={brands} direction={block.direction} />
           </div>
         </div>
@@ -613,6 +640,10 @@ function renderBlock(
         </div>
       </section>
     );
+  }
+
+  if (block.type === "searchFilters") {
+    return null;
   }
 
   if (block.type === "featureGrid") {

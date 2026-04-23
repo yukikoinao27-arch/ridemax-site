@@ -7,8 +7,8 @@
     "syncStrategy": "api-based-ingestion",
     "fallbackPath": "data/catalog-products.json",
     "notes": [
-      "Treat the catalog as read-only external data. The CMS should manage only display rules, taxonomy, and merchandising.",
-      "Switch mode to remote-api when the supplier or ERP endpoint is ready, then keep this local file as the fallback path.",
+      "Local JSON mode lets the admin stage product catalog snapshots alongside page content.",
+      "Switch mode to remote-api when the supplier or ERP endpoint is ready, then keep this local file as fallback data.",
       "Prefer API-based ingestion first. Move to queue-worker only when payload size or sync volume starts blocking the web app."
     ]
   },

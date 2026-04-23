@@ -71,6 +71,24 @@ export const sectionTextToneOptions: SelectOption[] = [
   { label: "Brand red", value: "brand" },
 ];
 
+export const sectionLayoutPresetOptions: SelectOption[] = [
+  { label: "Balanced", value: "standard" },
+  { label: "Compact", value: "compact" },
+  { label: "Feature", value: "feature" },
+];
+
+export const sectionBodyTextPresetOptions: SelectOption[] = [
+  { label: "Standard", value: "standard" },
+  { label: "Short", value: "short" },
+  { label: "Editorial", value: "editorial" },
+];
+
+export const sectionCtaPresetOptions: SelectOption[] = [
+  { label: "Solid button", value: "solid" },
+  { label: "Outline button", value: "outline" },
+  { label: "Text link", value: "text" },
+];
+
 /**
  * Card preset dropdown shown only for card-style blocks (collection grid,
  * feature grid). The preset names are intent-oriented so marketing picks a
@@ -95,6 +113,7 @@ export const pageSlugOptions: SelectOption[] = [
   { label: "Events", value: "events" },
   { label: "Awards", value: "awards" },
   { label: "Promotions", value: "promotions" },
+  { label: "Search", value: "search" },
 ];
 
 export const pageBlockTypeOptions: SelectOption[] = [
@@ -110,6 +129,7 @@ export const pageBlockTypeOptions: SelectOption[] = [
   { label: "Product Type Rows", value: "categorySections" },
   { label: "Featured Story Rows", value: "projectList" },
   { label: "Event Calendar", value: "calendar" },
+  { label: "Search Filters", value: "searchFilters" },
   { label: "Text Section", value: "richText" },
 ];
 
@@ -126,6 +146,52 @@ export function collectionVariantForSource(source: CollectionGridSource) {
 }
 
 export function createPageDocumentTemplate(slug: ContentPageSlug): PageDocument {
+  if (slug === "search") {
+    return {
+      id: "page-search",
+      slug,
+      title: pageLabel(slug),
+      summary: "Find pages, products, jobs, events, awards, and story content from Team Ridemax.",
+      blocks: [
+        {
+          id: "search-hero",
+          type: "hero",
+          order: 1,
+          title: "Search",
+          summary: "Find pages, products, jobs, events, awards, and story content from Team Ridemax.",
+          image: { src: "", alt: "Ridemax search hero" },
+          align: "center",
+          dark: true,
+          minHeight: "min-h-[18rem]",
+          tone: "default",
+          appearance: {
+            background: "surface-1",
+            headingScale: "display",
+            textTone: "default",
+            decoration: { style: "none", position: "bottom", size: "md", color: "brand-red" },
+          },
+        },
+        {
+          id: "search-filters",
+          type: "searchFilters",
+          order: 2,
+          title: "Filter by",
+          summary: "Let customers refine search results by category and choose the result order.",
+          categoryOptions: ["Tire", "PCR", "TBR"],
+          sortOptions: ["best", "newest", "name-asc", "name-desc"],
+          quickMatchesLabel: "Quick Matches",
+          maxSuggestions: 6,
+          appearance: {
+            background: "surface-1",
+            headingScale: "standard",
+            textTone: "default",
+            decoration: { style: "none", position: "bottom", size: "md", color: "brand-red" },
+          },
+        },
+      ],
+    };
+  }
+
   return {
     id: `page-${slug}`,
     slug,
@@ -251,6 +317,17 @@ export function createPageBlockTemplate(type: PageBlockType): PageBlock {
         ...base,
         type,
       };
+    case "searchFilters":
+      return {
+        ...base,
+        type,
+        title: "Filter by",
+        summary: "Let customers refine search results by category and sort order.",
+        categoryOptions: ["Tire", "PCR", "TBR"],
+        sortOptions: ["best", "newest", "name-asc", "name-desc"],
+        quickMatchesLabel: "Quick Matches",
+        maxSuggestions: 6,
+      };
     case "richText":
       return {
         ...base,
@@ -337,6 +414,30 @@ export function getPageBlockAppearanceFields(
       options: cardPresetOptions,
       helpText: "Preset owns the mobile layout. Marketing cannot break card breakpoints.",
     });
+  }
+
+  if (blockType === "collectionGrid") {
+    base.push(
+      {
+        key: "appearance.layoutPreset",
+        label: "Layout",
+        type: "select",
+        options: sectionLayoutPresetOptions,
+        helpText: "Controls the section rhythm without exposing columns or breakpoints.",
+      },
+      {
+        key: "appearance.bodyTextPreset",
+        label: "Body Text",
+        type: "select",
+        options: sectionBodyTextPresetOptions,
+      },
+      {
+        key: "appearance.ctaPreset",
+        label: "Button Style",
+        type: "select",
+        options: sectionCtaPresetOptions,
+      },
+    );
   }
 
   return base;
@@ -506,6 +607,25 @@ export function getPageBlockFields(block: PageBlock): PageBlockFieldConfig[] {
       ];
     case "projectList":
     case "calendar":
+      return common;
+    case "searchFilters":
+      return [
+        ...common,
+        {
+          key: "categoryOptions",
+          label: "Filter Options",
+          type: "textarea",
+          helpText: "One filter label per line, for example Tire, PCR, TBR.",
+        },
+        {
+          key: "sortOptions",
+          label: "Sort Options",
+          type: "textarea",
+          helpText: "Use supported sort keys: best, newest, name-asc, name-desc.",
+        },
+        { key: "quickMatchesLabel", label: "Suggestions Label", type: "text" },
+        { key: "maxSuggestions", label: "Max Suggestions", type: "text" },
+      ];
     case "richText":
       return common;
   }

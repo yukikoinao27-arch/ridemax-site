@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import { getAdminIdentity, isAdminAuthenticated } from "@/lib/server/admin-auth";
 import { logAdminActivity } from "@/lib/server/admin-activity-log";
 import { adminRateLimitResponse, consumeAdminWriteRateLimit } from "@/lib/server/admin-rate-limit";
-import { publishSiteContent } from "@/lib/server/ridemax-content-repository";
+import {
+  publishProductCatalog,
+  publishSiteContent,
+} from "@/lib/server/ridemax-content-repository";
 
 /**
  * Publish the current draft bundle. Admins click the sticky "Publish"
@@ -30,6 +33,7 @@ export async function POST(request: Request) {
   const actor = await getAdminIdentity();
   try {
     await publishSiteContent({ actor, note: body.note ?? null });
+    await publishProductCatalog();
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to publish.";
     return NextResponse.json({ error: message }, { status: 500 });
@@ -40,12 +44,16 @@ export async function POST(request: Request) {
     action: "publish",
     entityType: "site_content",
     entityId: "primary",
-    metadata: body.note ? { note: body.note } : null,
+    metadata: {
+      ...(body.note ? { note: body.note } : {}),
+      productCatalog: true,
+    },
   });
 
   revalidatePath("/", "layout");
   revalidatePath("/search");
-  revalidatePath("/products");
+  revalidatePath("/products", "layout");
+  revalidatePath("/product-page", "layout");
   revalidatePath("/careers");
   revalidatePath("/events");
   revalidatePath("/awards");

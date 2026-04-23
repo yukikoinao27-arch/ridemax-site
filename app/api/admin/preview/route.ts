@@ -1,8 +1,11 @@
 import { draftMode } from "next/headers";
 import { NextResponse } from "next/server";
-import { siteContentSchema } from "@/lib/content-schemas";
+import { externalProductCatalogSchema, siteContentSchema } from "@/lib/content-schemas";
 import { isAdminAuthenticated } from "@/lib/server/admin-auth";
-import { savePreviewSiteContent } from "@/lib/server/ridemax-content-repository";
+import {
+  savePreviewProductCatalog,
+  savePreviewSiteContent,
+} from "@/lib/server/ridemax-content-repository";
 
 export async function POST(request: Request) {
   if (!(await isAdminAuthenticated())) {
@@ -10,11 +13,16 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json()) as {
+    catalog?: unknown;
     content?: unknown;
     path?: string;
   };
 
   const parsed = siteContentSchema.safeParse(body.content);
+  const parsedCatalog =
+    body.catalog === undefined
+      ? null
+      : externalProductCatalogSchema.safeParse(body.catalog);
 
   if (!parsed.success) {
     return NextResponse.json(
@@ -23,7 +31,18 @@ export async function POST(request: Request) {
     );
   }
 
+  if (parsedCatalog && !parsedCatalog.success) {
+    return NextResponse.json(
+      { error: parsedCatalog.error.issues[0]?.message ?? "Invalid preview catalog payload." },
+      { status: 400 },
+    );
+  }
+
   await savePreviewSiteContent(parsed.data);
+  if (parsedCatalog?.success) {
+    await savePreviewProductCatalog(parsedCatalog.data);
+  }
+
   const preview = await draftMode();
   preview.enable();
 
